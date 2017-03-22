@@ -356,6 +356,7 @@
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Global.asax" />
     <Content Include="packages.config" />
+    <Content Include="scripts\angular-clipboard.js" />
     <Content Include="scripts\angular-local-storage.js" />
     <Content Include="scripts\angular-local-storage.min.js" />
     <Content Include="scripts\angular-local-storage.min.js.map" />
@@ -389,6 +390,7 @@
     <Content Include="Content\DataTables\css\common.scss" />
     <Content Include="Content\toastr.scss" />
     <Content Include="Content\toastr.less" />
+    <None Include="Properties\PublishProfiles\CustomProfile.pubxml" />
     <None Include="scripts\jquery-2.2.3.intellisense.js" />
     <Content Include="scripts\bootstrap.js" />
     <Content Include="scripts\bootstrap.min.js" />
@@ -459,6 +461,9 @@
     <Content Include="scripts\jquery-2.2.3.js" />
     <Content Include="scripts\jquery-2.2.3.min.js" />
     <Content Include="scripts\jquery-2.2.3.min.map" />
+    <Content Include="scripts\nya-bs-select.js" />
+    <Content Include="scripts\nya-bs-select.min.js" />
+    <Content Include="scripts\sb-admin-2.js" />
     <Content Include="Views\Account\Login.cshtml" />
     <Content Include="Views\Account\Reset.cshtml" />
     <Content Include="Views\Account\ResetPassword.cshtml" />
