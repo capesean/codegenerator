@@ -1,0 +1,40 @@
+﻿<!DOCTYPE html>
+<html ng-app="app">
+<head>
+
+    <title>Code Generator 2</title>
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta content="IE=edge, chrome=1" http-equiv="X-UA-Compatible" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+
+    <base href="/">
+
+    @Styles.Render("~/content/login")
+
+</head>
+<body id="login">
+
+    <div id="wrapper">
+
+        <div class="row">
+            <div class="col-md-12">
+                <section id="loginForm">
+
+                    <div id="logocontainer" class="text-center"><a href="/"><h1>CODE GENERATOR</h1></a></div>
+
+                    @RenderBody()
+
+                </section>
+            </div>
+        </div>
+
+    </div>
+
+    @Scripts.Render("~/scripts/login")
+
+    @RenderSection("scripts", required: false)
+
+</body>
+</html>

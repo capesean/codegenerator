@@ -1,0 +1,96 @@
+<div>
+
+    <form name="mainForm" ng-submit="vm.save()" novalidate>
+
+        <fieldset class="group" ng-disabled="vm.loading">
+
+            <legend>Lookup</legend>
+
+            <div class="row">
+
+                <div class="col-sm-12">
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.name.$invalid }">
+                            <label for="name" class="control-label">
+                                Name:
+                            </label>
+                            <input type="text" id="name" name="name" ng-model="vm.lookup.name" maxlength="50" class="form-control" ng-required="true" />
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </fieldset>
+
+        <div class="form-group error-messages has-error alert alert-danger" ng-if="mainForm.$submitted && mainForm.$invalid">
+
+            <span class="help-block has-error"
+                  ng-if="mainForm.$submitted">
+                <span>
+                    Please correct the following errors:
+                </span>
+            </span>
+
+            <ul>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.name.$error">
+                    <span ng-message="required">
+                        Name is required.
+                    </span>
+                </li>
+
+            </ul>
+
+        </div>
+
+        <fieldset ng-disabled="vm.loading">
+            <button type="submit" class="btn btn-success">Save<i class="fa fa-check"></i></button>
+            <button type="button" ng-if="!vm.isNew" class="btn btn-danger btn-delete" ng-click="vm.delete()">Delete<i class="fa fa-times"></i></button>
+        </fieldset>
+
+    </form>
+
+    <div ng-show="!vm.isNew">
+
+        <hr />
+
+        <h2>Lookup Options</h2>
+
+        <fieldset ng-disabled="vm.loading">
+            <a class="btn btn-primary" href="projects/{{vm.project.projectId}}/lookups/{{vm.lookup.lookupId}}/lookupoptions/{{vm.appSettings.newGuid}}">Add Lookup Option<i class="fa fa-plus-circle"></i></a><br />
+            <br />
+        </fieldset>
+
+        <table class="table table-striped table-hover table-bordered row-navigation table-sm">
+            <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Friendly Name</th>
+                    <th scope="col">Value</th>
+                </tr>
+            </thead>
+            <tbody ui-sortable="vm.sortableOptions" ng-model="vm.lookupOptions">
+                <tr ng-repeat="lookupOption in vm.lookupOptions" ng-click="vm.goToLookupOption(lookupOption.lookup.project.projectId, lookupOption.lookup.lookupId, lookupOption.lookupOptionId)">
+                    <td><i ng-if="vm.lookupOptions.length > 1" class="fa fa-arrows-v sortable-handle"></i>{{ lookupOption.name }}</td>
+                    <td>{{ lookupOption.friendlyName }}</td>
+                    <td>{{ lookupOption.value }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="row" ng-if="!vm.loading">
+            <div class="col-sm-7">
+               <app-pager headers="vm.lookupOptionsHeaders" callback="vm.loadLookupOptions"></app-pager>
+            </div>
+            <div class="col-sm-5 text-right resultsInfo">
+               <app-pager-info headers="vm.lookupOptionsHeaders"></app-pager-info>
+            </div>
+        </div>
+
+    </div>
+
+</div>

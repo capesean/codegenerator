@@ -1,0 +1,33 @@
+<div>
+
+    <div ng-hide="vm.loading">
+
+        <hr />
+
+        <table class="table table-striped table-hover table-bordered row-navigation table-sm">
+            <thead>
+                <tr>
+                    <th scope="col">Relationship Field Id</th>
+                    <th scope="col">Relationship</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="relationshipField in vm.relationshipFields" ng-click="vm.goToRelationshipField(relationshipField.relationship.entity.project.projectId, relationshipField.relationship.entity.entityId, relationshipField.relationship.relationshipId, relationshipField.relationshipFieldId)">
+                    <td>{{ relationshipField.relationshipFieldId }}</td>
+                    <td>{{ relationshipField.relationship.collectionName }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="row" ng-if="!vm.loading">
+            <div class="col-sm-7">
+                <app-pager headers="vm.headers" callback="vm.runSearch"></app-pager>
+            </div>
+            <div class="col-sm-5 text-right resultsInfo">
+                <app-pager-info headers="vm.headers"></app-pager-info>
+            </div>
+        </div>
+
+    </div>
+
+</div>

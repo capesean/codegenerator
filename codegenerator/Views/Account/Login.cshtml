@@ -1,0 +1,71 @@
+﻿@using WEB.Models
+@model LoginViewModel
+
+@using (Html.BeginForm("Login", "Account", new { ReturnUrl = ViewBag.ReturnUrl }, FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
+            {
+    @Html.AntiForgeryToken()
+
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+    <div>
+        @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+    </div>
+
+    <div>
+        @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="form-group">
+        <div class="col-sm-12">
+            @Html.TextBoxFor(m => m.Email, new { @class = "form-control", placeholder = "Email address", maxlength = 100 })
+            @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Password", maxlength = 100 })
+        </div>
+    </div>
+
+    <input id="loginButton" type="submit" class="btn btn-primary btn-block" value="Login" />
+
+    <p>
+        <a href="resetpassword">reset password</a>
+    </p>
+
+}
+
+
+@section scripts{
+    <script>
+        toastr.options = {
+            "closeButton": true,
+            "debug": false,
+            "progressBar": false,
+            "positionClass": "toast-bottom-right",
+            "onclick": null,
+            "showDuration": 300,
+            "hideDuration": 1000,
+            "timeOut": 5000,
+            "extendedTimeOut": 1000,
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        };
+    </script>
+    @if (Request.QueryString["msg"] == "tokensent")
+    {
+        <script>
+            toastr.success("A password reset token has been sent to your email address");
+        </script>
+    }
+    else if (Request.QueryString["msg"] == "passwordchanged")
+    {
+        <script>
+            toastr.success("Your password has been changed");
+        </script>
+    }
+    else if (Request.QueryString["msg"] == "loggedout")
+    {
+        <script>
+            toastr.success("You have been logged out");
+        </script>
+    }
+
+}

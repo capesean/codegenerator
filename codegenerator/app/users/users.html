@@ -1,0 +1,66 @@
+﻿<div>
+
+    <form ng-submit="vm.runSearch(0)" novalidate>
+
+        <fieldset ng-disabled="vm.loading">
+
+            <div class="row">
+
+                <div class="col-sm-6 col-lg-4">
+                    <div class="form-group">
+                        <input type="search" id="searchText" ng-model="vm.search.text" max="50" class="form-control" placeholder="Search users" />
+                    </div>
+                </div>
+
+                <div class="col-sm-4 col-md-3">
+                    <div class="form-group">
+                        <ol id="searchRole" class="nya-bs-select" ng-model="vm.search.roleId">
+                            <li nya-bs-option="role in vm.appSettings.roles" class="nya-bs-option" value="role.id">
+                                <a>{{role.name}}<span class="fa fa-check check-mark"></span></a>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+
+            </div>
+
+            <button type="submit" class="btn btn-success">Search<i class="fa fa-search"></i></button>
+            <a href="/users/{{vm.appSettings.newGuid}}" class="btn btn-primary">Add<i class="fa fa-plus-circle"></i></a>
+
+        </fieldset>
+
+    </form>
+
+    <div ng-show="!vm.loading">
+
+        <hr />
+
+        <table class="table table-striped table-hover table-bordered row-navigation table-sm">
+            <thead class="thead-inverse">
+                <tr>
+                    <th scope="col">First Name</th>
+                    <th scope="col">Last Name</th>
+                    <th scope="col" class="hidden-xs">Email</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="user in vm.users" ng-click="vm.goToUser(user.id)">
+                    <td>{{ user.firstName }}</td>
+                    <td>{{ user.lastName }}</td>
+                    <td class="hidden-xs">{{ user.email }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="row" ng-if="!vm.loading">
+            <div class="col-sm-7">
+                <ix-pager headers="vm.headers" callback="vm.runSearch"></ix-pager>
+            </div>
+            <div class="col-sm-5 text-right resultsInfo">
+                <ix-pager-info headers="vm.headers"></ix-pager-info>
+            </div>
+        </div>
+
+    </div>
+
+</div>

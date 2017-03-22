@@ -1,0 +1,124 @@
+﻿<!--todo: need a disabled field that prevents login and clears refreshtokens-->
+<!--todo: delete user-->
+<div>
+    <form name="mainForm" ng-submit="vm.save()" novalidate>
+
+        <fieldset class="group" ng-disabled="vm.loading">
+
+            <legend>User</legend>
+
+            <div class="col-sm-12">
+
+                <div class="row">
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.firstName.$invalid}">
+                            <label for="firstName" class="control-label">
+                                First name:
+                            </label>
+                            <input type="text" id="firstName" name="firstName" ng-model="vm.user.firstName" maxlength="256" class="form-control" required />
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.lastName.$invalid}">
+                            <label for="lastName" class="control-label">
+                                Last name:
+                            </label>
+                            <input type="text" id="lastName" name="lastName" ng-model="vm.user.lastName" maxlength="256" class="form-control" required />
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.email.$invalid}">
+                            <label for="email" class="control-label">
+                                Email:
+                            </label>
+                            <input type="email" id="email" name="email" ng-model="vm.user.email" maxlength="256" ng-minlength="3" class="form-control" required />
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4 col-lg-2">
+                        <div class="form-group">
+                            <label for="enabled" class="control-label">
+                                Enabled:
+                            </label>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" id="enabled" name="enabled" ng-model="vm.user.enabled" />
+                                    User is enabled
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-12 col-lg-6">
+                        <div class="form-group">
+                            <label class="control-label">
+                                Permissions:
+                            </label>
+                            <ol id="roles" name="roles" class="nya-bs-select" ng-model="vm.user.roleIds" multiple>
+                                <li nya-bs-option="role in vm.appSettings.roles" class="nya-bs-option" value="role.id">
+                                    <a>{{role.name}}<span class="fa fa-check check-mark"></span></a>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </fieldset>
+
+        <div class="form-group error-messages has-error alert alert-danger" ng-if="mainForm.$submitted && mainForm.$invalid">
+
+            <span class="help-block has-error"
+                  ng-if="mainForm.$submitted">
+                <span>
+                    Please correct the following errors:
+                </span>
+            </span>
+
+            <ul>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.firstName.$error">
+                    <span ng-message="required">
+                        First name is required.
+                    </span>
+                </li>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.lastName.$error">
+                    <span ng-message="required">
+                        Last name is required.
+                    </span>
+                </li>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.email.$error">
+                    <span ng-message="required">
+                        Email address is required.
+                    </span>
+                    <span ng-message="minlength">
+                        Email address is too short.
+                    </span>
+                    <span ng-message="email">
+                        Email address is not valid.
+                    </span>
+                </li>
+            </ul>
+
+        </div>
+
+        <fieldset ng-disabled="vm.loading">
+            <button type="submit" class="btn btn-success">Save<i class="fa fa-check"></i></button>
+        </fieldset>
+
+    </form>
+
+</div>

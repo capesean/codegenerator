@@ -1,0 +1,118 @@
+<div>
+
+    <form name="mainForm" ng-submit="vm.save()" novalidate>
+
+        <fieldset class="group" ng-disabled="vm.loading">
+
+            <legend>Code Replacement</legend>
+
+            <div class="row">
+
+                <div class="col-sm-12">
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.purpose.$invalid }">
+                            <label for="purpose" class="control-label">
+                                Purpose:
+                            </label>
+                            <input type="text" id="purpose" name="purpose" ng-model="vm.codeReplacement.purpose" maxlength="50" class="form-control" ng-required="true" />
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.codeType.$invalid }">
+                            <label for="codeType" class="control-label">
+                                Code Type:
+                            </label>
+                            <ol id="codeType" name="codeType" class="nya-bs-select form-control" ng-model="vm.codeReplacement.codeType" ng-required="true" data-live-search="true">
+                                <li nya-bs-option="codeType in vm.appSettings.codeType" class="nya-bs-option" value="codeType.id">
+                                    <a>{{codeType.label}}<span class="fa fa-check check-mark"></span></a>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4 col-md-3 col-lg-2">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.disabled.$invalid }">
+                            <label for="disabled" class="control-label">
+                                Disabled:
+                            </label>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" id="disabled" name="disabled" ng-model="vm.codeReplacement.disabled" />
+                                    Disabled
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-12">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.findCode.$invalid }">
+                            <label for="findCode" class="control-label">
+                                Find Code:
+                            </label>
+                            <textarea id="findCode" name="findCode" ng-model="vm.codeReplacement.findCode" class="form-control" required rows="10" ng-trim="false"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-12">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.replacementCode.$invalid }">
+                            <label for="replacementCode" class="control-label">
+                                Replacement Code:
+                            </label>
+                            <textarea id="replacementCode" name="replacementCode" ng-model="vm.codeReplacement.replacementCode" class="form-control" rows="10" ng-trim="false"></textarea>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </fieldset>
+
+        <div class="form-group error-messages has-error alert alert-danger" ng-if="mainForm.$submitted && mainForm.$invalid">
+
+            <span class="help-block has-error"
+                  ng-if="mainForm.$submitted">
+                <span>
+                    Please correct the following errors:
+                </span>
+            </span>
+
+            <ul>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.purpose.$error">
+                    <span ng-message="required">
+                        Purpose is required.
+                    </span>
+                </li>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.codeType.$error">
+                    <span ng-message="required">
+                        Code Type is required.
+                    </span>
+                </li>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.findCode.$error">
+                    <span ng-message="required">
+                        Find Code is required.
+                    </span>
+                </li>
+
+            </ul>
+
+        </div>
+
+        <fieldset ng-disabled="vm.loading">
+            <button type="submit" class="btn btn-success">Save<i class="fa fa-check"></i></button>
+            <button type="button" ng-if="!vm.isNew" class="btn btn-danger btn-delete" ng-click="vm.delete()">Delete<i class="fa fa-times"></i></button>
+        </fieldset>
+
+    </form>
+
+</div>

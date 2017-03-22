@@ -1,0 +1,22 @@
+﻿<h3 style="margin-top:0;">Hello, {{vm.identity.firstName}}</h3>
+
+<div ng-hide="vm.loading">
+
+    <a href="projects/{{vm.appSettings.newGuid}}" class="btn btn-primary">Add Project<i class="fa fa-plus-circle"></i></a>
+
+    <hr />
+
+    <table id="resultsList" class="table table-striped table-hover table-bordered row-navigation">
+        <thead>
+            <tr>
+                <th scope="col">Project</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="project in vm.projects" ng-click="vm.goToProject(project.projectId)">
+                <td>{{ project.name }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>

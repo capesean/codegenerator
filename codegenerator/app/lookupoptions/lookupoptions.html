@@ -1,0 +1,51 @@
+<div>
+
+    <form ng-submit="vm.runSearch(0)" novalidate>
+
+        <div class="row">
+
+        </div>
+
+        <fieldset ng-disabled="vm.loading">
+
+            <button type="submit" class="btn btn-success">Search<i class="fa fa-search"></i></button>
+
+        </fieldset>
+
+    </form>
+
+    <div ng-hide="vm.loading">
+
+        <hr />
+
+        <table class="table table-striped table-hover table-bordered row-navigation table-sm">
+            <thead>
+                <tr>
+                    <th scope="col">Lookup</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Friendly Name</th>
+                    <th scope="col">Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="lookupOption in vm.lookupOptions" ng-click="vm.goToLookupOption(lookupOption.lookup.project.projectId, lookupOption.lookup.lookupId, lookupOption.lookupOptionId)">
+                    <td>{{ lookupOption.lookup.name }}</td>
+                    <td>{{ lookupOption.name }}</td>
+                    <td>{{ lookupOption.friendlyName }}</td>
+                    <td>{{ lookupOption.value }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="row" ng-if="!vm.loading">
+            <div class="col-sm-7">
+                <app-pager headers="vm.headers" callback="vm.runSearch"></app-pager>
+            </div>
+            <div class="col-sm-5 text-right resultsInfo">
+                <app-pager-info headers="vm.headers"></app-pager-info>
+            </div>
+        </div>
+
+    </div>
+
+</div>

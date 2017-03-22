@@ -1,0 +1,340 @@
+<div>
+
+    <form name="mainForm" ng-submit="vm.save()" novalidate>
+
+        <fieldset class="group" ng-disabled="vm.loading">
+
+            <legend>Field</legend>
+
+            <div class="row">
+
+                <div class="col-sm-12">
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.name.$invalid }">
+                            <label for="name" class="control-label">
+                                Name:
+                            </label>
+                            <input type="text" id="name" name="name" ng-model="vm.field.name" maxlength="50" class="form-control" ng-required="true" />
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.label.$invalid }">
+                            <label for="label" class="control-label">
+                                Label:
+                            </label>
+                            <input type="text" id="label" name="label" ng-model="vm.field.label" maxlength="100" class="form-control" ng-required="true" />
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-12">
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.fieldType.$invalid }">
+                            <label for="fieldType" class="control-label">
+                                Field Type:
+                            </label>
+                            <ol id="fieldType" name="fieldType" class="nya-bs-select form-control" ng-model="vm.field.fieldType" ng-required="true" data-live-search="true">
+                                <li nya-bs-option="fieldType in vm.appSettings.fieldType" class="nya-bs-option" value="fieldType.id">
+                                    <a>{{fieldType.label}}<span class="fa fa-check check-mark"></span></a>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4 col-md-3 col-lg-2" ng-if="vm.showLength()">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.length.$invalid }">
+                            <label for="length" class="control-label">
+                                Length:
+                            </label>
+                            <input type="number" id="length" name="length" ng-model="vm.field.length" class="form-control" ng-required="true" />
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4 col-md-3 col-lg-2" ng-if="vm.showPrecisionAndScale()">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.precision.$invalid }">
+                            <label for="precision" class="control-label">
+                                Precision:
+                            </label>
+                            <input type="number" id="precision" name="precision" ng-model="vm.field.precision" class="form-control" ng-required="true" />
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4 col-md-3 col-lg-2" ng-if="vm.showPrecisionAndScale()">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.scale.$invalid }">
+                            <label for="scale" class="control-label">
+                                Scale:
+                            </label>
+                            <input type="number" id="scale" name="scale" ng-model="vm.field.scale" class="form-control" ng-required="true" />
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-12">
+
+                    <div class="col-sm-4 col-md-3 col-lg-2">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.keyField.$invalid }">
+                            <label for="keyField" class="control-label">
+                                Key Field:
+                            </label>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" id="keyField" name="keyField" ng-model="vm.field.keyField" />
+                                    Key Field
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4 col-md-3 col-lg-2" ng-if="!vm.field.keyField">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.isUnique.$invalid }">
+                            <label for="isUnique" class="control-label">
+                                Is Unique:
+                            </label>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" id="isUnique" name="isUnique" ng-model="vm.field.isUnique" />
+                                    Is Unique
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4 col-md-3 col-lg-2" ng-if="!vm.field.keyField">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.isNullable.$invalid }">
+                            <label for="isNullable" class="control-label">
+                                Is Nullable:
+                            </label>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" id="isNullable" name="isNullable" ng-model="vm.field.isNullable" />
+                                    Is Nullable
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-12">
+
+                    <div class="col-sm-4 col-md-3 col-lg-2">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.showInSearchResults.$invalid }">
+                            <label for="showInSearchResults" class="control-label">
+                                Show In Search Results:
+                            </label>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" id="showInSearchResults" name="showInSearchResults" ng-model="vm.field.showInSearchResults" />
+                                    Show In Search Results
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.searchType.$invalid }">
+                            <label for="searchType" class="control-label">
+                                Search Type:
+                            </label>
+                            <ol id="searchType" name="searchType" class="nya-bs-select form-control" ng-model="vm.field.searchType" ng-required="true" data-live-search="true">
+                                <li nya-bs-option="searchType in vm.appSettings.searchType" class="nya-bs-option" value="searchType.id">
+                                    <a>{{searchType.label}}<span class="fa fa-check check-mark"></span></a>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-12">
+
+                    <div class="col-sm-4 col-md-3 col-lg-2">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.sortPriority.$invalid }">
+                            <label for="sortPriority" class="control-label">
+                                Sort Priority:
+                            </label>
+                            <input type="number" id="sortPriority" name="sortPriority" ng-model="vm.field.sortPriority" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4 col-md-3 col-lg-2">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.sortDescending.$invalid }">
+                            <label for="sortDescending" class="control-label">
+                                Sort Descending:
+                            </label>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" id="sortDescending" name="sortDescending" ng-model="vm.field.sortDescending" />
+                                    Sort Descending
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4" ng-if="vm.field.fieldType === 18">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.lookupId.$invalid}">
+                            <label class="control-label">
+                                Lookup:
+                            </label>
+                            <ol id="lookupId" name="lookupId" class="nya-bs-select form-control" ng-model="vm.field.lookupId" data-live-search="true">
+                                <li nya-bs-option="lookup in vm.lookups" class="nya-bs-option" value="lookup.lookupId">
+                                    <a>{{lookup.name}}<span class="fa fa-check check-mark"></span></a>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.editPageType.$invalid }">
+                            <label for="editPageType" class="control-label">
+                                Edit Page Type:
+                            </label>
+                            <ol id="editPageType" name="editPageType" class="nya-bs-select form-control" ng-model="vm.field.editPageType" ng-required="true" data-live-search="true">
+                                <li nya-bs-option="editPageType in vm.appSettings.editPageType" class="nya-bs-option" value="editPageType.id">
+                                    <a>{{editPageType.label}}<span class="fa fa-check check-mark"></span></a>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.controllerInsertOverride.$invalid }">
+                            <label for="controllerInsertOverride" class="control-label">
+                                Controller Insert Override:
+                            </label>
+                            <input type="text" id="controllerInsertOverride" name="controllerInsertOverride" ng-model="vm.field.controllerInsertOverride" maxlength="50" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.controllerUpdateOverride.$invalid }">
+                            <label for="controllerUpdateOverride" class="control-label">
+                                Controller Update Override:
+                            </label>
+                            <input type="text" id="controllerUpdateOverride" name="controllerUpdateOverride" ng-model="vm.field.controllerUpdateOverride" maxlength="50" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.editPageDefault.$invalid }">
+                            <label for="editPageDefault" class="control-label">
+                                Edit Page Default:
+                            </label>
+                            <input type="text" id="editPageDefault" name="editPageDefault" ng-model="vm.field.editPageDefault" maxlength="50" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.calculatedFieldDefinition.$invalid }">
+                            <label for="calculatedFieldDefinition" class="control-label">
+                                Calculated Field Definition:
+                            </label>
+                            <input type="text" id="calculatedFieldDefinition" name="calculatedFieldDefinition" ng-model="vm.field.calculatedFieldDefinition" maxlength="500" class="form-control" />
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </fieldset>
+
+        <div class="form-group error-messages has-error alert alert-danger" ng-if="mainForm.$submitted && mainForm.$invalid">
+
+            <span class="help-block has-error"
+                  ng-if="mainForm.$submitted">
+                <span>
+                    Please correct the following errors:
+                </span>
+            </span>
+
+            <ul>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.name.$error">
+                    <span ng-message="required">
+                        Name is required.
+                    </span>
+                </li>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.label.$error">
+                    <span ng-message="required">
+                        Label is required.
+                    </span>
+                </li>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.fieldType.$error">
+                    <span ng-message="required">
+                        Field Type is required.
+                    </span>
+                </li>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.length.$error">
+                    <span ng-message="required">
+                        Length is required.
+                    </span>
+                </li>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.precision.$error">
+                    <span ng-message="required">
+                        Precision is required.
+                    </span>
+                </li>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.scale.$error">
+                    <span ng-message="required">
+                        Scale is required.
+                    </span>
+                </li>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.searchType.$error">
+                    <span ng-message="required">
+                        Search Type is required.
+                    </span>
+                </li>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.editPageType.$error">
+                    <span ng-message="required">
+                        Edit Page Type is required.
+                    </span>
+                </li>
+
+            </ul>
+
+        </div>
+
+        <fieldset ng-disabled="vm.loading">
+            <button type="submit" class="btn btn-success">Save<i class="fa fa-check"></i></button>
+            <button type="button" ng-if="!vm.isNew" class="btn btn-danger btn-delete" ng-click="vm.delete()">Delete<i class="fa fa-times"></i></button>
+        </fieldset>
+
+    </form>
+
+</div>

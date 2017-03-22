@@ -1,0 +1,48 @@
+<div>
+
+    <form ng-submit="vm.runSearch(0)" novalidate>
+
+        <div class="row">
+
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <input type="search" id="q" ng-model="vm.search.q" max="100" class="form-control" placeholder="Search code replacements" />
+                </div>
+            </div>
+
+        </div>
+
+        <fieldset ng-disabled="vm.loading">
+
+            <button type="submit" class="btn btn-success">Search<i class="fa fa-search"></i></button>
+
+        </fieldset>
+
+    </form>
+
+    <div ng-hide="vm.loading">
+
+        <hr />
+
+        <table class="table table-striped table-hover table-bordered row-navigation table-sm" ng-class="{ 'disabled': vm.loading }">
+            <thead>
+                <tr>
+                    <th scope="col">Entity</th>
+                    <th scope="col">Purpose</th>
+                    <th scope="col">Code Type</th>
+                    <th scope="col">Disabled</th>
+                </tr>
+            </thead>
+            <tbody ui-sortable="vm.sortOptions" ng-model="vm.codeReplacements">
+                <tr ng-repeat="codeReplacement in vm.codeReplacements" ng-click="vm.goToCodeReplacement(codeReplacement.entity.project.projectId, codeReplacement.entity.entityId, codeReplacement.codeReplacementId)">
+                    <td><div class="table-cell"><i class="fa fa-sort sortable-handle" ng-if="vm.codeReplacements.length > 1" ng-click="$event.stopPropagation();"></i></div><div class="table-cell">{{ codeReplacement.entity.name }}</div></td>
+                    <td>{{ codeReplacement.purpose }}</td>
+                    <td>{{ vm.appSettings.find(vm.appSettings.codeType, codeReplacement.codeType).label }}</td>
+                    <td>{{ codeReplacement.disabled ? "Yes" : "No" }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
+
+</div>

@@ -1,0 +1,341 @@
+﻿<div>
+
+    <form name="mainForm" ng-submit="vm.deploy()" novalidate>
+
+        <fieldset class="group" ng-disabled="vm.loading">
+
+            <legend>Code Deployment</legend>
+
+            <div class="col-sm-4 col-md-3 col-lg-2" ng-if="!vm.entity.preventModelDeployment">
+                <div class="form-group">
+                    <label for="model" class="control-label">
+                        Model:
+                    </label>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="model" name="model" ng-model="vm.deploymentOptions.model" />
+                            Model
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-4 col-md-3 col-lg-2">
+                <div class="form-group">
+                    <label for="dto" class="control-label">
+                        Enums:
+                    </label>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="enums" name="enums" ng-model="vm.deploymentOptions.enums" />
+                            Enums
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-4 col-md-3 col-lg-2" ng-if="!vm.entity.preventDTODeployment">
+                <div class="form-group">
+                    <label for="dto" class="control-label">
+                        DTO:
+                    </label>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="dto" name="dto" ng-model="vm.deploymentOptions.dto" />
+                            DTO
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-4 col-md-3 col-lg-2">
+                <div class="form-group">
+                    <label for="dto" class="control-label">
+                        Settings DTO:
+                    </label>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="settingsDTO" name="settingsDTO" ng-model="vm.deploymentOptions.settingsDTO" />
+                            Settings DTO
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-4 col-md-3 col-lg-2" ng-if="!vm.entity.preventDbContextDeployment">
+                <div class="form-group">
+                    <label for="dbContext" class="control-label">
+                        DbContext:
+                    </label>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="dbContext" name="dbContext" ng-model="vm.deploymentOptions.dbContext" />
+                            DbContext
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-4 col-md-3 col-lg-2" ng-if="!vm.entity.preventControllerDeployment">
+                <div class="form-group">
+                    <label for="controller" class="control-label">
+                        Controller:
+                    </label>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="controller" name="controller" ng-model="vm.deploymentOptions.controller" />
+                            Controller
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-4 col-md-3 col-lg-2" ng-if="!vm.entity.preventBundleConfigDeployment">
+                <div class="form-group">
+                    <label for="bundleConfig" class="control-label">
+                        Bundle Config:
+                    </label>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="bundleConfig" name="bundleConfig" ng-model="vm.deploymentOptions.bundleConfig" />
+                            Bundle Config
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-4 col-md-3 col-lg-2" ng-if="!vm.entity.preventAppRouterDeployment">
+                <div class="form-group">
+                    <label for="appRouter" class="control-label">
+                        App Router:
+                    </label>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="appRouter" name="appRouter" ng-model="vm.deploymentOptions.appRouter" />
+                            App Router
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-4 col-md-3 col-lg-2" ng-if="!vm.entity.preventApiResourceDeployment">
+                <div class="form-group">
+                    <label for="apiResource" class="control-label">
+                        Api Resource:
+                    </label>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="apiResource" name="apiResource" ng-model="vm.deploymentOptions.apiResource" />
+                            Api Resource
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-4 col-md-3 col-lg-2" ng-if="!vm.entity.preventListHtmlDeployment">
+                <div class="form-group">
+                    <label for="listHtml" class="control-label">
+                        List Html:
+                    </label>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="listHtml" name="listHtml" ng-model="vm.deploymentOptions.listHtml" />
+                            List Html
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-4 col-md-3 col-lg-2" ng-if="!vm.entity.preventListTypeScriptDeployment">
+                <div class="form-group">
+                    <label for="listTypeScript" class="control-label">
+                        List TypeScript:
+                    </label>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="listTypeScript" name="listTypeScript" ng-model="vm.deploymentOptions.listTypeScript" />
+                            List TypeScript
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-sm-4 col-md-3 col-lg-2" ng-if="!vm.entity.preventEditHtmlDeployment">
+                <div class="form-group">
+                    <label for="editHtml" class="control-label">
+                        Edit Html:
+                    </label>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="editHtml" name="editHtml" ng-model="vm.deploymentOptions.editHtml" />
+                            Edit Html
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-4 col-md-3 col-lg-2" ng-if="!vm.entity.preventEditTypeScriptDeployment">
+                <div class="form-group">
+                    <label for="editTypeScript" class="control-label">
+                        Edit TypeScript:
+                    </label>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="editTypeScript" name="editTypeScript" ng-model="vm.deploymentOptions.editTypeScript" />
+                            Edit TypeScript
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+        </fieldset>
+
+        <fieldset ng-disabled="vm.loading">
+            <button type="button" class="btn btn-primary" ng-click="vm.getCode()">Regenerate Code<i class="fa fa-refresh"></i></button>
+            <button type="submit" class="btn btn-success">Deploy<i class="fa fa-download"></i></button>
+            <button type="button" class="btn btn-default" ng-click="vm.toggle()">Toggle<i class="fa fa-check-square-o"></i></button>
+        </fieldset>
+
+    </form>
+
+    <hr />
+
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs" role="tablist">
+        <li role="presentation" xng-if="vm.entity.preventModelDeployment === ''" class="active"><a href="##modelTab" aria-controls="model" role="tab" data-toggle="tab">Model</a></li>
+        <li role="presentation"><a href="##enumsTab" aria-controls="enums" role="tab" data-toggle="tab">Enums</a></li>
+        <li role="presentation" xng-if="vm.entity.preventDTODeployment === ''"><a href="##dtoTab" aria-controls="dto" role="tab" data-toggle="tab">DTO</a></li>
+        <li role="presentation"><a href="##settingsDTOTab" aria-controls="settingsDTO" role="tab" data-toggle="tab">Settings DTO</a></li>
+        <li role="presentation" xng-if="vm.entity.preventDbContextDeployment === ''"><a href="##dbContextTab" aria-controls="dbContext" role="tab" data-toggle="tab">DbContext</a></li>
+        <li role="presentation" xng-if="vm.entity.preventControllerDeployment === ''"><a href="##controllerTab" aria-controls="controller" role="tab" data-toggle="tab">Controller</a></li>
+        <li role="presentation" xng-if="vm.entity.preventBundleConfigDeployment === ''"><a href="##bundleConfigTab" aria-controls="bundleConfig" role="tab" data-toggle="tab">Bundle Config</a></li>
+        <li role="presentation" xng-if="vm.entity.preventAppRouterDeployment === ''"><a href="##appRouterTab" aria-controls="appRouter" role="tab" data-toggle="tab">App Router</a></li>
+        <li role="presentation" xng-if="vm.entity.preventApiResourceDeployment === ''"><a href="##apiResourceTab" aria-controls="apiResource" role="tab" data-toggle="tab">Api Resource</a></li>
+        <li role="presentation" xng-if="vm.entity.preventListHtmlDeployment === ''"><a href="##listHtmlTab" aria-controls="listHtml" role="tab" data-toggle="tab">List Html</a></li>
+        <li role="presentation" xng-if="vm.entity.preventListTypeScriptDeployment === ''"><a href="##listTypeScriptTab" aria-controls="listTypeScript" role="tab" data-toggle="tab">List TypeScript</a></li>
+        <li role="presentation" xng-if="vm.entity.preventEditHtmlDeployment === ''"><a href="##editHtmlTab" aria-controls="editHtml" role="tab" data-toggle="tab">Edit Html</a></li>
+        <li role="presentation" xng-if="vm.entity.preventEditTypeScriptDeployment === ''"><a href="##editTypeScriptTab" aria-controls="editTypeScript" role="tab" data-toggle="tab">Edit TypeScript</a></li>
+    </ul>
+
+    <!-- Tab panes -->
+    <div class="tab-content">
+        <div role="tabpanel" class="tab-pane active" id="modelTab">
+
+            <br />
+
+            <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('model')">Copy<i class="fa fa-copy"></i></button></div></div>
+
+            <pre><code class="csharp" ng-bind-html="vm.escapedCode.model"></code></pre>
+
+        </div>
+        <div role="tabpanel" class="tab-pane" id="enumsTab">
+
+            <br />
+
+            <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('enumsTab')">Copy<i class="fa fa-copy"></i></button></div></div>
+
+            <pre><code class="csharp" ng-bind-html="vm.escapedCode.enums"></code></pre>
+
+        </div>
+        <div role="tabpanel" class="tab-pane" id="dtoTab">
+
+            <br />
+
+            <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('dto')">Copy<i class="fa fa-copy"></i></button></div></div>
+
+            <pre><code class="csharp" ng-bind-html="vm.escapedCode.dto"></code></pre>
+
+        </div>
+        <div role="tabpanel" class="tab-pane" id="settingsDTOTab">
+
+            <br />
+
+            <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('settingsDTO')">Copy<i class="fa fa-copy"></i></button></div></div>
+
+            <pre><code class="csharp" ng-bind-html="vm.escapedCode.settingsDTO"></code></pre>
+
+        </div>
+        <div role="tabpanel" class="tab-pane" id="dbContextTab">
+
+            <br />
+
+            <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('dbContext')">Copy<i class="fa fa-copy"></i></button></div></div>
+
+            <pre><code class="csharp" ng-bind-html="vm.escapedCode.dbContext"></code></pre>
+
+        </div>
+        <div role="tabpanel" class="tab-pane" id="bundleConfigTab">
+
+            <br />
+
+            <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('bundleConfig')">Copy<i class="fa fa-copy"></i></button></div></div>
+
+            <pre><code class="csharp" ng-bind-html="vm.escapedCode.bundleConfig"></code></pre>
+
+        </div>
+        <div role="tabpanel" class="tab-pane" id="appRouterTab">
+
+            <br />
+
+            <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('appRouter')">Copy<i class="fa fa-copy"></i></button></div></div>
+
+            <pre><code class="typescript" ng-bind-html="vm.escapedCode.appRouter"></code></pre>
+
+        </div>
+        <div role="tabpanel" class="tab-pane" id="apiResourceTab">
+
+            <br />
+
+            <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('apiResource')">Copy<i class="fa fa-copy"></i></button></div></div>
+
+            <pre><code class="typescript" ng-bind-html="vm.escapedCode.apiResource"></code></pre>
+
+        </div>
+        <div role="tabpanel" class="tab-pane" id="controllerTab">
+
+            <br />
+
+            <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('controller')">Copy<i class="fa fa-copy"></i></button></div></div>
+
+            <pre><code class="csharp" ng-bind-html="vm.escapedCode.controller"></code></pre>
+
+        </div>
+        <div role="tabpanel" class="tab-pane" id="listHtmlTab">
+
+            <br />
+
+            <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('listHtml')">Copy<i class="fa fa-copy"></i></button></div></div>
+
+            <pre><code class="html" ng-bind-html="vm.escapedCode.listHtml"></code></pre>
+
+        </div>
+        <div role="tabpanel" class="tab-pane" id="listTypeScriptTab">
+
+            <br />
+
+            <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('listTypeScript')">Copy<i class="fa fa-copy"></i></button></div></div>
+
+            <pre><code class="typescript" ng-bind-html="vm.escapedCode.listTypeScript"></code></pre>
+
+        </div>
+        <div role="tabpanel" class="tab-pane" id="editHtmlTab">
+
+            <br />
+
+            <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('editHtml')">Copy<i class="fa fa-copy"></i></button></div></div>
+
+            <pre><code class="html" ng-bind-html="vm.escapedCode.editHtml"></code></pre>
+
+        </div>
+        <div role="tabpanel" class="tab-pane" id="editTypeScriptTab">
+
+            <br />
+
+            <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('editTypeScript')">Copy<i class="fa fa-copy"></i></button></div></div>
+
+            <pre><code class="typescript" ng-bind-html="vm.escapedCode.editTypeScript"></code></pre>
+
+        </div>
+    </div>
+
+</div>

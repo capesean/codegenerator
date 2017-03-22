@@ -1,0 +1,59 @@
+﻿<div>
+    <form name="mainForm" ng-submit="vm.save()" novalidate>
+
+        <fieldset ng-disabled="vm.loading">
+
+            <div class="row">
+
+                <div class="col-sm-12">
+                    <fieldset class="group">
+
+                        <legend>Settings</legend>
+
+                        <div class="col-sm-12 col-md-6">
+                            <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.xxx.$invalid}">
+                                <label for="xxx" class="control-label">
+                                    xxx:
+                                </label>
+                                <textarea id="xxx" name="xxx" ng-model="vm.settings.xxx" class="form-control" rows="4"></textarea>
+                            </div>
+                        </div>
+
+                    </fieldset>
+                </div>
+
+            </div>
+
+        </fieldset>
+
+        <div class="form-group error-messages has-error alert alert-danger" ng-if="mainForm.$submitted && mainForm.$invalid">
+
+            <span class="help-block has-error"
+                  ng-if="mainForm.$submitted">
+                <span>
+                    Please correct the following errors:
+                </span>
+            </span>
+
+            <ul>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.xxx.$error">
+                    <span ng-message="required">
+                        xxx is required.
+                    </span>
+                </li>
+
+            </ul>
+
+        </div>
+
+        <fieldset ng-disabled="vm.loading">
+            <button type="submit" class="btn btn-success">Save<i class="fa fa-check"></i></button>
+        </fieldset>
+
+    </form>
+
+
+</div>

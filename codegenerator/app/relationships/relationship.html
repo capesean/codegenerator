@@ -1,0 +1,246 @@
+<div>
+
+    <form name="mainForm" ng-submit="vm.save()" novalidate>
+
+        <fieldset class="group" ng-disabled="vm.loading">
+
+            <legend>Relationship</legend>
+
+            <div class="row">
+
+                <div class="col-sm-12">
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group">
+                            <label for="name" class="control-label">
+                                Parent Entity:
+                            </label>
+                            <input type="text" ng-model="vm.entity.name" class="form-control" disabled="disabled" />
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.childEntityId.$invalid}">
+                            <label class="control-label">
+                                Child Entity:
+                            </label>
+                            <ol id="childEntityId" name="childEntityId" class="nya-bs-select" ng-model="vm.relationship.childEntityId" ng-required="true" disabled="{{!vm.isNew}}">
+                                <li nya-bs-option="entity in vm.entities" class="nya-bs-option" value="entity.entityId">
+                                    <a>{{entity.friendlyName}}<span class="fa fa-check check-mark"></span></a>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.collectionName.$invalid }">
+                            <label for="collectionName" class="control-label">
+                                Name of Collection on Parent:
+                            </label>
+                            <input type="text" id="collectionName" name="collectionName" ng-model="vm.relationship.collectionName" maxlength="50" class="form-control" ng-required="true" />
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.collectionFriendlyName.$invalid }">
+                            <label for="collectionFriendlyName" class="control-label">
+                                Collection Friendly Name:
+                            </label>
+                            <input type="text" id="collectionFriendlyName" name="collectionFriendlyName" ng-model="vm.relationship.collectionFriendlyName" maxlength="50" class="form-control" ng-required="true" />
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.parentName.$invalid }">
+                            <label for="parentName" class="control-label">
+                                Name of Parent on Child:
+                            </label>
+                            <input type="text" id="parentName" name="parentName" ng-model="vm.relationship.parentName" maxlength="50" class="form-control" ng-required="true" />
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.parentFriendlyName.$invalid }">
+                            <label for="parentFriendlyName" class="control-label">
+                                Parent Friendly Name:
+                            </label>
+                            <input type="text" id="parentFriendlyName" name="parentFriendlyName" ng-model="vm.relationship.parentFriendlyName" maxlength="50" class="form-control" ng-required="true" />
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.parentFieldId.$invalid}">
+                            <label class="control-label">
+                                Parent Field:
+                            </label>
+                            <ol id="parentFieldId" name="parentFieldId" class="nya-bs-select form-control" ng-model="vm.relationship.parentFieldId" ng-required="true" data-live-search="true">
+                                <li nya-bs-option="field in vm.fields" class="nya-bs-option" value="field.fieldId">
+                                    <a>{{field.name}}<span class="fa fa-check check-mark"></span></a>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4 col-md-3 col-lg-2">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.displayListOnParent.$invalid }">
+                            <label for="displayListOnParent" class="control-label">
+                                Display List On Parent:
+                            </label>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" id="displayListOnParent" name="displayListOnParent" ng-model="vm.relationship.displayListOnParent" />
+                                    Display List On Parent
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4 col-md-3 col-lg-2">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.hierarchy.$invalid }">
+                            <label for="hierarchy" class="control-label">
+                                Hierarchy:
+                            </label>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" id="hierarchy" name="hierarchy" ng-model="vm.relationship.hierarchy" />
+                                    Hierarchy
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.relationshipAncestorLimit.$invalid }">
+                            <label for="relationshipAncestorLimit" class="control-label">
+                                Ancestor Limit:
+                            </label>
+                            <ol id="relationshipAncestorLimit" name="relationshipAncestorLimit" class="nya-bs-select form-control" ng-model="vm.relationship.relationshipAncestorLimit" ng-required="true" data-live-search="true">
+                                <li nya-bs-option="relationshipAncestorLimit in vm.appSettings.relationshipAncestorLimits" class="nya-bs-option" value="relationshipAncestorLimit.id">
+                                    <a>{{relationshipAncestorLimit.label}}<span class="fa fa-check check-mark"></span></a>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </fieldset>
+
+        <div class="form-group error-messages has-error alert alert-danger" ng-if="mainForm.$submitted && mainForm.$invalid">
+
+            <span class="help-block has-error"
+                  ng-if="mainForm.$submitted">
+                <span>
+                    Please correct the following errors:
+                </span>
+            </span>
+
+            <ul>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.childEntityId.$error">
+                    <span ng-message="required">
+                        Child Entity is required.
+                    </span>
+                </li>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.collectionName.$error">
+                    <span ng-message="required">
+                        Name of Collection on Parent is required.
+                    </span>
+                </li>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.collectionFriendlyName.$error">
+                    <span ng-message="required">
+                        Collection Friendly Name is required.
+                    </span>
+                </li>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.parentName.$error">
+                    <span ng-message="required">
+                        Name of Parent on Child is required.
+                    </span>
+                </li>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.parentFriendlyName.$error">
+                    <span ng-message="required">
+                        Parent Friendly Name is required.
+                    </span>
+                </li>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.parentFieldId.$error">
+                    <span ng-message="required">
+                        Parent Field is required.
+                    </span>
+                </li>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.relationshipAncestorLimit.$error">
+                    <span ng-message="required">
+                        Ancestor Limit is required.
+                    </span>
+                </li>
+
+            </ul>
+
+        </div>
+
+        <fieldset ng-disabled="vm.loading">
+            <button type="submit" class="btn btn-success">Save<i class="fa fa-check"></i></button>
+            <button type="button" ng-if="!vm.isNew" class="btn btn-danger btn-delete" ng-click="vm.delete()">Delete<i class="fa fa-times"></i></button>
+        </fieldset>
+
+    </form>
+
+    <div ng-show="!vm.isNew">
+
+        <hr />
+
+        <h2>Relationship Fields</h2>
+
+        <fieldset ng-disabled="vm.loading">
+            <a class="btn btn-primary" href="projects/{{vm.project.projectId}}/entities/{{vm.entity.entityId}}/relationships/{{vm.relationship.relationshipId}}/relationshipfields/{{vm.appSettings.newGuid}}">Add Relationship Field<i class="fa fa-plus-circle"></i></a><br />
+            <br />
+        </fieldset>
+
+        <table class="table table-striped table-hover table-bordered row-navigation table-sm" ng-class="{ 'disabled': vm.loading }">
+            <thead>
+                <tr>
+                    <th scope="col">Parent Field</th>
+                    <th scope="col">Child Field</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="relationshipField in vm.relationshipFields" ng-click="vm.goToRelationshipField(relationshipField.relationship.entity.project.projectId, relationshipField.relationship.entity.entityId, relationshipField.relationship.relationshipId, relationshipField.relationshipFieldId)">
+                    <td>{{ relationshipField.parentField.label }} ({{ relationshipField.parentField.name }})</td>
+                    <td>{{ relationshipField.childField.label }} ({{ relationshipField.childField.name }})</td>
+                </tr>
+            </tbody>
+        </table>
+
+
+        <div class="row" ng-class="{ 'disabled': vm.loading }">
+            <div class="col-sm-7">
+               <app-pager headers="vm.relationshipFieldsHeaders" callback="vm.loadRelationshipFields"></app-pager>
+            </div>
+            <div class="col-sm-5 text-right resultsInfo">
+               <app-pager-info headers="vm.relationshipFieldsHeaders"></app-pager-info>
+            </div>
+        </div>
+
+    </div>
+
+</div>

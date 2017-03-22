@@ -1,0 +1,53 @@
+<div>
+
+    <form ng-submit="vm.runSearch(0)" novalidate>
+
+        <div class="row">
+
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <input type="search" id="q" ng-model="vm.search.q" max="100" class="form-control" placeholder="Search entities" />
+                </div>
+            </div>
+
+        </div>
+
+        <fieldset ng-disabled="vm.loading">
+
+            <button type="submit" class="btn btn-success">Search<i class="fa fa-search"></i></button>
+
+        </fieldset>
+
+    </form>
+
+    <div ng-hide="vm.loading">
+
+        <hr />
+
+        <table class="table table-striped table-hover table-bordered row-navigation table-sm">
+            <thead>
+                <tr>
+                    <th scope="col">Project</th>
+                    <th scope="col">Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="entity in vm.entities" ng-click="vm.goToEntity(entity.project.projectId, entity.entityId)">
+                    <td>{{ entity.project.name }}</td>
+                    <td>{{ entity.name }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="row" ng-if="!vm.loading">
+            <div class="col-sm-7">
+                <app-pager headers="vm.headers" callback="vm.runSearch"></app-pager>
+            </div>
+            <div class="col-sm-5 text-right resultsInfo">
+                <app-pager-info headers="vm.headers"></app-pager-info>
+            </div>
+        </div>
+
+    </div>
+
+</div>

@@ -1,0 +1,403 @@
+<div>
+
+    <form name="mainForm" ng-submit="vm.save()" novalidate>
+
+        <fieldset class="group" ng-disabled="vm.loading">
+
+            <legend>Entity</legend>
+
+            <div class="row">
+
+                <div class="col-sm-12">
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.name.$invalid }">
+                            <label for="name" class="control-label">
+                                Name:
+                            </label>
+                            <input type="text" id="name" name="name" ng-model="vm.entity.name" maxlength="50" class="form-control" ng-required="true" />
+                        </div>
+                    </div>
+
+                    <div ng-class="{ 'hide':  !vm.isNew && !vm.showMore}">
+
+                        <div class="col-sm-6 col-md-4">
+                            <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.pluralName.$invalid }">
+                                <label for="pluralName" class="control-label">
+                                    Plural Name:
+                                </label>
+                                <input type="text" id="pluralName" name="pluralName" ng-model="vm.entity.pluralName" maxlength="50" class="form-control" ng-required="true" />
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4">
+                            <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.friendlyName.$invalid }">
+                                <label for="friendlyName" class="control-label">
+                                    Friendly Name:
+                                </label>
+                                <input type="text" id="friendlyName" name="friendlyName" ng-model="vm.entity.friendlyName" maxlength="50" class="form-control" ng-required="true" />
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4">
+                            <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.pluralFriendlyName.$invalid }">
+                                <label for="pluralFriendlyName" class="control-label">
+                                    Plural Friendly Name:
+                                </label>
+                                <input type="text" id="pluralFriendlyName" name="pluralFriendlyName" ng-model="vm.entity.pluralFriendlyName" maxlength="50" class="form-control" ng-required="true" />
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4">
+                            <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.entityType.$invalid }">
+                                <label for="entityType" class="control-label">
+                                    Entity Type:
+                                </label>
+                                <ol id="entityType" name="entityType" class="nya-bs-select" ng-model="vm.entity.entityType" ng-required="true" data-live-search="true">
+                                    <li nya-bs-option="entityType in vm.appSettings.entityType" class="nya-bs-option" value="entityType.id">
+                                        <a>{{entityType.label}}<span class="fa fa-check check-mark"></span></a>
+                                    </li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4">
+                            <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.authorizationType.$invalid }">
+                                <label for="entityType" class="control-label">
+                                    Authorization Type:
+                                </label>
+                                <ol id="entityType" name="authorizationType" class="nya-bs-select" ng-model="vm.entity.authorizationType" ng-required="true" data-live-search="true">
+                                    <li nya-bs-option="authorizationType in vm.appSettings.authorizationType" class="nya-bs-option" value="authorizationType.id">
+                                        <a>{{authorizationType.label}}<span class="fa fa-check check-mark"></span></a>
+                                    </li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-4 col-md-3 col-lg-2">
+                            <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.partialEntityClass.$invalid }">
+                                <label for="partialEntityClass" class="control-label">
+                                    Partial Entity Class:
+                                </label>
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" id="partialEntityClass" name="partialEntityClass" ng-model="vm.entity.partialEntityClass" />
+                                        Partial Entity Class
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-4 col-md-3 col-lg-2">
+                            <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.partialControllerClass.$invalid }">
+                                <label for="partialControllerClass" class="control-label">
+                                    Partial Controller Class:
+                                </label>
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" id="partialControllerClass" name="partialControllerClass" ng-model="vm.entity.partialControllerClass" />
+                                        Partial Controller Class
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4">
+                            <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.breadcrumb.$invalid }">
+                                <label for="breadcrumb" class="control-label">
+                                    Breadcrumb:
+                                </label>
+                                <input type="text" id="breadcrumb" name="breadcrumb" ng-model="vm.entity.breadcrumb" maxlength="250" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4">
+                            <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.preventModelDeployment.$invalid }">
+                                <label for="preventModelDeployment" class="control-label">
+                                    Prevent Model Deployment:
+                                </label>
+                                <input type="text" id="preventModelDeployment" name="preventModelDeployment" ng-model="vm.entity.preventModelDeployment" maxlength="100" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4">
+                            <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.preventDTODeployment.$invalid }">
+                                <label for="preventDTODeployment" class="control-label">
+                                    Prevent DTO Deployment:
+                                </label>
+                                <input type="text" id="preventDTODeployment" name="preventDTODeployment" ng-model="vm.entity.preventDTODeployment" maxlength="100" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4">
+                            <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.preventDbContextDeployment.$invalid }">
+                                <label for="preventDbContextDeployment" class="control-label">
+                                    Prevent DbContext Deployment:
+                                </label>
+                                <input type="text" id="preventDbContextDeployment" name="preventDbContextDeployment" ng-model="vm.entity.preventDbContextDeployment" maxlength="100" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4">
+                            <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.preventControllerDeployment.$invalid }">
+                                <label for="preventControllerDeployment" class="control-label">
+                                    Prevent Controller Deployment:
+                                </label>
+                                <input type="text" id="preventControllerDeployment" name="preventControllerDeployment" ng-model="vm.entity.preventControllerDeployment" maxlength="100" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4">
+                            <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.preventBundleConfigDeployment.$invalid }">
+                                <label for="preventBundleConfigDeployment" class="control-label">
+                                    Prevent BundleConfig Deployment:
+                                </label>
+                                <input type="text" id="preventBundleConfigDeployment" name="preventBundleConfigDeployment" ng-model="vm.entity.preventBundleConfigDeployment" maxlength="100" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4">
+                            <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.preventAppRouterDeployment.$invalid }">
+                                <label for="preventAppRouterDeployment" class="control-label">
+                                    Prevent AppRouter Deployment:
+                                </label>
+                                <input type="text" id="preventAppRouterDeployment" name="preventAppRouterDeployment" ng-model="vm.entity.preventAppRouterDeployment" maxlength="100" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4">
+                            <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.preventApiResourceDeployment.$invalid }">
+                                <label for="preventApiResourceDeployment" class="control-label">
+                                    Prevent ApiResource Deployment:
+                                </label>
+                                <input type="text" id="preventApiResourceDeployment" name="preventApiResourceDeployment" ng-model="vm.entity.preventApiResourceDeployment" maxlength="100" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4">
+                            <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.preventListHtmlDeployment.$invalid }">
+                                <label for="preventListHtmlDeployment" class="control-label">
+                                    Prevent ListHtml Deployment:
+                                </label>
+                                <input type="text" id="preventListHtmlDeployment" name="preventListHtmlDeployment" ng-model="vm.entity.preventListHtmlDeployment" maxlength="100" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4">
+                            <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.preventListTypeScriptDeployment.$invalid }">
+                                <label for="preventListTypeScriptDeployment" class="control-label">
+                                    Prevent ListTypeScript Deployment:
+                                </label>
+                                <input type="text" id="preventListTypeScriptDeployment" name="preventListTypeScriptDeployment" ng-model="vm.entity.preventListTypeScriptDeployment" maxlength="100" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4">
+                            <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.preventEditHtmlDeployment.$invalid }">
+                                <label for="preventEditHtmlDeployment" class="control-label">
+                                    Prevent EditHtml Deployment:
+                                </label>
+                                <input type="text" id="preventEditHtmlDeployment" name="preventEditHtmlDeployment" ng-model="vm.entity.preventEditHtmlDeployment" maxlength="100" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4">
+                            <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.preventEditTypeScriptDeployment.$invalid }">
+                                <label for="preventEditTypeScriptDeployment" class="control-label">
+                                    Prevent EditTypeScript Deployment:
+                                </label>
+                                <input type="text" id="preventEditTypeScriptDeployment" name="preventEditTypeScriptDeployment" ng-model="vm.entity.preventEditTypeScriptDeployment" maxlength="100" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="col-sm-4 col-md-3 col-lg-2">
+                            <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.exclude.$invalid }">
+                                <label for="exclude" class="control-label">
+                                    Exclude:
+                                </label>
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" id="exclude" name="exclude" ng-model="vm.entity.exclude" />
+                                        Exclude
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+        </fieldset>
+
+        <div class="form-group error-messages has-error alert alert-danger" ng-if="mainForm.$submitted && mainForm.$invalid">
+
+            <span class="help-block has-error"
+                  ng-if="mainForm.$submitted">
+                <span>
+                    Please correct the following errors:
+                </span>
+            </span>
+
+            <ul>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.name.$error">
+                    <span ng-message="required">
+                        Name is required.
+                    </span>
+                </li>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.pluralName.$error">
+                    <span ng-message="required">
+                        Plural Name is required.
+                    </span>
+                </li>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.friendlyName.$error">
+                    <span ng-message="required">
+                        Friendly Name is required.
+                    </span>
+                </li>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.pluralFriendlyName.$error">
+                    <span ng-message="required">
+                        Plural Friendly Name is required.
+                    </span>
+                </li>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.entityType.$error">
+                    <span ng-message="required">
+                        Entity Type is required.
+                    </span>
+                </li>
+
+            </ul>
+
+        </div>
+
+        <fieldset ng-disabled="vm.loading">
+            <button type="submit" class="btn btn-success">Save<i class="fa fa-check"></i></button>
+            <button type="button" ng-if="!vm.isNew" class="btn btn-danger btn-delete" ng-click="vm.delete()">Delete<i class="fa fa-times"></i></button>
+            <a ng-if="!vm.isNew" class="btn btn-primary" href="projects/{{vm.project.projectId}}/entities/{{vm.entity.entityId}}/code">Code<i class="fa fa-code"></i></a>
+            <button type="button" ng-if="!vm.isNew" class="btn btn-default" ng-click="vm.showMore = !vm.showMore"><span ng-if="!vm.showMore">More<i class="fa fa-chevron-right"></i></span><span ng-if="vm.showMore">Less<i class="fa fa-chevron-left"></i></span></button>
+        </fieldset>
+
+    </form>
+
+    <div ng-show="!vm.isNew">
+
+        <hr />
+
+        <h2>Fields</h2>
+
+        <fieldset ng-disabled="vm.loading">
+            <a class="btn btn-primary" href="projects/{{vm.project.projectId}}/entities/{{vm.entity.entityId}}/fields/{{vm.appSettings.newGuid}}">Add Field<i class="fa fa-plus-circle"></i></a><br />
+            <br />
+        </fieldset>
+
+        <table class="table table-striped table-hover table-bordered row-navigation ">
+            <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Key Field</th>
+                    <th scope="col">Show In Search Results</th>
+                    <th scope="col">Search Type</th>
+                </tr>
+            </thead>
+            <tbody ui-sortable="vm.fieldsSortOptions" ng-model="vm.fields">
+                <tr ng-repeat="field in vm.fields" ng-click="vm.goToField(field.entity.project.projectId, field.entity.entityId, field.fieldId)">
+                    <td><i class="fa fa-bars sortable-handle"></i>{{ field.name }}</td>
+                    <td>{{ field.keyField ? "Yes" : "No" }}</td>
+                    <td>{{ field.showInSearchResults ? "Yes" : "No" }}</td>
+                    <td>{{ vm.appSettings.find(vm.appSettings.searchType, field.searchType).label }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <hr />
+
+        <h2>Relationships as Parent</h2>
+
+        <fieldset ng-disabled="vm.loading">
+            <a class="btn btn-primary" href="projects/{{vm.project.projectId}}/entities/{{vm.entity.entityId}}/relationships/{{vm.appSettings.newGuid}}">Add Relationship<i class="fa fa-plus-circle"></i></a><br />
+            <br />
+        </fieldset>
+
+        <table class="table table-striped table-hover table-bordered row-navigation ">
+            <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Parent Entity</th>
+                    <th scope="col">Child Entity</th>
+                </tr>
+            </thead>
+            <tbody ui-sortable="vm.relationshipsAsParentSortOptions" ng-model="vm.relationshipsAsParent">
+                <tr ng-repeat="relationship in vm.relationshipsAsParent" ng-click="vm.goToRelationship(relationship.parentEntity.entityId, relationship.relationshipId)">
+                    <td><i class="fa fa-bars sortable-handle"></i>{{ relationship.collectionName }}</td>
+                    <td>{{ relationship.parentEntity.friendlyName }}</td>
+                    <td>{{ relationship.childEntity.friendlyName }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <hr />
+
+        <h2>Relationships as Child</h2>
+
+        <table class="table table-striped table-hover table-bordered row-navigation ">
+            <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Parent Entity</th>
+                    <th scope="col">Child Entity</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="relationship in vm.relationshipsAsChild" ng-click="vm.goToRelationship(relationship.parentEntity.entityId, relationship.relationshipId)">
+                    <td>{{ relationship.collectionName }}</td>
+                    <td>{{ relationship.parentEntity.friendlyName }}</td>
+                    <td>{{ relationship.childEntity.friendlyName }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <hr />
+
+        <h2>Code Replacements</h2>
+
+        <fieldset ng-disabled="vm.loading">
+            <a class="btn btn-primary" href="projects/{{vm.project.projectId}}/entities/{{vm.entity.entityId}}/codereplacements/{{vm.appSettings.newGuid}}">Add Code Replacement<i class="fa fa-plus-circle"></i></a><br />
+            <br />
+        </fieldset>
+
+        <table class="table table-striped table-hover table-bordered row-navigation ">
+            <thead>
+                <tr>
+                    <th scope="col">Purpose</th>
+                    <th scope="col">Code Type</th>
+                    <th scope="col">Disabled</th>
+                </tr>
+            </thead>
+            <tbody ui-sortable="vm.codeReplacementsSortOptions" ng-model="vm.codeReplacements">
+                <tr ng-repeat="codeReplacement in vm.codeReplacements" ng-click="vm.goToCodeReplacement(codeReplacement.entity.project.projectId, codeReplacement.entity.entityId, codeReplacement.codeReplacementId)">
+                    <td><i class="fa fa-sort sortable-handle" ng-click="$event.stopPropagation();"></i>{{ codeReplacement.purpose }}</td>
+                    <td>{{ vm.appSettings.find(vm.appSettings.codeType, codeReplacement.codeType).label }}</td>
+                    <td>{{ codeReplacement.disabled ? "Yes" : "No" }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
+
+</div>

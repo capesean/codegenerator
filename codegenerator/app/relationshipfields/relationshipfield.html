@@ -1,0 +1,105 @@
+<div>
+    <form name="mainForm" ng-submit="vm.save()" novalidate>
+
+        <fieldset class="group" ng-disabled="vm.loading">
+
+            <legend>Relationship Fields</legend>
+
+            <div class="row">
+
+                <div class="col-sm-12">
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group">
+                            <label class="control-label">
+                                Parent Entity:
+                            </label>
+                            <input type="text" ng-model="vm.entity.friendlyName" class="form-control" disabled="disabled" />
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.parentFieldId.$invalid}">
+                            <label class="control-label">
+                                Parent Field:
+                            </label>
+                            <ol id="parentFieldId" name="parentFieldId" class="nya-bs-select" ng-model="vm.relationshipField.parentFieldId" ng-required="true">
+                                <li nya-bs-option="field in vm.parentFields" class="nya-bs-option" value="field.fieldId">
+                                    <a>{{field.label}} ({{field.name}})<span class="fa fa-check check-mark"></span></a>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="row">
+
+                <div class="col-sm-12">
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group">
+                            <label class="control-label">
+                                Child Entity:
+                            </label>
+                            <input type="text" ng-model="vm.childEntity.friendlyName" class="form-control" disabled="disabled" />
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.childFieldId.$invalid}">
+                            <label class="control-label">
+                                Child Field:
+                            </label>
+                            <ol id="childFieldId" name="childFieldId" class="nya-bs-select" ng-model="vm.relationshipField.childFieldId" ng-required="true">
+                                <li nya-bs-option="field in vm.childFields" class="nya-bs-option" value="field.fieldId">
+                                    <a>{{field.label}} ({{field.name}})<span class="fa fa-check check-mark"></span></a>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </fieldset>
+
+        <div class="form-group error-messages has-error alert alert-danger" ng-if="mainForm.$submitted && mainForm.$invalid">
+
+            <span class="help-block has-error"
+                  ng-if="mainForm.$submitted">
+                <span>
+                    Please correct the following errors:
+                </span>
+            </span>
+
+            <ul>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.parentFieldId.$error">
+                    <span ng-message="required">
+                        Parent Field is required.
+                    </span>
+                </li>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.childFieldId.$error">
+                    <span ng-message="required">
+                        Child Field is required.
+                    </span>
+                </li>
+
+            </ul>
+
+        </div>
+
+        <fieldset ng-disabled="vm.loading">
+            <button type="submit" class="btn btn-success">Save<i class="fa fa-check"></i></button>
+            <button type="button" ng-if="!vm.isNew" class="btn btn-danger btn-delete" ng-click="vm.delete()">Delete<i class="fa fa-times"></i></button>
+        </fieldset>
+
+    </form>
+</div>

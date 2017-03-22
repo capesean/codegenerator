@@ -1,0 +1,40 @@
+﻿@using WEB.Models
+@model ResetViewModel
+
+@using (Html.BeginForm("Reset", "Account", new { }, FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
+{
+    @Html.AntiForgeryToken()
+
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+    <div>
+        @Html.ValidationMessageFor(m => m.Email, string.Empty, new { @class = "text-danger" })
+    </div>
+
+    <div class="form-group">
+        <div class="col-sm-12">
+            @Html.TextBoxFor(m => m.Email, new { @class = "form-control", placeholder = "Email address", maxlength = 100 })
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-sm-12">
+            @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "New Password", maxlength = 100 })
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-sm-12">
+            @Html.PasswordFor(m => m.ConfirmPassword, new { @class = "form-control", placeholder = "Confirm Password", maxlength = 100 })
+        </div>
+    </div>
+
+    @Html.HiddenFor(m => m.Token)
+
+    <input id="loginButton" type="submit" class="btn btn-primary btn-block" value="Set Password" />
+
+    <p>
+        <a href="login">return to login</a>
+    </p>
+
+}

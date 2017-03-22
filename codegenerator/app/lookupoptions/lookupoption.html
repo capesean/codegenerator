@@ -1,0 +1,100 @@
+<div>
+
+    <form name="mainForm" ng-submit="vm.save()" novalidate>
+
+        <fieldset class="group" ng-disabled="vm.loading">
+
+            <legend>Lookup Option</legend>
+
+            <div class="row">
+
+                <div class="col-sm-12">
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.name.$invalid }">
+                            <label for="name" class="control-label">
+                                Name:
+                            </label>
+                            <input type="text" id="name" name="name" ng-model="vm.lookupOption.name" maxlength="50" class="form-control" ng-required="true" />
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.friendlyName.$invalid }">
+                            <label for="friendlyName" class="control-label">
+                                Friendly Name:
+                            </label>
+                            <input type="text" id="friendlyName" name="friendlyName" ng-model="vm.lookupOption.friendlyName" maxlength="50" class="form-control" ng-required="true" />
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4 col-md-3 col-lg-2">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.value.$invalid }">
+                            <label for="value" class="control-label">
+                                Value:
+                            </label>
+                            <input type="number" id="value" name="value" ng-model="vm.lookupOption.value" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4 col-md-3 col-lg-2">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.sortOrder.$invalid }">
+                            <label for="sortOrder" class="control-label">
+                                Sort Order:
+                            </label>
+                            <input type="number" id="sortOrder" name="sortOrder" ng-model="vm.lookupOption.sortOrder" class="form-control" ng-required="true" />
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </fieldset>
+
+        <div class="form-group error-messages has-error alert alert-danger" ng-if="mainForm.$submitted && mainForm.$invalid">
+
+            <span class="help-block has-error"
+                  ng-if="mainForm.$submitted">
+                <span>
+                    Please correct the following errors:
+                </span>
+            </span>
+
+            <ul>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.name.$error">
+                    <span ng-message="required">
+                        Name is required.
+                    </span>
+                </li>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.friendlyName.$error">
+                    <span ng-message="required">
+                        Friendly Name is required.
+                    </span>
+                </li>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.sortOrder.$error">
+                    <span ng-message="required">
+                        Sort Order is required.
+                    </span>
+                </li>
+
+            </ul>
+
+        </div>
+
+        <fieldset ng-disabled="vm.loading">
+            <button type="submit" class="btn btn-success">Save<i class="fa fa-check"></i></button>
+            <button type="button" ng-if="!vm.isNew" class="btn btn-danger btn-delete" ng-click="vm.delete()">Delete<i class="fa fa-times"></i></button>
+        </fieldset>
+
+    </form>
+
+</div>
