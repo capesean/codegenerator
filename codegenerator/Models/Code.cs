@@ -22,9 +22,13 @@ namespace WEB.Models
                 if (_allEntities == null)
                 {
                     _allEntities = DbContext.Entities
+                        .Include(e => e.Project)
                         .Include(e => e.Fields)
-                        .Include(e => e.RelationshipsAsChild)
-                        .Include(e => e.RelationshipsAsParent)
+                        .Include(e => e.CodeReplacements)
+                        .Include(e => e.RelationshipsAsChild.Select(p => p.RelationshipFields))
+                        .Include(e => e.RelationshipsAsChild.Select(p => p.ParentEntity))
+                        .Include(e => e.RelationshipsAsParent.Select(p => p.RelationshipFields))
+                        .Include(e => e.RelationshipsAsParent.Select(p => p.ChildEntity))
                         .Where(e => e.ProjectId == CurrentEntity.ProjectId).OrderBy(e => e.Name).ToList();
                 }
                 return _allEntities;
@@ -71,6 +75,10 @@ namespace WEB.Models
         {
             return AllEntities.Single(e => e.EntityId == entityId);
         }
+        private Relationship ParentHierarchyRelationship
+        {
+            get { return CurrentEntity.RelationshipsAsChild.SingleOrDefault(r => r.Hierarchy); }
+        }
 
         public Code(Entity currentEntity, ApplicationDbContext dbContext)
         {
@@ -99,6 +107,7 @@ namespace WEB.Models
             var keyCounter = 0;
             foreach (var field in CurrentEntity.Fields.OrderBy(f => f.FieldOrder))
             {
+                var parentHierarchyRelationshipIndexFieldCount = 0;
                 if (field.KeyField && CurrentEntity.EntityType == EntityType.User) continue;
 
                 if (field.KeyField)
@@ -126,7 +135,21 @@ namespace WEB.Models
                     if (field.NetType == "string" && field.Length > 0)
                         s.Add($"        [MaxLength({field.Length})]");
                     if (field.IsUnique)
-                        s.Add($"        [Index(\"IX_{CurrentEntity.Name}_{field.Name}\", IsUnique = true)]");
+                        s.Add($"        [Index(\"IX_{CurrentEntity.Name}_{field.Name}\", IsUnique = true, Order = 0)]");
+                    else
+                    {
+                        // if it's a hierarchy, the unique key must be on the unique field (above) AND the relationship link fields to the hierarhcy parent 
+                        if (ParentHierarchyRelationship != null && ParentHierarchyRelationship.RelationshipFields.Any(f => f.ChildFieldId == field.FieldId))
+                        {
+                            // need to get the single unique field for the index name
+                            var uniqueField = CurrentEntity.Fields.SingleOrDefault(f => f.IsUnique);
+                            if (uniqueField != null)
+                            {
+                                parentHierarchyRelationshipIndexFieldCount++;
+                                s.Add($"        [Index(\"IX_{CurrentEntity.Name}_{uniqueField.Name}\", IsUnique = true, Order = {parentHierarchyRelationshipIndexFieldCount})]");
+                            }
+                        }
+                    }
                     s.Add($"        public {field.NetType.ToString()} {field.Name} {{ get; set; }}");
                 }
                 s.Add($"");
@@ -271,6 +294,8 @@ namespace WEB.Models
             }
             foreach (var relationship in CurrentEntity.RelationshipsAsChild)
             {
+                // using exclude to avoid circular references. example: KTU-PACK: version => localisation => contentset => version (UpdateFromVersion)
+                if (relationship.RelationshipAncestorLimit == RelationshipAncestorLimits.Exclude) continue;
                 s.Add($"        public {relationship.ParentEntity.Name}DTO {relationship.ParentName} {{ get; set; }}");
                 s.Add($"");
             }
@@ -288,6 +313,8 @@ namespace WEB.Models
             }
             foreach (var relationship in CurrentEntity.RelationshipsAsChild.OrderBy(o => o.ParentFriendlyName))
             {
+                // using exclude to avoid circular references. example: KTU-PACK: version => localisation => contentset => version (UpdateFromVersion)
+                if (relationship.RelationshipAncestorLimit == RelationshipAncestorLimits.Exclude) continue;
                 s.Add($"            {CurrentEntity.DTOName.ToCamelCase()}.{relationship.ParentName} = {CurrentEntity.CamelCaseName}.{relationship.ParentName} == null ? null : Create({CurrentEntity.CamelCaseName}.{relationship.ParentName});");
             }
             s.Add($"");
@@ -485,8 +512,15 @@ namespace WEB.Models
             s.Add($"");
             foreach (var field in CurrentEntity.Fields.Where(f => f.IsUnique))
             {
-                s.Add($"            if (DbContext.{CurrentEntity.PluralName}.Any(o => o.{field.Name} == {CurrentEntity.DTOName.ToCamelCase()}.{field.Name} && !({GetKeyFieldLinq("o", CurrentEntity.DTOName.ToCamelCase())})))");
-                s.Add($"                return BadRequest(\"{field.Label} already exists.\");");
+                string hierarchyFields = string.Empty;
+                if (ParentHierarchyRelationship != null)
+                {
+                    foreach (var relField in ParentHierarchyRelationship.RelationshipFields)
+                        hierarchyFields += (hierarchyFields == string.Empty ? "" : " && ") + "o." + relField.ChildField.Name + " == " + CurrentEntity.DTOName.ToCamelCase() + "." + relField.ChildField.Name;
+                    hierarchyFields += " && ";
+                }
+                s.Add($"            if (DbContext.{CurrentEntity.PluralName}.Any(o => {hierarchyFields}o.{field.Name} == {CurrentEntity.DTOName.ToCamelCase()}.{field.Name} && !({GetKeyFieldLinq("o", CurrentEntity.DTOName.ToCamelCase())})))");
+                s.Add($"                return BadRequest(\"{field.Label} already exists{(ParentHierarchyRelationship == null ? string.Empty : " on this " + ParentHierarchyRelationship.ParentEntity.FriendlyName)}.\");");
                 s.Add($"");
             }
             if (CurrentEntity.HasCompositePrimaryKey)
@@ -517,7 +551,7 @@ namespace WEB.Models
                     {
                         sort += ".Where(o => " + (CurrentEntity.RelationshipsAsChild.Single(r => r.Hierarchy).RelationshipFields.Select(o => $"o.{o.ChildField.Name} == {CurrentEntity.DTOName.ToCamelCase()}.{o.ChildField.Name}").Aggregate((current, next) => current + " && " + next)) + ")";
                     }
-                    sort += $".MaxAsync(o => (int?)o.{field.Name}) ?? 0) + 1;";
+                    sort += $".MaxAsync(o => (int?)o.{field.Name}) ?? -1) + 1;";
                     s.Add(sort);
                     s.Add($"");
                 }
@@ -525,7 +559,7 @@ namespace WEB.Models
                 s.Add($"            }}");
                 s.Add($"            else");
                 s.Add($"            {{");
-                foreach (var field in CurrentEntity.Fields.Where(f => !string.IsNullOrWhiteSpace(f.ControllerUpdateOverride)))
+                foreach (var field in CurrentEntity.Fields.Where(f => !string.IsNullOrWhiteSpace(f.ControllerUpdateOverride)).OrderBy(f => f.FieldOrder))
                 {
                     s.Add($"                {CurrentEntity.CamelCaseName}.{field.Name} = {field.ControllerUpdateOverride};");
                 }
@@ -691,12 +725,14 @@ namespace WEB.Models
             s.Add($"    entityRoutes.$inject = [\"$stateProvider\"];");
             s.Add($"    function entityRoutes($stateProvider) {{");
             s.Add($"");
+            s.Add($"        var version = \"?v={string.Format("{0:yyyyMMddHHmmss}", DateTime.Now)}\";");
+            s.Add($"");
             s.Add($"        $stateProvider");
             foreach (var e in NormalEntities)
             {
                 s.Add($"            {(e == NormalEntities.First() ? string.Empty : "})")}.state(\"app.{e.Name.ToCamelCase()}\", {{");
                 s.Add($"                url: \"{e.GetNavigationUrl()}\",");
-                s.Add($"                templateUrl: \"/app/{e.PluralName.ToLower()}/{e.Name.ToLower()}.html\",");
+                s.Add($"                templateUrl: \"/app/{e.PluralName.ToLower()}/{e.Name.ToLower()}.html\" + version,");
                 s.Add($"                controller: \"{e.Name.ToCamelCase()}\",");
                 s.Add($"                controllerAs: \"vm\",");
                 //s.Add($"                data: {{");
@@ -820,7 +856,7 @@ namespace WEB.Models
                     {
                         s.Add($"            <div class=\"col-sm-6 col-md-4 col-lg-3\">");
                         s.Add($"                <div class=\"form-group\">");
-                        s.Add($"                    <ol id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" title=\"{field.Label}\" class=\"nya-bs-select\" ng-model=\"vm.search.{field.Name.ToCamelCase()}\" data-size=\"10\" live-search=\"true\">");
+                        s.Add($"                    <ol id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" title=\"{field.Label}\" class=\"nya-bs-select form-control\" ng-model=\"vm.search.{field.Name.ToCamelCase()}\" data-size=\"10\" live-search=\"true\">");
                         s.Add($"                        <li nya-bs-option=\"item in vm.appSettings.{field.Lookup.Name.ToCamelCase()}\" class=\"nya-bs-option\" value=\"item.id\">");
                         s.Add($"                            <a>{{{{item.label}}}}<span class=\"fa fa-check check-mark\"></span></a>");
                         s.Add($"                        </li>");
@@ -836,7 +872,7 @@ namespace WEB.Models
                         var relField = relationship.RelationshipFields.Single();
                         s.Add($"            <div class=\"col-sm-6 col-md-4 col-lg-3\">");
                         s.Add($"                <div class=\"form-group\">");
-                        s.Add($"                    <ol id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" title=\"{parentEntity.PluralFriendlyName}\" class=\"nya-bs-select\" ng-model=\"vm.search.{field.Name.ToCamelCase()}\" data-size=\"10\" live-search=\"true\">");
+                        s.Add($"                    <ol id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" title=\"{parentEntity.PluralFriendlyName}\" class=\"nya-bs-select form-control\" ng-model=\"vm.search.{field.Name.ToCamelCase()}\" data-size=\"10\" live-search=\"true\">");
                         s.Add($"                        <li nya-bs-option=\"{parentEntity.Name.ToCamelCase()} in vm.{parentEntity.PluralName.ToCamelCase()}\" class=\"nya-bs-option\" value=\"{parentEntity.Name.ToCamelCase()}.{relField.ParentField.Name.ToCamelCase()}\">");
                         s.Add($"                            <a>{{{{{parentEntity.Name.ToCamelCase()}.{relationship.ParentField.Name.ToCamelCase()}}}}}<span class=\"fa fa-check check-mark\"></span></a>");
                         s.Add($"                        </li>");
@@ -851,11 +887,11 @@ namespace WEB.Models
                 s.Add($"");
                 s.Add($"        <fieldset ng-disabled=\"vm.loading\">");
                 s.Add($"");
-                s.Add($"            <button type=\"submit\" class=\"btn btn-success\">Search<i class=\"fa fa-search\"></i></button>");
+                s.Add($"            <button type=\"submit\" class=\"btn btn-success\">Search<i class=\"fa fa-search{(CurrentEntity.Project.Bootstrap3 ? string.Empty : " ml-1")}\"></i></button>");
                 if (CurrentEntity.RelationshipsAsChild.Count(r => r.Hierarchy) == 0)
                 {
                     // todo: needs field list + field.newParameter
-                    s.Add($"            <a href=\"{CurrentEntity.PluralName.ToLower()}/{CurrentEntity.KeyFields.Select(f => $"{{{{vm.appSettings.{f.NewVariable}}}}}").Aggregate((current, next) => current + "/" + next)}\" class=\"btn btn-primary\">Add<i class=\"fa fa-plus-circle\"></i></a>");
+                    s.Add($"            <a href=\"{CurrentEntity.PluralName.ToLower()}/{CurrentEntity.KeyFields.Select(f => $"{{{{vm.appSettings.{f.NewVariable}}}}}").Aggregate((current, next) => current + "/" + next)}\" class=\"btn btn-primary\">Add<i class=\"fa fa-plus-circle ml-1\"></i></a>");
                 }
                 s.Add($"");
                 s.Add($"        </fieldset>");
@@ -1330,8 +1366,8 @@ namespace WEB.Models
             s.Add($"        </div>");
             s.Add($"");
             s.Add($"        <fieldset ng-disabled=\"vm.loading\">");
-            s.Add($"            <button type=\"submit\" class=\"btn btn-success\">Save<i class=\"fa fa-check\"></i></button>");
-            s.Add($"            <button type=\"button\" ng-if=\"!vm.isNew\" class=\"btn btn-danger btn-delete\" ng-click=\"vm.delete()\">Delete<i class=\"fa fa-times\"></i></button>");
+            s.Add($"            <button type=\"submit\" class=\"btn btn-success\">Save<i class=\"fa fa-check{(CurrentEntity.Project.Bootstrap3 ? string.Empty : " ml-1")}\"></i></button>");
+            s.Add($"            <button type=\"button\" ng-if=\"!vm.isNew\" class=\"btn btn-danger btn-delete\" ng-click=\"vm.delete()\">Delete<i class=\"fa fa-times{(CurrentEntity.Project.Bootstrap3 ? string.Empty : " ml-1")}\"></i></button>");
             s.Add($"        </fieldset>");
             s.Add($"");
             s.Add($"    </form>");
@@ -1362,7 +1398,7 @@ namespace WEB.Models
                                 href += "/{{vm." + entity.Name.ToCamelCase() + "." + field.Name.ToCamelCase() + "}}";
                         }
                     }
-                    s.Add($"            <a class=\"btn btn-primary\" href=\"{href}\">Add {childEntity.FriendlyName}<i class=\"fa fa-plus-circle\"></i></a><br />");
+                    s.Add($"            <a class=\"btn btn-primary\" href=\"{href}\">Add {childEntity.FriendlyName}<i class=\"fa fa-plus-circle ml-1\"></i></a><br />");
                     s.Add($"            <br />");
                     s.Add($"        </fieldset>");
                     s.Add($"");
@@ -1590,7 +1626,8 @@ namespace WEB.Models
             s.Add($"                {CurrentEntity.ViewModelObject}.$save(");
             s.Add($"                    data => {{");
             s.Add($"");
-            s.Add($"                        {CurrentEntity.ViewModelObject} = data;");
+            // ngResource automatically updates the object
+            //s.Add($"                        {CurrentEntity.ViewModelObject} = data;");
             s.Add($"                        notifications.success(\"The {CurrentEntity.FriendlyName.ToLower()} has been saved.\", \"Saved\");");
             s.Add($"                        if (vm.isNew)");
             s.Add($"                            $state.go(\"app.{CurrentEntity.CamelCaseName}\", {{");
@@ -1752,6 +1789,7 @@ namespace WEB.Models
 
         public List<string> GetTopAncestors(List<string> list, string prefix, Relationship relationship, RelationshipAncestorLimits ancestorLimit, int level = 0)
         {
+            //if (relationship.RelationshipAncestorLimit == RelationshipAncestorLimits.Exclude) return list;
             prefix += "." + relationship.ParentName;
             if (ancestorLimit == RelationshipAncestorLimits.IncludeRelatedEntity && level == 0)
             {
@@ -1763,7 +1801,7 @@ namespace WEB.Models
             }
             else if (relationship.ParentEntity.RelationshipsAsChild.Any() && relationship.ParentEntityId != relationship.ChildEntityId)
             {
-                foreach (var parentRelationship in relationship.ParentEntity.RelationshipsAsChild)
+                foreach (var parentRelationship in relationship.ParentEntity.RelationshipsAsChild.Where(r => r.RelationshipAncestorLimit != RelationshipAncestorLimits.Exclude))
                 {
                     list = GetTopAncestors(list, prefix, parentRelationship, ancestorLimit, level + 1);
                 }

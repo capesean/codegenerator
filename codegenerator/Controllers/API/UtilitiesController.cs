@@ -14,31 +14,54 @@ namespace WEB.Controllers
         [HttpPost, Route("multideploy")]
         public async Task<IHttpActionResult> MultiDeploy([FromBody] List<Option> options)
         {
+            if (!System.Web.HttpContext.Current.Request.IsLocal)
+                return BadRequest("Deployment is only allowed when hosted on a local machine");
+
             var results = new List<DeploymentResult>();
 
             foreach (var option in options)
             {
-                var entity = DbContext.Entities
-                    .Include(o => o.Project)
-                    .Include(o => o.Fields)
-                    .SingleOrDefault(o => o.EntityId == option.EntityId);
+                if (option.ApiResource
+                    || option.AppRouter
+                    || option.BundleConfig
+                    || option.Controller
+                    || option.DbContext
+                    || option.DTO
+                    || option.EditHtml
+                    || option.EditTypeScript
+                    || option.Enums
+                    || option.ListHtml
+                    || option.ListTypeScript
+                    || option.Model
+                    || option.SettingsDTO)
+                {
 
-                if (entity == null) return BadRequest("Invalid Entity Id");
+                    var entity = DbContext.Entities
+                        .Include(o => o.Project)
+                        .Include(o => o.Fields)
+                        .Include(o => o.CodeReplacements)
+                        .Include(o => o.RelationshipsAsChild.Select(p => p.RelationshipFields))
+                        .Include(o => o.RelationshipsAsChild.Select(p => p.ParentEntity))
+                        .Include(o => o.RelationshipsAsParent.Select(p => p.RelationshipFields))
+                        .Include(o => o.RelationshipsAsParent.Select(p => p.ChildEntity))
+                        .SingleOrDefault(o => o.EntityId == option.EntityId);
 
-                if (option.Model) RunDeploy(entity, CodeType.Model, results);
-                if (option.Enums) RunDeploy(entity, CodeType.Enums, results);
-                if (option.DTO) RunDeploy(entity, CodeType.DTO, results);
-                if (option.SettingsDTO) RunDeploy(entity, CodeType.SettingsDTO, results);
-                if (option.DbContext) RunDeploy(entity, CodeType.DbContext, results);
-                if (option.Controller) RunDeploy(entity, CodeType.Controller, results);
-                if (option.BundleConfig) RunDeploy(entity, CodeType.BundleConfig, results);
-                if (option.AppRouter) RunDeploy(entity, CodeType.AppRouter, results);
-                if (option.ApiResource) RunDeploy(entity, CodeType.ApiResource, results);
-                if (option.ListHtml) RunDeploy(entity, CodeType.ListHtml, results);
-                if (option.ListTypeScript) RunDeploy(entity, CodeType.ListTypeScript, results);
-                if (option.EditHtml) RunDeploy(entity, CodeType.EditHtml, results);
-                if (option.EditTypeScript) RunDeploy(entity, CodeType.EditTypeScript, results);
+                    if (entity == null) return BadRequest("Invalid Entity Id");
 
+                    if (option.Model) RunDeploy(entity, CodeType.Model, results);
+                    if (option.Enums) RunDeploy(entity, CodeType.Enums, results);
+                    if (option.DTO) RunDeploy(entity, CodeType.DTO, results);
+                    if (option.SettingsDTO) RunDeploy(entity, CodeType.SettingsDTO, results);
+                    if (option.DbContext) RunDeploy(entity, CodeType.DbContext, results);
+                    if (option.Controller) RunDeploy(entity, CodeType.Controller, results);
+                    if (option.BundleConfig) RunDeploy(entity, CodeType.BundleConfig, results);
+                    if (option.AppRouter) RunDeploy(entity, CodeType.AppRouter, results);
+                    if (option.ApiResource) RunDeploy(entity, CodeType.ApiResource, results);
+                    if (option.ListHtml) RunDeploy(entity, CodeType.ListHtml, results);
+                    if (option.ListTypeScript) RunDeploy(entity, CodeType.ListTypeScript, results);
+                    if (option.EditHtml) RunDeploy(entity, CodeType.EditHtml, results);
+                    if (option.EditTypeScript) RunDeploy(entity, CodeType.EditTypeScript, results);
+                }
             }
 
             return Ok(results);

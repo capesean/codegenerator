@@ -46,8 +46,10 @@ namespace WEB.Controllers
                 .Include(o => o.Project)
                 .Include(o => o.Fields)
                 .Include(o => o.CodeReplacements)
-                .Include(o => o.RelationshipsAsChild)
-                .Include(o => o.RelationshipsAsParent)
+                .Include(o => o.RelationshipsAsChild.Select(p => p.RelationshipFields))
+                .Include(o => o.RelationshipsAsChild.Select(p => p.ParentEntity))
+                .Include(o => o.RelationshipsAsParent.Select(p => p.RelationshipFields))
+                .Include(o => o.RelationshipsAsParent.Select(p => p.ChildEntity))
                 .SingleOrDefault(o => o.EntityId == id);
 
             if (entity == null)
@@ -81,9 +83,17 @@ namespace WEB.Controllers
         [HttpPost, Route("{id:Guid}/code")]
         public IHttpActionResult Deploy(Guid id, [FromBody]DeploymentOptions deploymentOptions)
         {
+            if (!HttpContext.Current.Request.IsLocal)
+                return BadRequest("Deployment is only allowed when hosted on a local machine");
+
             var entity = DbContext.Entities
                 .Include(o => o.Project)
                 .Include(o => o.Fields)
+                .Include(o => o.CodeReplacements)
+                .Include(o => o.RelationshipsAsChild.Select(p => p.RelationshipFields))
+                .Include(o => o.RelationshipsAsChild.Select(p => p.ParentEntity))
+                .Include(o => o.RelationshipsAsParent.Select(p => p.RelationshipFields))
+                .Include(o => o.RelationshipsAsParent.Select(p => p.ChildEntity))
                 .SingleOrDefault(o => o.EntityId == id);
 
             if (entity == null)

@@ -19,8 +19,8 @@ namespace WEB.Models
             Database.SetInitializer(new MigrateDatabaseToLatestVersion<ApplicationDbContext, Migrations.Configuration>());
             Database.Initialize(false);
 
-            if (System.Web.HttpContext.Current != null && System.Web.HttpContext.Current.Request.IsLocal)
-                Configuration.LazyLoadingEnabled = false;
+            //if (System.Web.HttpContext.Current != null && System.Web.HttpContext.Current.Request.IsLocal)
+                //Configuration.LazyLoadingEnabled = false;
         }
 
         public static ApplicationDbContext Create()
