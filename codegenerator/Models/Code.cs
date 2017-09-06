@@ -95,7 +95,7 @@ namespace WEB.Models
             if (CurrentEntity.RelationshipsAsParent.Any())
                 s.Add($"using System.Collections.Generic;");
             s.Add($"using System.ComponentModel.DataAnnotations;");
-            if (CurrentEntity.RelationshipsAsChild.Any() || CurrentEntity.Fields.Any(f => f.IsUnique) || CurrentEntity.KeyFields.Count > 1 || CurrentEntity.Fields.Any(f => f.EditPageType == EditPageType.CalculatedField))
+            if (CurrentEntity.RelationshipsAsChild.Any() || CurrentEntity.Fields.Any(f => f.IsUnique) || CurrentEntity.Fields.Any(f => f.FieldType == FieldType.Date) || CurrentEntity.KeyFields.Count > 1 || CurrentEntity.Fields.Any(f => f.EditPageType == EditPageType.CalculatedField))
                 s.Add($"using System.ComponentModel.DataAnnotations.Schema;");
             s.Add($"");
             s.Add($"namespace {CurrentEntity.Project.Namespace}.Models");
@@ -136,6 +136,8 @@ namespace WEB.Models
                         s.Add($"        [MaxLength({field.Length})]");
                     if (field.IsUnique)
                         s.Add($"        [Index(\"IX_{CurrentEntity.Name}_{field.Name}\", IsUnique = true, Order = 0)]");
+                    if (field.FieldType == FieldType.Date)
+                        s.Add($"        [Column(TypeName = \"Date\")]");
                     else
                     {
                         // if it's a hierarchy, the unique key must be on the unique field (above) AND the relationship link fields to the hierarhcy parent 
@@ -364,6 +366,12 @@ namespace WEB.Models
                     s.Add($"");
                 }
             }
+            var decimalFields = DbContext.Fields.Where(f => f.FieldType == FieldType.Decimal && f.Entity.ProjectId == CurrentEntity.ProjectId).OrderBy(f => f.Entity.Name).ThenBy(f => f.FieldOrder).ToList();
+            foreach (var field in decimalFields)
+            {
+                s.Add($"            modelBuilder.Entity<{field.Entity.Name}>().Property(o => o.{field.Name}).HasPrecision({field.Precision}, {field.Scale});");
+
+            }
             s.Add($"        }}");
             s.Add($"    }}");
             s.Add($"}}");
@@ -423,7 +431,7 @@ namespace WEB.Models
             {
                 s.Add($"");
                 s.Add($"            if (!string.IsNullOrWhiteSpace(q))");
-                s.Add($"                results = results.Where(o => {CurrentEntity.TextSearchFields.Select(o => $"o.{o.Name}.Contains(q)").Aggregate((current, next) => current + " || " + next) });");
+                s.Add($"                results = results.Where(o => {CurrentEntity.TextSearchFields.Select(o => $"o.{o.Name + (o.CustomType == CustomType.String ? string.Empty : ".ToString()")}.Contains(q)").Aggregate((current, next) => current + " || " + next) });");
             }
 
             if (fieldsToSearch.Count > 0)
@@ -652,7 +660,7 @@ namespace WEB.Models
             #region sort
             if (CurrentEntity.HasASortField)
             {
-                s.Add($"        [HttpPost, Route(\"sort\")]");
+                s.Add($"        [{(CurrentEntity.AuthorizationType == AuthorizationType.ProtectChanges ? "Authorize(Roles = \"Administrator\"), " : "")}HttpPost, Route(\"sort\")]");
                 s.Add($"        public async Task<IHttpActionResult> Sort([FromBody]SortedGuids sortedIds)");
                 s.Add($"        {{");
                 s.Add($"            var sortOrder = 0;");
@@ -731,7 +739,7 @@ namespace WEB.Models
             foreach (var e in NormalEntities)
             {
                 s.Add($"            {(e == NormalEntities.First() ? string.Empty : "})")}.state(\"app.{e.Name.ToCamelCase()}\", {{");
-                s.Add($"                url: \"{e.GetNavigationUrl()}\",");
+                s.Add($"                url: \"{CurrentEntity.Project.UrlPrefix}{e.GetNavigationUrl()}\",");
                 s.Add($"                templateUrl: \"/app/{e.PluralName.ToLower()}/{e.Name.ToLower()}.html\" + version,");
                 s.Add($"                controller: \"{e.Name.ToCamelCase()}\",");
                 s.Add($"                controllerAs: \"vm\",");
@@ -749,7 +757,7 @@ namespace WEB.Models
                 s.Add($"                }}");
                 s.Add($"            }}).state(\"app.{e.PluralName.ToCamelCase()}\", {{");
                 // todo: search fields
-                s.Add($"                url: \"/{e.PluralName.ToLower()}\",");
+                s.Add($"                url: \"{CurrentEntity.Project.UrlPrefix}/{e.PluralName.ToLower()}\",");
                 s.Add($"                templateUrl: \"/app/{e.PluralName.ToLower()}/{e.PluralName.ToLower()}.html\",");
                 s.Add($"                controller: \"{e.PluralName.ToCamelCase()}\",");
                 s.Add($"                controllerAs: \"vm\",");
@@ -891,7 +899,7 @@ namespace WEB.Models
                 if (CurrentEntity.RelationshipsAsChild.Count(r => r.Hierarchy) == 0)
                 {
                     // todo: needs field list + field.newParameter
-                    s.Add($"            <a href=\"{CurrentEntity.PluralName.ToLower()}/{CurrentEntity.KeyFields.Select(f => $"{{{{vm.appSettings.{f.NewVariable}}}}}").Aggregate((current, next) => current + "/" + next)}\" class=\"btn btn-primary\">Add<i class=\"fa fa-plus-circle ml-1\"></i></a>");
+                    s.Add($"            <a href=\"{CurrentEntity.Project.UrlPrefix}/{CurrentEntity.PluralName.ToLower()}/{CurrentEntity.KeyFields.Select(f => $"{{{{vm.appSettings.{f.NewVariable}}}}}").Aggregate((current, next) => current + "/" + next)}\" class=\"btn btn-primary\">Add<i class=\"fa fa-plus-circle ml-1\"></i></a>");
                 }
                 s.Add($"");
                 s.Add($"        </fieldset>");
@@ -1146,9 +1154,9 @@ namespace WEB.Models
             var t = string.Empty;
             if (CurrentEntity.Project.Bootstrap3)
             {
-                s.Add($"                <div class=\"col-sm-12\">");
-                s.Add($"");
-                t = "    ";
+                //s.Add($"                <div class=\"col-sm-12\">");
+                //s.Add($"");
+                //t = "    ";
             }
             #region form fields
             foreach (var field in CurrentEntity.Fields.OrderBy(o => o.FieldOrder))
@@ -1231,7 +1239,7 @@ namespace WEB.Models
                     s.Add(t + $"                        </label>");
                     if (field.FieldType == FieldType.Text || field.FieldType == FieldType.nText)
                     {
-                        s.Add(t + $"                        <textarea id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\" class=\"form-control\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} rows=\"6\"></textarea>");
+                        s.Add(t + $"                        <textarea id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\" class=\"form-control\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} rows=\"6\"" + (field.Length == 0 ? string.Empty : $" maxlength=\"{field.Length}\"") + $"></textarea>");
                     }
                     else
                     {
@@ -1277,7 +1285,7 @@ namespace WEB.Models
                     s.Add(t + $"                        <label for=\"{field.Name.ToCamelCase()}\" class=\"control-label\">");
                     s.Add(t + $"                            {field.Label}:");
                     s.Add(t + $"                        </label>");
-                    s.Add(t + $"                        <input type=\"{(field.FieldType == FieldType.Date ? "date" : "datetime-local")}\" id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\" class=\"form-control\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} />");
+                    s.Add(t + $"                        <input type=\"{(field.FieldType == FieldType.Date ? "date" : "datetime-local")}\" id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\" {(field.FieldType == FieldType.Date ? "ng-model-options=\"{timezone: 'utc'}\" " : "")} class=\"form-control\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} />");
                     s.Add(t + $"                    </div>");
                     s.Add(t + $"                </div>");
                     s.Add($"");
@@ -1290,8 +1298,8 @@ namespace WEB.Models
                 }
             }
             #endregion
-            if (CurrentEntity.Project.Bootstrap3)
-                s.Add($"                </div>");
+            //if (CurrentEntity.Project.Bootstrap3)
+            //    s.Add($"                </div>");
             s.Add($"            </div>");
             s.Add($"");
             s.Add($"        </fieldset>");

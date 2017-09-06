@@ -53,9 +53,11 @@
                     if (!isLoggedIn) {
                         // redirect to login
                         alert("not logged in");
+                        //$window.location.assign("/login" + ($window.location.pathname === "/" ? "" : "?url=" + encodeURIComponent($window.location.pathname + $window.location.search)));
                     }
                     else {
                         if ($rootScope.toState.data.allowAny) {
+                            // fine
                         }
                         else if (Object.prototype.toString.call($rootScope.toState.data.roles) !== "[object Array]") {
                             notifications.error("Route does not have any permissions - use allowAny if applicable");

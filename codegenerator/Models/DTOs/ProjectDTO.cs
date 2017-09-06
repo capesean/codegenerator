@@ -34,6 +34,9 @@ namespace WEB.Models
         [Required]
         public bool ExcludeTypes { get; set; }
 
+        [MaxLength(50)]
+        public string UrlPrefix { get; set; }
+
     }
 
     public partial class ModelFactory
@@ -50,6 +53,7 @@ namespace WEB.Models
             projectDTO.AngularDirectivePrefix = project.AngularDirectivePrefix;
             projectDTO.Bootstrap3 = project.Bootstrap3;
             projectDTO.ExcludeTypes = project.ExcludeTypes;
+            projectDTO.UrlPrefix = project.UrlPrefix;
 
             return projectDTO;
         }
@@ -63,6 +67,7 @@ namespace WEB.Models
             project.AngularDirectivePrefix = projectDTO.AngularDirectivePrefix;
             project.Bootstrap3 = projectDTO.Bootstrap3;
             project.ExcludeTypes = projectDTO.ExcludeTypes;
+            project.UrlPrefix = projectDTO.UrlPrefix;
         }
     }
 }

@@ -13,7 +13,7 @@ namespace WEB.Models
 
         [Required(AllowEmptyStrings = true)]
         [MaxLength(50)]
-        [Index("IX_Project_Name", IsUnique = true)]
+        [Index("IX_Project_Name", IsUnique = true, Order = 0)]
         public string Name { get; set; }
 
         [Required(AllowEmptyStrings = true)]
@@ -38,9 +38,12 @@ namespace WEB.Models
         [Required]
         public bool ExcludeTypes { get; set; }
 
-        public virtual ICollection<Lookup> Lookups { get; set; } = new List<Lookup>();
+        [MaxLength(50)]
+        public string UrlPrefix { get; set; }
 
         public virtual ICollection<Entity> Entities { get; set; } = new List<Entity>();
+
+        public virtual ICollection<Lookup> Lookups { get; set; } = new List<Lookup>();
 
         public Project()
         {

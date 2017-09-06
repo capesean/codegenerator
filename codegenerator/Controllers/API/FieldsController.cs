@@ -70,7 +70,7 @@ namespace WEB.Controllers
             {
                 field = new Field();
                 DbContext.Entry(field).State = EntityState.Added;
-                field.FieldOrder = (DbContext.Fields.Where(f => f.EntityId == fieldDTO.EntityId).Max(f => (byte?)(f.FieldOrder + 1)) ?? 0);
+                field.FieldOrder = (DbContext.Fields.Where(f => f.EntityId == fieldDTO.EntityId).Max(f => (int?)(f.FieldOrder + 1)) ?? 0);
                 fieldDTO.FieldOrder = (await DbContext.Fields.Where(o => o.EntityId == fieldDTO.EntityId).MaxAsync(o => (int?)o.FieldOrder) ?? 0) + 1;
             }
             else

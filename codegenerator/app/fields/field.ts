@@ -140,11 +140,15 @@
 
                         vm.field = data;
                         notifications.success("The field has been saved.", "Saved");
-                        if (vm.isNew)
-                            $state.go("app.field", {
-                                fieldId: vm.field.fieldId
+                        //if (vm.isNew)
+                            //$state.go("app.field", {
+                            //    fieldId: vm.field.fieldId
+                            //});
+                        //else 
+                            $state.go("app.entity", {
+                                projectId: $stateParams.projectId,
+                                entityId: $stateParams.entityId
                             });
-
                     },
                     err=> {
 

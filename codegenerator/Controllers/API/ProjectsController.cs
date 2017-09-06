@@ -65,6 +65,7 @@ namespace WEB.Controllers
             if (isNew)
             {
                 project = new Project();
+
                 DbContext.Entry(project).State = EntityState.Added;
             }
             else
@@ -84,7 +85,7 @@ namespace WEB.Controllers
             return await Get(project.ProjectId);
         }
 
-        [HttpDelete, Route("{projectId:Guid}")]
+        [HttpDelete Route("{projectId:Guid}")]
         public async Task<IHttpActionResult> Delete(Guid projectId)
         {
             var project = await DbContext.Projects.SingleOrDefaultAsync(o => o.ProjectId == projectId);
@@ -92,10 +93,10 @@ namespace WEB.Controllers
             if (project == null)
                 return NotFound();
 
-            if (DbContext.Entities.Any(o => o.ProjectId == projectId))
+            if (DbContext.Entities.Any(o => o.ProjectId == project.ProjectId))
                 return BadRequest("Unable to delete the project as it has related entities");
 
-            if (DbContext.Lookups.Any(o => o.ProjectId == projectId))
+            if (DbContext.Lookups.Any(o => o.ProjectId == project.ProjectId))
                 return BadRequest("Unable to delete the project as it has related lookups");
 
             DbContext.Entry(project).State = EntityState.Deleted;

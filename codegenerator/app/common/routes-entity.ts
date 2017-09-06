@@ -7,10 +7,12 @@
     entityRoutes.$inject = ["$stateProvider"];
     function entityRoutes($stateProvider) {
 
+        var version = "?v=20170515094438";
+
         $stateProvider
             .state("app.codeReplacement", {
                 url: "/projects/:projectId/entities/:entityId/codereplacements/:codeReplacementId",
-                templateUrl: "/app/codereplacements/codereplacement.html",
+                templateUrl: "/app/codereplacements/codereplacement.html" + version,
                 controller: "codeReplacement",
                 controllerAs: "vm",
                 ncyBreadcrumb: {
@@ -27,7 +29,7 @@
                 }
             }).state("app.entity", {
                 url: "/projects/:projectId/entities/:entityId",
-                templateUrl: "/app/entities/entity.html",
+                templateUrl: "/app/entities/entity.html" + version,
                 controller: "entity",
                 controllerAs: "vm",
                 ncyBreadcrumb: {
@@ -44,7 +46,7 @@
                 }
             }).state("app.field", {
                 url: "/projects/:projectId/entities/:entityId/fields/:fieldId",
-                templateUrl: "/app/fields/field.html",
+                templateUrl: "/app/fields/field.html" + version,
                 controller: "field",
                 controllerAs: "vm",
                 ncyBreadcrumb: {
@@ -61,7 +63,7 @@
                 }
             }).state("app.lookup", {
                 url: "/projects/:projectId/lookups/:lookupId",
-                templateUrl: "/app/lookups/lookup.html",
+                templateUrl: "/app/lookups/lookup.html" + version,
                 controller: "lookup",
                 controllerAs: "vm",
                 ncyBreadcrumb: {
@@ -78,7 +80,7 @@
                 }
             }).state("app.lookupOption", {
                 url: "/projects/:projectId/lookups/:lookupId/lookupoptions/:lookupOptionId",
-                templateUrl: "/app/lookupoptions/lookupoption.html",
+                templateUrl: "/app/lookupoptions/lookupoption.html" + version,
                 controller: "lookupOption",
                 controllerAs: "vm",
                 ncyBreadcrumb: {
@@ -95,7 +97,7 @@
                 }
             }).state("app.project", {
                 url: "/projects/:projectId",
-                templateUrl: "/app/projects/project.html",
+                templateUrl: "/app/projects/project.html" + version,
                 controller: "project",
                 controllerAs: "vm",
                 ncyBreadcrumb: {
@@ -103,7 +105,7 @@
                     label: "{{vm.project.name}}"
                 }
             }).state("app.projects", {
-                url: "/",
+                url: "/projects",
                 templateUrl: "/app/projects/projects.html",
                 controller: "projects",
                 controllerAs: "vm",
@@ -112,7 +114,7 @@
                 }
             }).state("app.relationship", {
                 url: "/projects/:projectId/entities/:entityId/relationships/:relationshipId",
-                templateUrl: "/app/relationships/relationship.html",
+                templateUrl: "/app/relationships/relationship.html" + version,
                 controller: "relationship",
                 controllerAs: "vm",
                 ncyBreadcrumb: {
@@ -129,7 +131,7 @@
                 }
             }).state("app.relationshipField", {
                 url: "/projects/:projectId/entities/:entityId/relationships/:relationshipId/relationshipfields/:relationshipFieldId",
-                templateUrl: "/app/relationshipfields/relationshipfield.html",
+                templateUrl: "/app/relationshipfields/relationshipfield.html" + version,
                 controller: "relationshipField",
                 controllerAs: "vm",
                 ncyBreadcrumb: {

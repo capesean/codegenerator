@@ -55,6 +55,15 @@
                         </div>
                     </div>
 
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.urlPrefix.$invalid }">
+                            <label for="urlPrefix" class="control-label">
+                                URL Prefix:
+                            </label>
+                            <input type="text" id="urlPrefix" name="urlPrefix" ng-model="vm.project.urlPrefix" maxlength="50" class="form-control" />
+                        </div>
+                    </div>
+
                     <div class="col-sm-4 col-md-3 col-lg-2">
                         <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.bootstrap3.$invalid }">
                             <label for="bootstrap3" class="control-label">

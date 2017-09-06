@@ -48,7 +48,7 @@
                     err => {
 
                         notifications.error("Failed to load the projects.", "Error", err);
-                        $state.go("app.home"); 
+                        $state.go("app.home");
 
                     }).$promise
             );
