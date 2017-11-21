@@ -132,8 +132,17 @@ namespace WEB.Models
                         else
                             s.Add($"        [Required]");
                     }
-                    if (field.NetType == "string" && field.Length > 0)
-                        s.Add($"        [MaxLength({field.Length})]");
+                    if (field.NetType == "string")
+                    {
+                        if (field.Length == 0 && (field.FieldType == FieldType.Varchar || field.FieldType == FieldType.nVarchar))
+                        {
+                            //s.Add($"        [Column(TypeName = \"{field.FieldType.ToString().ToLower()}(MAX)\")]");
+                        }
+                        else
+                        {
+                            s.Add($"        [MaxLength({field.Length})]");
+                        }
+                    }
                     if (field.IsUnique)
                         s.Add($"        [Index(\"IX_{CurrentEntity.Name}_{field.Name}\", IsUnique = true, Order = 0)]");
                     if (field.FieldType == FieldType.Date)
@@ -143,13 +152,15 @@ namespace WEB.Models
                         // if it's a hierarchy, the unique key must be on the unique field (above) AND the relationship link fields to the hierarhcy parent 
                         if (ParentHierarchyRelationship != null && ParentHierarchyRelationship.RelationshipFields.Any(f => f.ChildFieldId == field.FieldId))
                         {
-                            // need to get the single unique field for the index name
-                            var uniqueField = CurrentEntity.Fields.SingleOrDefault(f => f.IsUnique);
-                            if (uniqueField != null)
-                            {
-                                parentHierarchyRelationshipIndexFieldCount++;
-                                s.Add($"        [Index(\"IX_{CurrentEntity.Name}_{uniqueField.Name}\", IsUnique = true, Order = {parentHierarchyRelationshipIndexFieldCount})]");
-                            }
+                            // DISABLED THIS FOR IBER BECAUSE DISTRICT HAS TWO ISUNIQUE FIELDS, NOT SURE WHAT THIS IS MEANT TO DO
+
+                            //// need to get the single unique field for the index name
+                            //var uniqueField = CurrentEntity.Fields.SingleOrDefault(f => f.IsUnique);
+                            //if (uniqueField != null)
+                            //{
+                            //    parentHierarchyRelationshipIndexFieldCount++;
+                            //    s.Add($"        [Index(\"IX_{CurrentEntity.Name}_{uniqueField.Name}\", IsUnique = true, Order = {parentHierarchyRelationshipIndexFieldCount})]");
+                            //}
                         }
                     }
                     s.Add($"        public {field.NetType.ToString()} {field.Name} {{ get; set; }}");
@@ -264,12 +275,14 @@ namespace WEB.Models
 
         public string GenerateDTO()
         {
-            if (CurrentEntity.EntityType == EntityType.User) return string.Empty;
+            //if (CurrentEntity.EntityType == EntityType.User) return string.Empty;
 
             var s = new StringBuilder();
 
             s.Add($"using System;");
             s.Add($"using System.ComponentModel.DataAnnotations;");
+            if (CurrentEntity.EntityType == EntityType.User)
+                s.Add($"using System.Collections.Generic;");
             s.Add($"");
             s.Add($"namespace {CurrentEntity.Project.Namespace}.Models");
             s.Add($"{{");
@@ -301,17 +314,36 @@ namespace WEB.Models
                 s.Add($"        public {relationship.ParentEntity.Name}DTO {relationship.ParentName} {{ get; set; }}");
                 s.Add($"");
             }
+            if (CurrentEntity.EntityType == EntityType.User)
+            {
+                s.Add($"        public string Email {{ get; set; }}");
+                s.Add($"");
+                s.Add($"        public IList<Guid> RoleIds {{ get; set; }}");
+                s.Add($"");
+            }
             s.Add($"    }}");
             s.Add($"");
             s.Add($"    public partial class ModelFactory");
             s.Add($"    {{");
             s.Add($"        public {CurrentEntity.DTOName} Create({CurrentEntity.Name} {CurrentEntity.CamelCaseName})");
             s.Add($"        {{");
+            if (CurrentEntity.EntityType == EntityType.User)
+            {
+                s.Add($"            var roleIds = new List<Guid>();");
+                s.Add($"            foreach (var role in user.Roles)");
+                s.Add($"                roleIds.Add(role.RoleId);");
+                s.Add($"");
+            }
             s.Add($"            var {CurrentEntity.DTOName.ToCamelCase()} = new {CurrentEntity.DTOName}();");
             s.Add($"");
             foreach (var field in CurrentEntity.Fields.OrderBy(f => f.FieldOrder))
             {
                 s.Add($"            {CurrentEntity.DTOName.ToCamelCase()}.{field.Name} = {CurrentEntity.CamelCaseName}.{field.Name};");
+            }
+            if (CurrentEntity.EntityType == EntityType.User)
+            {
+                s.Add($"            {CurrentEntity.DTOName.ToCamelCase()}.Email = {CurrentEntity.CamelCaseName}.Email;");
+                s.Add($"            {CurrentEntity.DTOName.ToCamelCase()}.RoleIds = roleIds;");
             }
             foreach (var relationship in CurrentEntity.RelationshipsAsChild.OrderBy(o => o.ParentFriendlyName))
             {
@@ -325,6 +357,11 @@ namespace WEB.Models
             s.Add($"");
             s.Add($"        public void Hydrate({CurrentEntity.Name} {CurrentEntity.CamelCaseName}, {CurrentEntity.DTOName} {CurrentEntity.DTOName.ToCamelCase()})");
             s.Add($"        {{");
+            if (CurrentEntity.EntityType == EntityType.User)
+            {
+                s.Add($"            {CurrentEntity.CamelCaseName}.UserName = {CurrentEntity.DTOName.ToCamelCase()}.Email;");
+                s.Add($"            {CurrentEntity.CamelCaseName}.Email = {CurrentEntity.DTOName.ToCamelCase()}.Email;");
+            }
             foreach (var field in CurrentEntity.Fields.OrderBy(f => f.FieldOrder))
             {
                 if (field.KeyField || field.EditPageType == EditPageType.ReadOnly) continue;
@@ -370,7 +407,11 @@ namespace WEB.Models
             foreach (var field in decimalFields)
             {
                 s.Add($"            modelBuilder.Entity<{field.Entity.Name}>().Property(o => o.{field.Name}).HasPrecision({field.Precision}, {field.Scale});");
-
+            }
+            var smallDateTimeFields = DbContext.Fields.Where(f => f.FieldType == FieldType.SmallDateTime && f.Entity.ProjectId == CurrentEntity.ProjectId).OrderBy(f => f.Entity.Name).ThenBy(f => f.FieldOrder).ToList();
+            foreach (var field in smallDateTimeFields)
+            {
+                s.Add($"            modelBuilder.Entity<{field.Entity.Name}>().Property(o => o.{field.Name}).HasColumnType(\"smalldatetime\");");
             }
             s.Add($"        }}");
             s.Add($"    }}");
@@ -394,7 +435,7 @@ namespace WEB.Models
             s.Add($"");
             s.Add($"namespace {CurrentEntity.Project.Namespace}.Controllers");
             s.Add($"{{");
-            s.Add($"    [Authorize{(CurrentEntity.AuthorizationType == AuthorizationType.ProtectAll ? $"(Roles = \"Administrator\")" : string.Empty)}, RoutePrefix(\"api/{CurrentEntity.PluralName.ToLower()}\")]");
+            s.Add($"    [Authorize{(CurrentEntity.AuthorizationType == AuthorizationType.ProtectAll ? (CurrentEntity.Project.UseStringAuthorizeAttributes ? "(Roles = \"Administrator\")" : "Roles(Roles.Administrator)") : string.Empty)}, RoutePrefix(\"api/{CurrentEntity.PluralName.ToLower()}\")]");
             s.Add($"    public {(CurrentEntity.PartialControllerClass ? "partial " : string.Empty)}class {CurrentEntity.PluralName}Controller : BaseApiController");
             s.Add($"    {{");
 
@@ -413,7 +454,7 @@ namespace WEB.Models
             s.Add($"        {{");
             s.Add($"            IQueryable<{CurrentEntity.Name}> results = DbContext.{CurrentEntity.PluralName};");
 
-            if (CurrentEntity.RelationshipsAsChild.Count > 0)
+            if (CurrentEntity.RelationshipsAsChild.Where(r => r.RelationshipAncestorLimit != RelationshipAncestorLimits.Exclude).Any())
             {
                 s.Add($"            if (pagingOptions.IncludeEntities)");
                 s.Add($"            {{");
@@ -483,7 +524,7 @@ namespace WEB.Models
             if (!CurrentEntity.HasCompositePrimaryKey)
             {
                 // composite keys can't insert with blank keys - have to use the update method with a modified isnew check (if record exists)
-                s.Add($"        [{(CurrentEntity.AuthorizationType == AuthorizationType.ProtectChanges ? "Authorize(Roles = \"Administrator\"), " : string.Empty)}HttpPost, Route(\"\")]");
+                s.Add($"        [{(CurrentEntity.AuthorizationType == AuthorizationType.ProtectChanges ? (CurrentEntity.Project.UseStringAuthorizeAttributes ? "Authorize(Roles = \"Administrator\"), " : "AuthorizeRoles(Roles.Administrator), ") : string.Empty)}HttpPost, Route(\"\")]");
                 s.Add($"        public async Task<IHttpActionResult> Insert([FromBody]{CurrentEntity.DTOName} {CurrentEntity.DTOName.ToCamelCase()})");
                 s.Add($"        {{");
                 foreach (var field in CurrentEntity.KeyFields)
@@ -502,7 +543,7 @@ namespace WEB.Models
             #endregion
 
             #region update
-            s.Add($"        [{(CurrentEntity.AuthorizationType == AuthorizationType.ProtectChanges ? "Authorize(Roles = \"Administrator\"), " : string.Empty)}HttpPost, Route(\"{CurrentEntity.RoutePath}\")]");
+            s.Add($"        [{(CurrentEntity.AuthorizationType == AuthorizationType.ProtectChanges ? (CurrentEntity.Project.UseStringAuthorizeAttributes ? "Authorize(Roles = \"Administrator\"), " : "AuthorizeRoles(Roles.Administrator), ") : string.Empty)}HttpPost, Route(\"{CurrentEntity.RoutePath}\")]");
             s.Add($"        public async Task<IHttpActionResult> Update({CurrentEntity.ControllerParameters}, [FromBody]{CurrentEntity.DTOName} {CurrentEntity.DTOName.ToCamelCase()})");
             s.Add($"        {{");
             s.Add($"            if ({GetKeyFieldLinq(CurrentEntity.DTOName.ToCamelCase(), null, "!=", "||")}) return BadRequest(\"Id mismatch\");");
@@ -632,7 +673,7 @@ namespace WEB.Models
             #endregion
 
             #region delete
-            s.Add($"        [{(CurrentEntity.AuthorizationType == AuthorizationType.ProtectChanges ? "Authorize(Roles = \"Administrator\"), " : string.Empty)}HttpDelete Route(\"{CurrentEntity.RoutePath}\")]");
+            s.Add($"        [{(CurrentEntity.AuthorizationType == AuthorizationType.ProtectChanges ? (CurrentEntity.Project.UseStringAuthorizeAttributes ? "Authorize(Roles = \"Administrator\"), " : "AuthorizeRoles(Roles.Administrator), ") : string.Empty)}HttpDelete, Route(\"{CurrentEntity.RoutePath}\")]");
             s.Add($"        public async Task<IHttpActionResult> Delete({CurrentEntity.ControllerParameters})");
             s.Add($"        {{");
             s.Add($"            var {CurrentEntity.CamelCaseName} = await DbContext.{CurrentEntity.PluralName}.SingleOrDefaultAsync(o => {GetKeyFieldLinq("o")});");
@@ -642,10 +683,19 @@ namespace WEB.Models
             s.Add($"");
             foreach (var relationship in CurrentEntity.RelationshipsAsParent.Where(rel => !rel.ChildEntity.Exclude).OrderBy(o => o.SortOrder))
             {
-                var joins = relationship.RelationshipFields.Select(o => $"o.{o.ChildField.Name} == {CurrentEntity.CamelCaseName}.{o.ParentField.Name}").Aggregate((current, next) => current + " && " + next);
-                s.Add($"            if (DbContext.{relationship.ChildEntity.PluralName}.Any(o => {joins}))");
-                s.Add($"                return BadRequest(\"Unable to delete the {CurrentEntity.FriendlyName.ToLower()} as it has related {relationship.ChildEntity.PluralFriendlyName.ToLower()}\");");
-                s.Add($"");
+                if (relationship.CascadeDelete)
+                {
+                    s.Add($"            foreach (var {relationship.ChildEntity.CamelCaseName} in DbContext.{relationship.ChildEntity.PluralName}.Where(o => {relationship.RelationshipFields.Select(rf => "o." + rf.ChildField.Name + " == " + CurrentEntity.CamelCaseName + "." + rf.ParentField.Name).Aggregate((current, next) => current + " && " + next)}))");
+                    s.Add($"                DbContext.Entry({relationship.ChildEntity.CamelCaseName}).State = EntityState.Deleted;");
+                    s.Add($"");
+                }
+                else
+                {
+                    var joins = relationship.RelationshipFields.Select(o => $"o.{o.ChildField.Name} == {CurrentEntity.CamelCaseName}.{o.ParentField.Name}").Aggregate((current, next) => current + " && " + next);
+                    s.Add($"            if (DbContext.{relationship.ChildEntity.PluralName}.Any(o => {joins}))");
+                    s.Add($"                return BadRequest(\"Unable to delete the {CurrentEntity.FriendlyName.ToLower()} as it has related {relationship.ChildEntity.PluralFriendlyName.ToLower()}\");");
+                    s.Add($"");
+                }
             }
             // need to add fk checks here!
             s.Add($"            DbContext.Entry({CurrentEntity.CamelCaseName}).State = EntityState.Deleted;");
@@ -660,18 +710,18 @@ namespace WEB.Models
             #region sort
             if (CurrentEntity.HasASortField)
             {
-                s.Add($"        [{(CurrentEntity.AuthorizationType == AuthorizationType.ProtectChanges ? "Authorize(Roles = \"Administrator\"), " : "")}HttpPost, Route(\"sort\")]");
+                s.Add($"        [{(CurrentEntity.AuthorizationType == AuthorizationType.ProtectChanges ? (CurrentEntity.Project.UseStringAuthorizeAttributes ? "Authorize(Roles = \"Administrator\"), " : "AuthorizeRoles(Roles.Administrator), ") : "")}HttpPost, Route(\"sort\")]");
                 s.Add($"        public async Task<IHttpActionResult> Sort([FromBody]SortedGuids sortedIds)");
                 s.Add($"        {{");
+                //s.Add($"            var {CurrentEntity.PluralName.ToCamelCase()} = await DbContext.{CurrentEntity.PluralName}.Where(o => sortedIds.ids.Contains(o.{CurrentEntity.KeyFields[0].Name})).ToListAsync();");
+                s.Add($"            var {CurrentEntity.PluralName.ToCamelCase()} = await DbContext.{CurrentEntity.PluralName}.ToListAsync();");
+                s.Add($"            if ({CurrentEntity.PluralName.ToCamelCase()}.Count != sortedIds.ids.Length) return BadRequest(\"Some of the {CurrentEntity.PluralFriendlyName.ToLower()} could not be found\");");
+                s.Add($"");
                 s.Add($"            var sortOrder = 0;");
-                s.Add($"            foreach (var id in sortedIds.ids)");
+                s.Add($"            foreach (var {CurrentEntity.Name.ToCamelCase()} in {CurrentEntity.PluralName.ToCamelCase()})");
                 s.Add($"            {{");
-                s.Add($"                var item = await DbContext.{CurrentEntity.PluralName}.SingleOrDefaultAsync(o => o.{CurrentEntity.KeyFields[0].Name} == id);");
-                s.Add($"");
-                s.Add($"                if (item == null) return BadRequest(\"One of the {CurrentEntity.PluralFriendlyName.ToLower()} could not be found\");");
-                s.Add($"");
-                s.Add($"                DbContext.Entry(item).State = EntityState.Modified;");
-                s.Add($"                item.{CurrentEntity.SortField.Name} = sortOrder;");
+                s.Add($"                DbContext.Entry({CurrentEntity.Name.ToCamelCase()}).State = EntityState.Modified;");
+                s.Add($"                {CurrentEntity.Name.ToCamelCase()}.{CurrentEntity.SortField.Name} = Array.IndexOf(sortedIds.ids, {CurrentEntity.Name.ToCamelCase()}.{CurrentEntity.KeyFields[0].Name});");
                 s.Add($"                sortOrder++;");
                 s.Add($"            }}");
                 s.Add($"");
@@ -749,11 +799,11 @@ namespace WEB.Models
                 s.Add($"                ncyBreadcrumb: {{");
                 s.Add($"                    parent: \"app.{(e.RelationshipsAsChild.Any(r => r.Hierarchy) ? e.RelationshipsAsChild.First(r => r.Hierarchy).ParentEntity.Name : e.PluralName).ToCamelCase()}\",");
                 var defaultField = e.Fields.Where(f => f.ShowInSearchResults && !RelationshipFields.Any(rf => rf.ChildFieldId == f.FieldId)).OrderBy(f => f.FieldOrder).FirstOrDefault();
-                if (defaultField == null && e.Breadcrumb == null)
+                if (defaultField == null && string.IsNullOrWhiteSpace(e.Breadcrumb))
                     s.Add($"                    label: \"{e.FriendlyName}\"");
                 //throw new Exception(e.Name + " does not have a breadcrumb or default field (search result field that is not in a relationship as child)");
                 else
-                    s.Add($"                    label: \"{{{{{(e.Breadcrumb ?? $"vm.{e.Name.ToCamelCase()}.{defaultField.Name.ToCamelCase()}")}}}}}\"");
+                    s.Add($"                    label: \"{{{{{(!string.IsNullOrWhiteSpace(e.Breadcrumb) ? e.Breadcrumb : $"vm.{e.Name.ToCamelCase()}.{defaultField.Name.ToCamelCase()}")}}}}}\"");
                 s.Add($"                }}");
                 s.Add($"            }}).state(\"app.{e.PluralName.ToCamelCase()}\", {{");
                 // todo: search fields
@@ -937,9 +987,9 @@ namespace WEB.Models
                     if (field.CustomType == CustomType.Date)
                     {
                         if (field.IsNullable)
-                            s.Add($"                    <td>{handleStart}{{{{ { CurrentEntity.CamelCaseName}.{ field.Name.ToCamelCase()} === null ? \"\" : vm.moment({ CurrentEntity.CamelCaseName}.{ field.Name.ToCamelCase()}).format('DD MMM YYYY{(field.FieldType == FieldType.Date ? string.Empty : " HH:mm:ss")}') }}}}{handleEnd}</td>");
+                            s.Add($"                    <td>{handleStart}{{{{ { CurrentEntity.CamelCaseName}.{ field.Name.ToCamelCase()} === null ? \"\" : vm.moment({ CurrentEntity.CamelCaseName}.{ field.Name.ToCamelCase()}).format('DD MMM YYYY{(field.FieldType == FieldType.Date ? string.Empty : " HH:mm" + (field.FieldType == FieldType.SmallDateTime ? "" : ":ss"))}') }}}}{handleEnd}</td>");
                         else
-                            s.Add($"                    <td>{handleStart}{{{{ vm.moment({ CurrentEntity.CamelCaseName}.{ field.Name.ToCamelCase()}).format('DD MMM YYYY{(field.FieldType == FieldType.Date ? string.Empty : " HH:mm:ss")}') }}}}{handleEnd}</td>");
+                            s.Add($"                    <td>{handleStart}{{{{ vm.moment({ CurrentEntity.CamelCaseName}.{ field.Name.ToCamelCase()}).format('DD MMM YYYY{(field.FieldType == FieldType.Date ? string.Empty : " HH:mm" + (field.FieldType == FieldType.SmallDateTime ? "" : ":ss"))}') }}}}{handleEnd}</td>");
                     }
                     else if (field.CustomType == CustomType.Enum)
                         s.Add($"                    <td>{handleStart}{{{{ vm.appSettings.find(vm.appSettings.{field.Lookup.Name.ToCamelCase()}, {CurrentEntity.CamelCaseName}.{field.Name.ToCamelCase()}).label }}}}{handleEnd}</td>");
@@ -1067,7 +1117,7 @@ namespace WEB.Models
             s.Add($"");
             s.Add($"            promises.push(");
             // composite primary keys can't use the .query method because: http://stackoverflow.com/questions/39405452/ngresource-query-with-composite-key-parameter/40087371#40087371
-            s.Add($"                {CurrentEntity.ResourceName}.{(CurrentEntity.KeyFields.Count == 1 ? "query" : "search")}(");
+            s.Add($"                {CurrentEntity.ResourceName}.{(!CurrentEntity.HasCompositePrimaryKey ? "query" : "search")}(");
             s.Add($"                    {{");
             foreach (var field in CurrentEntity.Fields.Where(f => f.SearchType == SearchType.Exact))
             {
@@ -1095,7 +1145,7 @@ namespace WEB.Models
             s.Add($"                    }}).$promise");
             s.Add($"            );");
             s.Add($"");
-            s.Add($"            $q.all(promises).finally(() => vm.loading = false)");
+            s.Add($"            $q.all(promises).finally(() => vm.loading = false);");
             s.Add($"");
             s.Add($"        }};");
             s.Add($"");
@@ -1137,7 +1187,7 @@ namespace WEB.Models
 
         public string GenerateEditHtml()
         {
-            if (CurrentEntity.EntityType == EntityType.User) return string.Empty;
+            //if (CurrentEntity.EntityType == EntityType.User) return string.Empty;
 
             var s = new StringBuilder();
 
@@ -1154,16 +1204,30 @@ namespace WEB.Models
             var t = string.Empty;
             if (CurrentEntity.Project.Bootstrap3)
             {
-                //s.Add($"                <div class=\"col-sm-12\">");
-                //s.Add($"");
-                //t = "    ";
+                s.Add($"                <div class=\"col-sm-12\">");
+                s.Add($"");
+                t = "    ";
             }
             #region form fields
+            if (CurrentEntity.EntityType == EntityType.User)
+            {
+                s.Add(t + $"                <div class=\"col-sm-6 col-md-4\">");
+                s.Add(t + $"                    <div class=\"form-group\" ng-class=\"{{ 'has-error':  mainForm.$submitted && mainForm.email.$invalid }}\">");
+                s.Add(t + $"                        <label for=\"email\" class=\"control-label\">");
+                s.Add(t + $"                            Email:");
+                s.Add(t + $"                        </label>");
+                s.Add(t + $"                        <input type=\"email\" id=\"email\" name=\"email\" ng-model=\"{CurrentEntity.ViewModelObject}.email\" maxlength=\"256\" class=\"form-control\" ng-required=\"true\" />");
+                s.Add(t + $"                    </div>");
+                s.Add(t + $"                </div>");
+                s.Add($"");
+            }
+
             foreach (var field in CurrentEntity.Fields.OrderBy(o => o.FieldOrder))
             {
                 if (field.KeyField && field.CustomType != CustomType.String && !CurrentEntity.HasCompositePrimaryKey) continue;
                 if (field.EditPageType == EditPageType.Exclude) continue;
                 if (field.EditPageType == EditPageType.SortField) continue;
+                if (field.EditPageType == EditPageType.CalculatedField) continue;
 
                 if (field.EditPageType == EditPageType.ReadOnly)
                 {
@@ -1174,7 +1238,7 @@ namespace WEB.Models
                     s.Add(t + $"                        </label>");
                     if (field.CustomType == CustomType.Date)
                     {
-                        s.Add(t + $"                        <input type=\"text\" id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" class=\"form-control\" ng-disabled=\"true\" value=\"{{{{{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()} ? vm.moment({CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}).format('DD MMMM YYYY{(field.FieldType == FieldType.Date ? string.Empty : " HH:mm:ss")}') : ''}}}}\" />");
+                        s.Add(t + $"                        <input type=\"text\" id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" class=\"form-control\" ng-disabled=\"true\" value=\"{{{{{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()} ? vm.moment({CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}).format('DD MMMM YYYY{(field.FieldType == FieldType.Date ? string.Empty : " HH:mm" + (field.FieldType == FieldType.SmallDateTime ? "" : ":ss"))}') : ''}}}}\" />");
                     }
                     else if (field.CustomType == CustomType.Boolean)
                     {
@@ -1204,7 +1268,7 @@ namespace WEB.Models
                     s.Add(t + $"                        <label class=\"control-label\">");
                     s.Add(t + $"                            {field.Label}:");
                     s.Add(t + $"                        </label>");
-                    s.Add(t + $"                        <ol id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" class=\"nya-bs-select form-control\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} data-live-search=\"true\"{(field.KeyField ? "disabled=\"!vm.isNew\"" : string.Empty)}>");
+                    s.Add(t + $"                        <ol id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" class=\"nya-bs-select form-control\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} data-live-search=\"true\"{(field.KeyField ? " disabled=\"!vm.isNew\"" : string.Empty)}>");
                     s.Add(t + $"                            <li nya-bs-option=\"{relationship.ParentEntity.Name.ToCamelCase()} in vm.{relationship.ParentEntity.PluralName.ToCamelCase()}\" class=\"nya-bs-option\" value=\"{relationship.ParentEntity.Name.ToCamelCase()}.{relationshipField.ParentField.Name.ToCamelCase()}\">");
                     s.Add(t + $"                                <a>{{{{{relationship.ParentEntity.Name.ToCamelCase()}.{relationship.ParentField.Name.ToCamelCase()}}}}}<span class=\"fa fa-check check-mark\"></span></a>");
                     s.Add(t + $"                            </li>");
@@ -1237,7 +1301,7 @@ namespace WEB.Models
                     s.Add(t + $"                        <label for=\"{field.Name.ToCamelCase()}\" class=\"control-label\">");
                     s.Add(t + $"                            {field.Label}:");
                     s.Add(t + $"                        </label>");
-                    if (field.FieldType == FieldType.Text || field.FieldType == FieldType.nText)
+                    if (field.FieldType == FieldType.Text || field.FieldType == FieldType.nText || field.Length == 0)
                     {
                         s.Add(t + $"                        <textarea id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\" class=\"form-control\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} rows=\"6\"" + (field.Length == 0 ? string.Empty : $" maxlength=\"{field.Length}\"") + $"></textarea>");
                     }
@@ -1298,8 +1362,26 @@ namespace WEB.Models
                 }
             }
             #endregion
-            //if (CurrentEntity.Project.Bootstrap3)
-            //    s.Add($"                </div>");
+
+            if (CurrentEntity.EntityType == EntityType.User)
+            {
+                s.Add(t + $"                <div class=\"col-sm-12 col-lg-6\">");
+                s.Add(t + $"                    <div class=\"form-group\">");
+                s.Add(t + $"                        <label class=\"control-label\">");
+                s.Add(t + $"                            Roles:");
+                s.Add(t + $"                        </label>");
+                s.Add(t + $"                        <ol id=\"roles\" name=\"roles\" class=\"nya-bs-select form-control\" ng-model=\"vm.user.roleIds\" multiple>");
+                s.Add(t + $"                            <li nya-bs-option=\"role in vm.appSettings.roles\" class=\"nya-bs-option\" value=\"role.id\">");
+                s.Add(t + $"                                <a>{{{{role.label}}}}<span class=\"fa fa-check check-mark\"></span></a>");
+                s.Add(t + $"                            </li>");
+                s.Add(t + $"                        </ol>");
+                s.Add(t + $"                    </div>");
+                s.Add(t + $"                </div>");
+                s.Add(t + $"");
+            }
+
+            if (CurrentEntity.Project.Bootstrap3)
+                s.Add(t + $"            </div>");
             s.Add($"            </div>");
             s.Add($"");
             s.Add($"        </fieldset>");
@@ -1316,6 +1398,23 @@ namespace WEB.Models
             s.Add($"            <ul>");
             s.Add($"");
             #region form validation
+            if (CurrentEntity.EntityType == EntityType.User)
+            {
+                s.Add($"                <li class=\"help-block has-error\"");
+                s.Add($"                    ng-if=\"mainForm.$submitted\"");
+                s.Add($"                    ng-messages=\"mainForm.email.$error\">");
+                s.Add($"                    <span ng-message=\"required\">");
+                s.Add($"                        Email address is required.");
+                s.Add($"                    </span>");
+                s.Add($"                    <span ng-message=\"minlength\">");
+                s.Add($"                        Email address is too short.");
+                s.Add($"                    </span>");
+                s.Add($"                    <span ng-message=\"email\">");
+                s.Add($"                        Email address is not valid.");
+                s.Add($"                    </span>");
+                s.Add($"                </li>");
+                s.Add($"");
+            }
             foreach (var field in CurrentEntity.Fields.OrderBy(o => o.FieldOrder))
             {
                 if (field.EditPageType == EditPageType.ReadOnly || field.EditPageType == EditPageType.Exclude || field.EditPageType == EditPageType.SortField) continue;
@@ -1338,13 +1437,22 @@ namespace WEB.Models
                 }
                 else if (field.CustomType == CustomType.Enum || field.CustomType == CustomType.String || field.CustomType == CustomType.Number)
                 {
-                    if (field.IsNullable) continue;
+                    if (field.IsNullable && field.CustomType != CustomType.Number) continue;
                     s.Add($"                <li class=\"help-block has-error\"");
                     s.Add($"                    ng-if=\"mainForm.$submitted\"");
                     s.Add($"                    ng-messages=\"mainForm.{field.Name.ToCamelCase()}.$error\">");
-                    s.Add($"                    <span ng-message=\"required\">");
-                    s.Add($"                        {field.Label} is required.");
-                    s.Add($"                    </span>");
+                    if (!field.IsNullable)
+                    {
+                        s.Add($"                    <span ng-message=\"required\">");
+                        s.Add($"                        {field.Label} is required.");
+                        s.Add($"                    </span>");
+                    }
+                    if (field.CustomType == CustomType.Number)
+                    {
+                        s.Add($"                    <span ng-message=\"number\">");
+                        s.Add($"                        {field.Label} is not a valid number.");
+                        s.Add($"                    </span>");
+                    }
                     s.Add($"                </li>");
                     s.Add($"");
                 }
@@ -1375,7 +1483,7 @@ namespace WEB.Models
             s.Add($"");
             s.Add($"        <fieldset ng-disabled=\"vm.loading\">");
             s.Add($"            <button type=\"submit\" class=\"btn btn-success\">Save<i class=\"fa fa-check{(CurrentEntity.Project.Bootstrap3 ? string.Empty : " ml-1")}\"></i></button>");
-            s.Add($"            <button type=\"button\" ng-if=\"!vm.isNew\" class=\"btn btn-danger btn-delete\" ng-click=\"vm.delete()\">Delete<i class=\"fa fa-times{(CurrentEntity.Project.Bootstrap3 ? string.Empty : " ml-1")}\"></i></button>");
+            s.Add($"            <button type=\"button\" ng-if=\"!vm.isNew\" class=\"btn {(CurrentEntity.Project.Bootstrap3 ? "btn-danger btn-delete" : "btn-outline-danger")}\" ng-click=\"vm.delete()\">Delete<i class=\"fa fa-times{(CurrentEntity.Project.Bootstrap3 ? string.Empty : " ml-1")}\"></i></button>");
             s.Add($"        </fieldset>");
             s.Add($"");
             s.Add($"    </form>");
@@ -1394,10 +1502,10 @@ namespace WEB.Models
                     s.Add($"        <h2>{relationship.CollectionFriendlyName}</h2>");
                     s.Add($"");
                     s.Add($"        <fieldset ng-disabled=\"vm.loading\">");
-                    var href = string.Empty;
+                    var href = "/";
                     foreach (var entity in childEntity.GetNavigationEntities())
                     {
-                        href += (href == string.Empty ? string.Empty : "/") + entity.PluralName.ToLower();
+                        href += (href == "/" ? string.Empty : "/") + entity.PluralName.ToLower();
                         foreach (var field in childEntity.GetNavigationFields().Where(f => f.EntityId == entity.EntityId))
                         {
                             if (entity == childEntity)
@@ -1457,7 +1565,7 @@ namespace WEB.Models
 
         public string GenerateEditTypeScript()
         {
-            if (CurrentEntity.EntityType == EntityType.User) return string.Empty;
+            //if (CurrentEntity.EntityType == EntityType.User) return string.Empty;
 
             var s = new StringBuilder();
 
@@ -1525,8 +1633,10 @@ namespace WEB.Models
             s.Add($"                    if (vm.isNew) {{");
             s.Add($"");
             s.Add($"                        {CurrentEntity.ViewModelObject} = new {CurrentEntity.ResourceName}();");
-            foreach (var field in CurrentEntity.KeyFields.OrderBy(f => f.FieldOrder))
-                s.Add($"                        {CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()} = appSettings.{field.NewVariable};");
+            // without the HasCompositePrimaryKey check, it sets the values of the FK fields to newGuid, which then changes the coloring of nasBySelect (not 'empty') and sometimes selects an option (e.g. municipality in iber/datum)
+            if (!CurrentEntity.HasCompositePrimaryKey)
+                foreach (var field in CurrentEntity.KeyFields.OrderBy(f => f.FieldOrder))
+                    s.Add($"                        {CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()} = appSettings.{field.NewVariable};");
             foreach (var field in CurrentEntity.Fields.Where(f => !string.IsNullOrWhiteSpace(f.EditPageDefault)))
                 s.Add($"                        {CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()} = {field.EditPageDefault};");
             var relationship = CurrentEntity.RelationshipsAsChild.FirstOrDefault(r => r.Hierarchy);
@@ -1562,8 +1672,8 @@ namespace WEB.Models
                 s.Add($"");
                 s.Add($"                                    {CurrentEntity.DefaultGo}");
                 s.Add($"");
-                s.Add($"                                }})");
-                s.Add($"                                .$promise);");
+                s.Add($"                                }}).$promise");
+                s.Add($"                        );");
                 s.Add($"");
                 s.Add($"                        $q.all(promises).finally(() => vm.loading = false);");
             }
@@ -1605,8 +1715,8 @@ namespace WEB.Models
             s.Add($"");
             s.Add($"                                    {CurrentEntity.DefaultGo}");
             s.Add($"");
-            s.Add($"                                }})");
-            s.Add($"                                .$promise);");
+            s.Add($"                                }}).$promise");
+            s.Add($"                        );");
             s.Add($"");
             foreach (var rel in CurrentEntity.RelationshipsAsParent.Where(r => r.DisplayListOnParent))
             {
@@ -1691,13 +1801,21 @@ namespace WEB.Models
                 s.Add($"");
                 s.Add($"            if (!dontSetLoading) vm.loading = true;");
                 s.Add($"");
-                s.Add($"            var promise = {rel.ChildEntity.ResourceName}.query(");
+                s.Add($"            var promise = {rel.ChildEntity.ResourceName}.{(rel.ChildEntity.HasCompositePrimaryKey ? "search" : "query")}(");
                 s.Add($"                {{");
                 foreach (var field in rel.RelationshipFields)
                     s.Add($"                    {field.ChildField.Name.ToCamelCase()}: $stateParams.{field.ParentField.Name.ToCamelCase()},");
                 if (rel.ChildEntity.Fields.Any(f => f.EditPageType == EditPageType.SortField))
                     s.Add($"                    pageSize: 0,");
-                s.Add($"                    pageIndex: pageIndex");
+                if (rel.Hierarchy)
+                {
+                    s.Add($"                    pageIndex: pageIndex,");
+                    s.Add($"                    includeEntities: true");
+                }
+                else
+                {
+                    s.Add($"                    pageIndex: pageIndex");
+                }
                 s.Add($"                }},");
                 s.Add($"                (data, headers) => {{");
                 if (!rel.ChildEntity.HasASortField)

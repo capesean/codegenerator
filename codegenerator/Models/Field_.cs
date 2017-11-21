@@ -145,6 +145,11 @@ namespace WEB.Models
                 return GetNetType(FieldType, IsNullable, Lookup);
             }
         }
+
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 
     public enum CustomType

@@ -19,6 +19,8 @@
         vm.loadEntities = loadEntities;
         vm.multideploy = {};
         vm.setCheckBoxes = setCheckBoxes;
+        vm.setCheckBoxesByRow = setCheckBoxesByRow;
+        vm.selectAll = selectAll;
         vm.runMultiDeploy = runMultiDeploy;
         initPage();
         function initPage() {
@@ -89,7 +91,8 @@
             vm.loading = true;
             var promise = lookupResource.query({
                 projectId: $stateParams.projectId,
-                pageIndex: pageIndex
+                pageIndex: pageIndex,
+                pageSize: 0
             }, function (data, headers) {
                 vm.lookupsHeaders = JSON.parse(headers("X-Pagination"));
                 vm.lookups = data;
@@ -191,6 +194,40 @@
                 else
                     vm.multideploy[entity.entityId][item] = checked;
             });
+        }
+        function selectAll() {
+            angular.forEach(vm.entities, function (entity) {
+                setCheckBoxesByRow(entity, true);
+            });
+        }
+        function setCheckBoxesByRow(entity, force) {
+            var checked = !vm.multideploy[entity.entityId]["model"];
+            if (force !== undefined)
+                checked = force;
+            if (!checked || !entity.preventModelDeployment)
+                vm.multideploy[entity.entityId]["model"] = checked;
+            vm.multideploy[entity.entityId]["enums"] = checked;
+            if (!checked || !entity.preventDTODeployment)
+                vm.multideploy[entity.entityId]["dto"] = checked;
+            vm.multideploy[entity.entityId]["settingsDTO"] = checked;
+            if (!checked || !entity.preventDbContextDeployment)
+                vm.multideploy[entity.entityId]["dbContext"] = checked;
+            if (!checked || !entity.preventControllerDeployment)
+                vm.multideploy[entity.entityId]["controller"] = checked;
+            if (!checked || !entity.preventBundleConfigDeployment)
+                vm.multideploy[entity.entityId]["bundleConfig"] = checked;
+            if (!checked || !entity.preventappRouterDeployment)
+                vm.multideploy[entity.entityId]["appRouter"] = checked;
+            if (!checked || !entity.preventApiResourceDeployment)
+                vm.multideploy[entity.entityId]["apiResource"] = checked;
+            if (!checked || !entity.preventListHtmlDeployment)
+                vm.multideploy[entity.entityId]["listHtml"] = checked;
+            if (!checked || !entity.preventListTypeScriptDeployment)
+                vm.multideploy[entity.entityId]["listTypeScript"] = checked;
+            if (!checked || !entity.preventEditHtmlDeployment)
+                vm.multideploy[entity.entityId]["editHtml"] = checked;
+            if (!checked || !entity.preventEditTypeScriptDeployment)
+                vm.multideploy[entity.entityId]["editTypeScript"] = checked;
         }
     }
     ;

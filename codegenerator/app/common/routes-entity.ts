@@ -7,7 +7,7 @@
     entityRoutes.$inject = ["$stateProvider"];
     function entityRoutes($stateProvider) {
 
-        var version = "?v=20170515094438";
+        var version = "?v=20171116115121";
 
         $stateProvider
             .state("app.codeReplacement", {

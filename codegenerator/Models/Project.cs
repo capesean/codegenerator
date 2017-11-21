@@ -41,6 +41,9 @@ namespace WEB.Models
         [MaxLength(50)]
         public string UrlPrefix { get; set; }
 
+        [Required]
+        public bool UseStringAuthorizeAttributes { get; set; }
+
         public virtual ICollection<Entity> Entities { get; set; } = new List<Entity>();
 
         public virtual ICollection<Lookup> Lookups { get; set; } = new List<Lookup>();

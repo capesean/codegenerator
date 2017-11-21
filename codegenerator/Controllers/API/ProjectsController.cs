@@ -85,7 +85,7 @@ namespace WEB.Controllers
             return await Get(project.ProjectId);
         }
 
-        [HttpDelete Route("{projectId:Guid}")]
+        [HttpDelete, Route("{projectId:Guid}")]
         public async Task<IHttpActionResult> Delete(Guid projectId)
         {
             var project = await DbContext.Projects.SingleOrDefaultAsync(o => o.ProjectId == projectId);

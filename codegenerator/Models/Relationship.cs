@@ -11,6 +11,12 @@ namespace WEB.Models
         [Required]
         public Guid RelationshipId { get; set; }
 
+        [Required]
+        public Guid ParentEntityId { get; set; }
+
+        [Required]
+        public Guid ChildEntityId { get; set; }
+
         [Required(AllowEmptyStrings = true)]
         [MaxLength(50)]
         public string CollectionName { get; set; }
@@ -28,12 +34,6 @@ namespace WEB.Models
         public string ParentFriendlyName { get; set; }
 
         [Required]
-        public Guid ParentEntityId { get; set; }
-
-        [Required]
-        public Guid ChildEntityId { get; set; }
-
-        [Required]
         public Guid ParentFieldId { get; set; }
 
         [Required]
@@ -47,6 +47,9 @@ namespace WEB.Models
 
         [Required]
         public RelationshipAncestorLimits RelationshipAncestorLimit { get; set; }
+
+        [Required]
+        public bool CascadeDelete { get; set; }
 
         public virtual ICollection<RelationshipField> RelationshipFields { get; set; } = new List<RelationshipField>();
 

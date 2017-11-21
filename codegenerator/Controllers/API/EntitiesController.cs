@@ -14,7 +14,10 @@ namespace WEB.Controllers
         public async Task<IHttpActionResult> Search([FromUri]PagingOptions pagingOptions, [FromUri]string q = null, [FromUri]Guid? projectId = null)
         {
             IQueryable<Entity> results = DbContext.Entities;
-            results = results.Include(o => o.Project);
+            if (pagingOptions.IncludeEntities)
+            {
+                results = results.Include(o => o.Project);
+            }
 
             if (!string.IsNullOrWhiteSpace(q))
                 results = results.Where(o => o.Name.Contains(q));
@@ -66,6 +69,7 @@ namespace WEB.Controllers
             if (isNew)
             {
                 entity = new Entity();
+
                 DbContext.Entry(entity).State = EntityState.Added;
             }
             else
@@ -93,13 +97,13 @@ namespace WEB.Controllers
             if (entity == null)
                 return NotFound();
 
-            if (DbContext.Relationships.Any(o => o.ChildEntityId == entity.EntityId))
+            if (DbContext.Relationships.Any(o => o.ParentEntityId == entity.EntityId))
                 return BadRequest("Unable to delete the entity as it has related relationships");
 
             if (DbContext.Fields.Any(o => o.EntityId == entity.EntityId))
                 return BadRequest("Unable to delete the entity as it has related fields");
 
-            if (DbContext.Relationships.Any(o => o.ParentEntityId == entity.EntityId))
+            if (DbContext.Relationships.Any(o => o.ChildEntityId == entity.EntityId))
                 return BadRequest("Unable to delete the entity as it has related relationships");
 
             if (DbContext.CodeReplacements.Any(o => o.EntityId == entity.EntityId))

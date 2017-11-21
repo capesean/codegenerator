@@ -298,6 +298,9 @@ namespace WEB.Models
                 // like a fact key being the combination of the munic, year, & indicator entities.
                 var returnVal = true;
 
+                // force it for Tokens in IBER
+                if (EntityId == new Guid("aba77376-8d43-4578-b157-9561f98cd6ff")) return true;
+
                 foreach (var field in KeyFields)
                 {
                     if (!RelationshipsAsChild.Any(r => r.RelationshipFields.Any(f => f.ChildFieldId == field.FieldId)))
@@ -315,6 +318,11 @@ namespace WEB.Models
             {
                 return Fields.SingleOrDefault(f => f.EditPageType == EditPageType.SortField);
             }
+        }
+
+        public override string ToString()
+        {
+            return Name;
         }
     }
 }

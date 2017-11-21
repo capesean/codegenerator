@@ -311,16 +311,22 @@
                 <tr>
                     <th scope="col">Name</th>
                     <th scope="col">Key Field</th>
-                    <th scope="col">Show In Search Results</th>
-                    <th scope="col">Search Type</th>
+                    <th scope="col">Type</th>
+                    <th scope="col">Search Results</th>
+                    <th scope="col">Search</th>
+                    <th scope="col">Unique</th>
+                    <th scope="col">Nullable</th>
                 </tr>
             </thead>
             <tbody ui-sortable="vm.fieldsSortOptions" ng-model="vm.fields">
                 <tr ng-repeat="field in vm.fields" ng-click="vm.goToField(field.entity.project.projectId, field.entity.entityId, field.fieldId)">
                     <td><i class="fa fa-bars sortable-handle"></i>{{ field.name }}</td>
                     <td>{{ field.keyField ? "Yes" : "No" }}</td>
+                    <td>{{ vm.appSettings.find(vm.appSettings.fieldType, field.fieldType).label }}</td>
                     <td>{{ field.showInSearchResults ? "Yes" : "No" }}</td>
                     <td>{{ vm.appSettings.find(vm.appSettings.searchType, field.searchType).label }}</td>
+                    <td>{{ field.isUnique ? "Yes" : "No" }}</td>
+                    <td>{{ field.isNullable ? "Yes" : "No" }}</td>
                 </tr>
             </tbody>
         </table>

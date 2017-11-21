@@ -48,12 +48,12 @@
                     err => {
 
                         notifications.error("Failed to load the entities.", "Error", err);
-                        $state.go("app.home"); 
+                        $state.go("app.home");
 
                     }).$promise
             );
 
-            $q.all(promises).finally(() => vm.loading = false)
+            $q.all(promises).finally(() => vm.loading = false);
 
         };
 

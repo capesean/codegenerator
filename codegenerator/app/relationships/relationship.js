@@ -49,8 +49,8 @@
                 if (vm.isNew) {
                     vm.relationship = new relationshipResource();
                     vm.relationship.relationshipId = appSettings.newGuid;
+                    vm.relationship.relationshipAncestorLimit = 1;
                     vm.relationship.parentEntityId = $stateParams.entityId;
-                    vm.relationship.relationshipAncestorLimit = 3;
                     promises = [];
                     promises.push(entityResource.get({
                         entityId: $stateParams.entityId
@@ -99,7 +99,6 @@
             else {
                 vm.loading = true;
                 vm.relationship.$save(function (data) {
-                    vm.relationship = data;
                     notifications.success("The relationship has been saved.", "Saved");
                     if (vm.isNew)
                         $state.go("app.relationship", {

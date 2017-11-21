@@ -133,9 +133,7 @@
 
                         vm.relationshipField = data;
                         notifications.success("The relationship field has been saved.", "Saved");
-                        $state.go("app.relationshipField", {
-                            relationshipFieldId: vm.relationshipField.relationshipFieldId
-                        });
+                        $state.go("app.relationship", { projectId: $stateParams.projectId, entityId: $stateParams.entityId, relationshipId: $stateParams.relationshipId });
 
                     },
                     err=> {

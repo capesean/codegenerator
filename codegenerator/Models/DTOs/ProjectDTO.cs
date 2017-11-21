@@ -37,6 +37,9 @@ namespace WEB.Models
         [MaxLength(50)]
         public string UrlPrefix { get; set; }
 
+        [Required]
+        public bool UseStringAuthorizeAttributes { get; set; }
+
     }
 
     public partial class ModelFactory
@@ -54,6 +57,7 @@ namespace WEB.Models
             projectDTO.Bootstrap3 = project.Bootstrap3;
             projectDTO.ExcludeTypes = project.ExcludeTypes;
             projectDTO.UrlPrefix = project.UrlPrefix;
+            projectDTO.UseStringAuthorizeAttributes = project.UseStringAuthorizeAttributes;
 
             return projectDTO;
         }
@@ -68,6 +72,7 @@ namespace WEB.Models
             project.Bootstrap3 = projectDTO.Bootstrap3;
             project.ExcludeTypes = projectDTO.ExcludeTypes;
             project.UrlPrefix = projectDTO.UrlPrefix;
+            project.UseStringAuthorizeAttributes = projectDTO.UseStringAuthorizeAttributes;
         }
     }
 }

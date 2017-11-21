@@ -122,6 +122,20 @@
                         </div>
                     </div>
 
+                    <div class="col-sm-4 col-md-3 col-lg-2">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.cascadeDelete.$invalid }">
+                            <label for="cascadeDelete" class="control-label">
+                                Cascade Delete:
+                            </label>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" id="cascadeDelete" name="cascadeDelete" ng-model="vm.relationship.cascadeDelete" />
+                                    Cascade Delete
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
@@ -142,7 +156,7 @@
                     ng-if="mainForm.$submitted"
                     ng-messages="mainForm.childEntityId.$error">
                     <span ng-message="required">
-                        Child Entity is required.
+                        Child is required.
                     </span>
                 </li>
 
@@ -212,7 +226,7 @@
         <h2>Relationship Fields</h2>
 
         <fieldset ng-disabled="vm.loading">
-            <a class="btn btn-primary" href="projects/{{vm.project.projectId}}/entities/{{vm.entity.entityId}}/relationships/{{vm.relationship.relationshipId}}/relationshipfields/{{vm.appSettings.newGuid}}">Add Relationship Field<i class="fa fa-plus-circle"></i></a><br />
+            <a class="btn btn-primary" href="projects/{{vm.project.projectId}}/entities/{{vm.entity.entityId}}/relationships/{{vm.relationship.relationshipId}}/relationshipfields/{{vm.appSettings.newGuid}}">Add Relationship Field<i class="fa fa-plus-circle ml-1"></i></a><br />
             <br />
         </fieldset>
 

@@ -17,6 +17,7 @@
         vm.delete = del;
         vm.isNew = $stateParams.relationshipId === vm.appSettings.newGuid;
         vm.goToRelationshipField = (projectId, entityId, relationshipId, relationshipFieldId) => $state.go("app.relationshipField", { projectId: $stateParams.projectId, entityId: $stateParams.entityId, relationshipId: relationshipId, relationshipFieldId: relationshipFieldId });
+
         vm.loadRelationshipFields = loadRelationshipFields;
 
         initPage();
@@ -74,8 +75,8 @@
 
                         vm.relationship = new relationshipResource();
                         vm.relationship.relationshipId = appSettings.newGuid;
-                         vm.relationship.parentEntityId = $stateParams.entityId;
-                        vm.relationship.relationshipAncestorLimit = 3;
+                        vm.relationship.relationshipAncestorLimit = 1;
+                        vm.relationship.parentEntityId = $stateParams.entityId;
 
                         promises = [];
 
@@ -150,7 +151,6 @@
                 vm.relationship.$save(
                     data => {
 
-                        vm.relationship = data;
                         notifications.success("The relationship has been saved.", "Saved");
                         if (vm.isNew)
                             $state.go("app.relationship", {

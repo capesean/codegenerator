@@ -16,10 +16,10 @@ namespace WEB.Controllers
             IQueryable<Relationship> results = DbContext.Relationships;
             if (pagingOptions.IncludeEntities)
             {
-                results = results.Include(o => o.ChildEntity.Project);
                 results = results.Include(o => o.ParentEntity.Project);
                 results = results.Include(o => o.ParentField.Entity.Project);
                 results = results.Include(o => o.ParentField.Lookup.Project);
+                results = results.Include(o => o.ChildEntity.Project);
             }
 
             if (parentEntityId.HasValue) results = results.Where(o => o.ParentEntityId == parentEntityId);
@@ -35,10 +35,10 @@ namespace WEB.Controllers
         public async Task<IHttpActionResult> Get(Guid relationshipId)
         {
             var relationship = await DbContext.Relationships
-                .Include(o => o.ChildEntity.Project)
                 .Include(o => o.ParentEntity.Project)
                 .Include(o => o.ParentField.Entity.Project)
                 .Include(o => o.ParentField.Lookup.Project)
+                .Include(o => o.ChildEntity.Project)
                 .SingleOrDefaultAsync(o => o.RelationshipId == relationshipId);
 
             if (relationship == null)
@@ -75,7 +75,7 @@ namespace WEB.Controllers
             {
                 relationship = new Relationship();
 
-                relationshipDTO.SortOrder = (await DbContext.Relationships.MaxAsync(o => (int?)o.SortOrder) ?? 0) + 1;
+                relationshipDTO.SortOrder = (await DbContext.Relationships.Where(o => o.ParentEntityId == relationshipDTO.ParentEntityId).MaxAsync(o => (int?)o.SortOrder) ?? 0) + 1;
 
                 DbContext.Entry(relationship).State = EntityState.Added;
             }
@@ -117,15 +117,14 @@ namespace WEB.Controllers
         [HttpPost, Route("sort")]
         public async Task<IHttpActionResult> Sort([FromBody]SortedGuids sortedIds)
         {
+            var relationships = await DbContext.Relationships.Where(r => sortedIds.ids.Contains(r.RelationshipId)).ToListAsync();
+            if (relationships.Count != sortedIds.ids.Length) return BadRequest("Some of the relationships could not be found");
+
             var sortOrder = 0;
-            foreach (var id in sortedIds.ids)
+            foreach (var relationship in relationships)
             {
-                var item = await DbContext.Relationships.SingleOrDefaultAsync(o => o.RelationshipId == id);
-
-                if (item == null) return BadRequest("One of the relationships could not be found");
-
-                DbContext.Entry(item).State = EntityState.Modified;
-                item.SortOrder = sortOrder;
+                DbContext.Entry(relationship).State = EntityState.Modified;
+                relationship.SortOrder = Array.IndexOf(sortedIds.ids, relationship.RelationshipId);
                 sortOrder++;
             }
 

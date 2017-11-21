@@ -92,6 +92,20 @@
                         </div>
                     </div>
 
+                    <div class="col-sm-4 col-md-3 col-lg-2">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.useStringAuthorizeAttributes.$invalid }">
+                            <label for="useStringAuthorizeAttributes" class="control-label">
+                                Use String Authorize Attributes:
+                            </label>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" id="useStringAuthorizeAttributes" name="useStringAuthorizeAttributes" ng-model="vm.project.useStringAuthorizeAttributes" />
+                                    Use String Authorize Attributes
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
@@ -167,9 +181,11 @@
 
         <fieldset ng-disabled="vm.loading">
             <a class="btn btn-primary" href="projects/{{vm.project.projectId}}/entities/{{vm.appSettings.newGuid}}">Add Entity<i class="fa fa-plus-circle"></i></a>
-            <button type="button" ng-if="!vm.isNew" class="btn btn-primary" ng-click="vm.runMultiDeploy()">Multi-Deploy<i class="fa fa-refresh"></i></button><br />
-            <br />
+            <button type="button" class="btn btn-primary" ng-click="vm.runMultiDeploy()">Multi-Deploy<i class="fa fa-refresh"></i></button>
+            <button type="button" class="btn btn-default" ng-click="vm.selectAll()">Select All</button>
         </fieldset>
+
+        <br />
 
         <table class="table table-striped table-hover table-bordered row-navigation ">
             <thead class="rotated">
@@ -192,7 +208,7 @@
             </thead>
             <tbody>
                 <tr ng-repeat="entity in vm.entities" ng-click="vm.goToEntity(entity.project.projectId, entity.entityId)">
-                    <td><a href="/projects/{{vm.project.projectId}}/entities/{{entity.entityId}}">{{ entity.name }}</a></td>
+                    <td ng-click="$event.stopPropagation();vm.setCheckBoxesByRow(entity);"><a ng-click="$event.stopPropagation();$event.preventDefault();vm.goToEntity(entity.project.projectId, entity.entityId);" href="/projects/{{vm.project.projectId}}/entities/{{entity.entityId}}">{{ entity.name }}</a></td>
                     <td class="text-center" ng-click="$event.stopPropagation()" uib-tooltip="{{entity.preventModelDeployment}}"><input type="checkbox" ng-disabled="!!entity.preventModelDeployment" ng-model="vm.multideploy[entity.entityId].model" /></td>
                     <td class="text-center" ng-click="$event.stopPropagation()"><input type="checkbox" ng-model="vm.multideploy[entity.entityId].enums" /></td>
                     <td class="text-center" ng-click="$event.stopPropagation()" uib-tooltip="{{entity.preventDTODeployment}}"><input type="checkbox" ng-disabled="!!entity.preventDTODeployment" ng-model="vm.multideploy[entity.entityId].dto" /></td>
@@ -211,7 +227,7 @@
         </table>
 
         <div ng-if="vm.deploymentResults">
-            
+
             <h2>Deployment Results</h2>
 
             <table class="table table-striped table-hover table-bordered">

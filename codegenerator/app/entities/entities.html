@@ -24,7 +24,7 @@
 
         <hr />
 
-        <table class="table table-striped table-hover table-bordered row-navigation table-sm">
+        <table class="table table-striped table-hover table-bordered row-navigation table-sm" ng-class="{ 'disabled': vm.loading }">
             <thead>
                 <tr>
                     <th scope="col">Project</th>
@@ -39,7 +39,7 @@
             </tbody>
         </table>
 
-        <div class="row" ng-if="!vm.loading">
+        <div class="row" ng-class="{ 'disabled': vm.loading }">
             <div class="col-sm-7">
                 <app-pager headers="vm.headers" callback="vm.runSearch"></app-pager>
             </div>

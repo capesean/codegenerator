@@ -81,13 +81,13 @@ namespace WEB.Models
         [Required]
         public bool Exclude { get; set; }
 
-        public virtual ICollection<CodeReplacement> CodeReplacements { get; set; } = new List<CodeReplacement>();
-
-        public virtual ICollection<Relationship> RelationshipsAsChild { get; set; } = new List<Relationship>();
+        public virtual ICollection<Relationship> RelationshipsAsParent { get; set; } = new List<Relationship>();
 
         public virtual ICollection<Field> Fields { get; set; } = new List<Field>();
 
-        public virtual ICollection<Relationship> RelationshipsAsParent { get; set; } = new List<Relationship>();
+        public virtual ICollection<Relationship> RelationshipsAsChild { get; set; } = new List<Relationship>();
+
+        public virtual ICollection<CodeReplacement> CodeReplacements { get; set; } = new List<CodeReplacement>();
 
         [ForeignKey("ProjectId")]
         public virtual Project Project { get; set; }
