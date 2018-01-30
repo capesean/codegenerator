@@ -40,7 +40,7 @@
                                 Field Type:
                             </label>
                             <ol id="fieldType" name="fieldType" class="nya-bs-select form-control" ng-model="vm.field.fieldType" ng-required="true" data-live-search="true">
-                                <li nya-bs-option="fieldType in vm.appSettings.fieldType" class="nya-bs-option" value="fieldType.id">
+                                <li nya-bs-option="fieldType in vm.appSettings.fieldType | orderBy: 'label'" class="nya-bs-option" value="fieldType.id">
                                     <a>{{fieldType.label}}<span class="fa fa-check check-mark"></span></a>
                                 </li>
                             </ol>
@@ -53,6 +53,15 @@
                                 Length:
                             </label>
                             <input type="number" id="length" name="length" ng-model="vm.field.length" class="form-control" ng-required="true" />
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4 col-md-3 col-lg-2" ng-if="vm.showLength()">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.minLength.$invalid }">
+                            <label for="minLength" class="control-label">
+                                Min Length:
+                            </label>
+                            <input type="number" id="minLength" name="minLength" ng-model="vm.field.minLength" class="form-control" ng-required="true" />
                         </div>
                     </div>
 
@@ -190,7 +199,7 @@
                                 Lookup:
                             </label>
                             <ol id="lookupId" name="lookupId" class="nya-bs-select form-control" ng-model="vm.field.lookupId" data-live-search="true">
-                                <li nya-bs-option="lookup in vm.lookups" class="nya-bs-option" value="lookup.lookupId">
+                                <li nya-bs-option="lookup in vm.lookups | orderBy: 'name'" class="nya-bs-option" value="lookup.lookupId">
                                     <a>{{lookup.name}}<span class="fa fa-check check-mark"></span></a>
                                 </li>
                             </ol>

@@ -138,9 +138,9 @@ namespace WEB.Models
                         {
                             //s.Add($"        [Column(TypeName = \"{field.FieldType.ToString().ToLower()}(MAX)\")]");
                         }
-                        else
+                        else if (field.Length > 0)
                         {
-                            s.Add($"        [MaxLength({field.Length})]");
+                            s.Add($"        [MaxLength({field.Length}){(field.MinLength > 0 ? $", MinLength({field.MinLength})" : "")}]");
                         }
                     }
                     if (field.IsUnique)
@@ -307,7 +307,7 @@ namespace WEB.Models
                 s.Add($"        public {Field.GetNetType(field.FieldType, field.EditPageType == EditPageType.ReadOnly ? true : field.IsNullable, field.Lookup)} {field.Name} {{ get; set; }}");
                 s.Add($"");
             }
-            foreach (var relationship in CurrentEntity.RelationshipsAsChild)
+            foreach (var relationship in CurrentEntity.RelationshipsAsChild.OrderBy(r => r.SortOrder))
             {
                 // using exclude to avoid circular references. example: KTU-PACK: version => localisation => contentset => version (UpdateFromVersion)
                 if (relationship.RelationshipAncestorLimit == RelationshipAncestorLimits.Exclude) continue;
@@ -327,6 +327,8 @@ namespace WEB.Models
             s.Add($"    {{");
             s.Add($"        public {CurrentEntity.DTOName} Create({CurrentEntity.Name} {CurrentEntity.CamelCaseName})");
             s.Add($"        {{");
+            s.Add($"            if ({CurrentEntity.CamelCaseName} == null) return null;");
+            s.Add($"");
             if (CurrentEntity.EntityType == EntityType.User)
             {
                 s.Add($"            var roleIds = new List<Guid>();");
@@ -349,7 +351,7 @@ namespace WEB.Models
             {
                 // using exclude to avoid circular references. example: KTU-PACK: version => localisation => contentset => version (UpdateFromVersion)
                 if (relationship.RelationshipAncestorLimit == RelationshipAncestorLimits.Exclude) continue;
-                s.Add($"            {CurrentEntity.DTOName.ToCamelCase()}.{relationship.ParentName} = {CurrentEntity.CamelCaseName}.{relationship.ParentName} == null ? null : Create({CurrentEntity.CamelCaseName}.{relationship.ParentName});");
+                s.Add($"            {CurrentEntity.DTOName.ToCamelCase()}.{relationship.ParentName} = Create({CurrentEntity.CamelCaseName}.{relationship.ParentName});");
             }
             s.Add($"");
             s.Add($"            return {CurrentEntity.DTOName.ToCamelCase()};");
@@ -504,7 +506,7 @@ namespace WEB.Models
             s.Add($"        [HttpGet, Route(\"{CurrentEntity.RoutePath}\")]");
             s.Add($"        public async Task<IHttpActionResult> Get({CurrentEntity.ControllerParameters})");
             s.Add($"        {{");
-            s.Add($"            var {CurrentEntity.Name.ToLower()} = await DbContext.{CurrentEntity.PluralName}");
+            s.Add($"            var {CurrentEntity.CamelCaseName} = await DbContext.{CurrentEntity.PluralName}");
             foreach (var relationship in CurrentEntity.RelationshipsAsChild.Where(r => r.RelationshipAncestorLimit != RelationshipAncestorLimits.Exclude).OrderBy(r => r.SortOrder))
             {
                 foreach (var result in GetTopAncestors(new List<string>(), "o", relationship, relationship.RelationshipAncestorLimit))
@@ -512,10 +514,10 @@ namespace WEB.Models
             }
             s.Add($"                .SingleOrDefaultAsync(o => {GetKeyFieldLinq("o")});");
             s.Add($"");
-            s.Add($"            if ({CurrentEntity.Name.ToLower()} == null)");
+            s.Add($"            if ({CurrentEntity.CamelCaseName} == null)");
             s.Add($"                return NotFound();");
             s.Add($"");
-            s.Add($"            return Ok(ModelFactory.Create({CurrentEntity.Name.ToLower()}));");
+            s.Add($"            return Ok(ModelFactory.Create({CurrentEntity.CamelCaseName}));");
             s.Add($"        }}");
             s.Add($"");
             #endregion
@@ -974,7 +976,7 @@ namespace WEB.Models
             var firstCol = true;
             foreach (var field in CurrentEntity.Fields.Where(f => f.ShowInSearchResults).OrderBy(f => f.FieldOrder))
             {
-                var handleStart = firstCol && CurrentEntity.HasASortField ? $"<div class=\"table-cell\"><i class=\"fa fa-sort sortable-handle\" ng-if=\"vm.{CurrentEntity.PluralName.ToCamelCase()}.length > 1\" ng-click=\"$event.stopPropagation();\"></i></div><div class=\"table-cell\">" : string.Empty;
+                var handleStart = firstCol && CurrentEntity.HasASortField ? $"<i class=\"fa fa-sort sortable-handle mt-1\" ng-if=\"vm.{CurrentEntity.PluralName.ToCamelCase()}.length > 1\" ng-click=\"$event.stopPropagation();\"></i><div class=\"sortColumnText\">" : string.Empty;
                 var handleEnd = firstCol && CurrentEntity.HasASortField ? $"</div>" : string.Empty;
 
                 if (CurrentEntity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(f => f.ChildFieldId == field.FieldId)))
@@ -1105,7 +1107,7 @@ namespace WEB.Models
 
                 }
             }
-            s.Add($"            $q.all(promises).finally(() => runSearch(0))");
+            s.Add($"            $q.all(promises).finally(() => runSearch(0));");
             s.Add($"");
             s.Add($"        }}");
             s.Add($"");
@@ -1125,6 +1127,13 @@ namespace WEB.Models
             }
             if (CurrentEntity.Fields.Any(f => f.SearchType == SearchType.Text))
                 s.Add($"                        q: vm.search.q,"); // todo: what would happen if searching and the entity is sortable? should disable sorting? 
+            // instruct api to load related entities as this entity has parent entities in results grid
+            foreach (var field in CurrentEntity.Fields.Where(f => f.ShowInSearchResults).OrderBy(f => f.FieldOrder))
+                if (CurrentEntity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(f => f.ChildFieldId == field.FieldId)))
+                {
+                    s.Add($"                        includeEntities: true,");
+                    break;
+                }
             if (CurrentEntity.HasASortField)
                 s.Add($"                        pageSize: 0");
             else
@@ -1202,12 +1211,13 @@ namespace WEB.Models
             s.Add($"            <div class=\"row\">");
             s.Add($"");
             var t = string.Empty;
-            if (CurrentEntity.Project.Bootstrap3)
-            {
-                s.Add($"                <div class=\"col-sm-12\">");
-                s.Add($"");
-                t = "    ";
-            }
+            // not really a bootstrap3 issue - old projects will be affected by this now being commented
+            //if (CurrentEntity.Project.Bootstrap3)
+            //{
+            //    s.Add($"                <div class=\"col-sm-12\">");
+            //    s.Add($"");
+            //    t = "    ";
+            //}
             #region form fields
             if (CurrentEntity.EntityType == EntityType.User)
             {
@@ -1303,7 +1313,7 @@ namespace WEB.Models
                     s.Add(t + $"                        </label>");
                     if (field.FieldType == FieldType.Text || field.FieldType == FieldType.nText || field.Length == 0)
                     {
-                        s.Add(t + $"                        <textarea id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\" class=\"form-control\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} rows=\"6\"" + (field.Length == 0 ? string.Empty : $" maxlength=\"{field.Length}\"") + $"></textarea>");
+                        s.Add(t + $"                        <textarea id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\" class=\"form-control\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} rows=\"6\"" + (field.Length == 0 ? string.Empty : $" maxlength=\"{field.Length}\"") + (field.MinLength > 0 ? " ng-minlength=\"" + field.MinLength + "\"" : "") + $"></textarea>");
                     }
                     else
                     {
@@ -1380,8 +1390,9 @@ namespace WEB.Models
                 s.Add(t + $"");
             }
 
-            if (CurrentEntity.Project.Bootstrap3)
-                s.Add(t + $"            </div>");
+            // not really a bootstrap3 issue - old projects will be affected by this now being commented
+            //if (CurrentEntity.Project.Bootstrap3)
+            //    s.Add(t + $"            </div>");
             s.Add($"            </div>");
             s.Add($"");
             s.Add($"        </fieldset>");
@@ -1451,6 +1462,12 @@ namespace WEB.Models
                     {
                         s.Add($"                    <span ng-message=\"number\">");
                         s.Add($"                        {field.Label} is not a valid number.");
+                        s.Add($"                    </span>");
+                    }
+                    if (field.MinLength > 0)
+                    {
+                        s.Add($"                    <span ng-message=\"minlength\">");
+                        s.Add($"                        {field.Label} is too short.");
                         s.Add($"                    </span>");
                     }
                     s.Add($"                </li>");
@@ -1532,7 +1549,7 @@ namespace WEB.Models
                     var firstCol = true;
                     foreach (var column in childEntity.GetSearchResultsFields(CurrentEntity))
                     {
-                        s.Add($"                    <td>{(firstCol && childEntity.HasASortField ? $"<div class=\"table-cell\"><i class=\"fa fa-sort sortable-handle\" ng-if=\"vm.{relationship.CollectionName.ToCamelCase()}.length > 1\" ng-click=\"$event.stopPropagation();\"></i></div>" : string.Empty)}{(firstCol && childEntity.HasASortField ? "<div class=\"table-cell\">" + column.Value + "</div>" : column.Value)}</td>");
+                        s.Add($"                    <td>{(firstCol && childEntity.HasASortField ? $"<i class=\"fa fa-sort sortable-handle mt-1\" ng-if=\"vm.{relationship.CollectionName.ToCamelCase()}.length > 1\" ng-click=\"$event.stopPropagation();\"></i>" : string.Empty)}{(firstCol && childEntity.HasASortField ? "<div class=\"sortColumnText\">" + column.Value + "</div>" : column.Value)}</td>");
                         firstCol = false;
                     }
                     s.Add($"                </tr>");
@@ -1664,12 +1681,7 @@ namespace WEB.Models
                 s.Add($"                                }},");
                 s.Add($"                                err => {{");
                 s.Add($"");
-                s.Add($"                                    if (err.status === 404) {{");
-                s.Add($"                                        notifications.error(\"The requested {relationship.ParentEntity.FriendlyName.ToLower()} does not exist.\", \"Error\");");
-                s.Add($"                                    }} else {{");
-                s.Add($"                                        notifications.error(\"Failed to load the {relationship.ParentEntity.FriendlyName.ToLower()}.\", \"Error\", err);");
-                s.Add($"                                    }}");
-                s.Add($"");
+                s.Add($"                                    errorService.handleApiError(err, \"{relationship.ParentEntity.FriendlyName.ToLower()}\", \"load\");");
                 s.Add($"                                    {CurrentEntity.DefaultGo}");
                 s.Add($"");
                 s.Add($"                                }}).$promise");
@@ -1707,12 +1719,7 @@ namespace WEB.Models
             s.Add($"                                }},");
             s.Add($"                                err => {{");
             s.Add($"");
-            s.Add($"                                    if (err.status === 404) {{");
-            s.Add($"                                        notifications.error(\"The requested {CurrentEntity.FriendlyName.ToLower()} does not exist.\", \"Error\");");
-            s.Add($"                                    }} else {{");
-            s.Add($"                                        notifications.error(\"Failed to load the {CurrentEntity.FriendlyName.ToLower()}.\", \"Error\", err);");
-            s.Add($"                                    }}");
-            s.Add($"");
+            s.Add($"                                    errorService.handleApiError(err, \"{CurrentEntity.FriendlyName.ToLower()}\", \"load\");");
             s.Add($"                                    {CurrentEntity.DefaultGo}");
             s.Add($"");
             s.Add($"                                }}).$promise");
@@ -1722,7 +1729,8 @@ namespace WEB.Models
             {
                 s.Add($"                        promises.push(load{rel.ChildEntity.PluralName}(0, true));");
             }
-            s.Add($"");
+            if (CurrentEntity.RelationshipsAsParent.Where(r => r.DisplayListOnParent).Count() > 0)
+                s.Add($"");
             s.Add($"                        $q.all(promises).finally(() => vm.loading = false);");
             s.Add($"                    }}");
             s.Add($"                }});");
@@ -1736,31 +1744,31 @@ namespace WEB.Models
             s.Add($"            if ($scope.mainForm.$invalid) {{");
             s.Add($"");
             s.Add($"                notifications.error(\"The form has not been completed correctly.\", \"Error\");");
-            s.Add($"");
-            s.Add($"            }} else {{");
-            s.Add($"");
-            s.Add($"                vm.loading = true;");
-            s.Add($"");
-            s.Add($"                {CurrentEntity.ViewModelObject}.$save(");
-            s.Add($"                    data => {{");
-            s.Add($"");
-            // ngResource automatically updates the object
-            //s.Add($"                        {CurrentEntity.ViewModelObject} = data;");
-            s.Add($"                        notifications.success(\"The {CurrentEntity.FriendlyName.ToLower()} has been saved.\", \"Saved\");");
-            s.Add($"                        if (vm.isNew)");
-            s.Add($"                            $state.go(\"app.{CurrentEntity.CamelCaseName}\", {{");
-            foreach (var field in CurrentEntity.KeyFields.OrderBy(f => f.FieldOrder))
-                s.Add($"                                {field.Name.ToCamelCase()}: {CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}" + (field == CurrentEntity.KeyFields.OrderBy(f => f.FieldOrder).Last() ? string.Empty : ","));
-            s.Add($"                            }});");
-            s.Add($"");
-            s.Add($"                    }},");
-            s.Add($"                    err=> {{");
-            s.Add($"");
-            s.Add($"                        errorService.handleApiError(err, \"{CurrentEntity.FriendlyName.ToLower()}\");");
-            s.Add($"");
-            s.Add($"                    }}).finally(() => vm.loading = false);");
+            s.Add($"                return;");
             s.Add($"");
             s.Add($"            }}");
+            s.Add($"");
+            s.Add($"            vm.loading = true;");
+            s.Add($"");
+            s.Add($"            {CurrentEntity.ViewModelObject}.$save(");
+            s.Add($"                data => {{");
+            s.Add($"");
+            // ngResource automatically updates the object
+            //s.Add($"                    {CurrentEntity.ViewModelObject} = data;");
+            s.Add($"                    notifications.success(\"The {CurrentEntity.FriendlyName.ToLower()} has been saved.\", \"Saved\");");
+            s.Add($"                    if (vm.isNew)");
+            s.Add($"                        $state.go(\"app.{CurrentEntity.CamelCaseName}\", {{");
+            foreach (var field in CurrentEntity.KeyFields.OrderBy(f => f.FieldOrder))
+                s.Add($"                            {field.Name.ToCamelCase()}: {CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}" + (field == CurrentEntity.KeyFields.OrderBy(f => f.FieldOrder).Last() ? string.Empty : ","));
+            s.Add($"                        }});");
+            s.Add($"");
+            s.Add($"                }},");
+            s.Add($"                err=> {{");
+            s.Add($"");
+            s.Add($"                    errorService.handleApiError(err, \"{CurrentEntity.FriendlyName.ToLower()}\");");
+            s.Add($"");
+            s.Add($"                }}).finally(() => vm.loading = false);");
+            s.Add($"");
             s.Add($"        }};");
             #endregion
 
@@ -1768,28 +1776,27 @@ namespace WEB.Models
             s.Add($"");
             s.Add($"        function del() {{");
             s.Add($"");
-            s.Add($"            if (confirm(\"Confirm delete?\")) {{");
+            s.Add($"            if (!confirm(\"Confirm delete?\")) return;");
             s.Add($"");
-            s.Add($"                vm.loading = true;");
+            s.Add($"            vm.loading = true;");
             s.Add($"");
-            s.Add($"                {CurrentEntity.ResourceName}.delete(");
-            s.Add($"                    {{");
+            s.Add($"            {CurrentEntity.ResourceName}.delete(");
+            s.Add($"                {{");
             foreach (var field in CurrentEntity.KeyFields.OrderBy(f => f.FieldOrder))
-                s.Add($"                        {field.Name.ToCamelCase()}: $stateParams.{field.Name.ToCamelCase()}" + (field == CurrentEntity.KeyFields.OrderBy(f => f.FieldOrder).Last() ? string.Empty : ","));
-            s.Add($"                    }},");
-            s.Add($"                    () => {{");
+                s.Add($"                    {field.Name.ToCamelCase()}: $stateParams.{field.Name.ToCamelCase()}" + (field == CurrentEntity.KeyFields.OrderBy(f => f.FieldOrder).Last() ? string.Empty : ","));
+            s.Add($"                }},");
+            s.Add($"                () => {{");
             s.Add($"");
-            s.Add($"                        notifications.success(\"The {CurrentEntity.FriendlyName.ToLower()} has been deleted.\", \"Deleted\");");
-            s.Add($"                        {CurrentEntity.DefaultGo}");
+            s.Add($"                    notifications.success(\"The {CurrentEntity.FriendlyName.ToLower()} has been deleted.\", \"Deleted\");");
+            s.Add($"                    {CurrentEntity.DefaultGo}");
             s.Add($"");
-            s.Add($"                    }}, err => {{");
+            s.Add($"                }}, err => {{");
             s.Add($"");
-            s.Add($"                        errorService.handleApiError(err, \"{CurrentEntity.FriendlyName.ToLower()}\", \"delete\");");
+            s.Add($"                    errorService.handleApiError(err, \"{CurrentEntity.FriendlyName.ToLower()}\", \"delete\");");
             s.Add($"");
-            s.Add($"                    }})");
-            s.Add($"                    .$promise.finally(() => vm.loading = false);");
+            s.Add($"                }})");
+            s.Add($"                .$promise.finally(() => vm.loading = false);");
             s.Add($"");
-            s.Add($"            }}");
             s.Add($"        }}");
             #endregion
 

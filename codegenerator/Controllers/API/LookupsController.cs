@@ -14,14 +14,17 @@ namespace WEB.Controllers
         public async Task<IHttpActionResult> Search([FromUri]PagingOptions pagingOptions, [FromUri]string q = null, [FromUri]Guid? projectId = null)
         {
             IQueryable<Lookup> results = DbContext.Lookups;
-            results = results.Include(o => o.Project);
+            if (pagingOptions.IncludeEntities)
+            {
+                results = results.Include(o => o.Project);
+            }
 
             if (!string.IsNullOrWhiteSpace(q))
                 results = results.Where(o => o.Name.Contains(q));
 
             if (projectId.HasValue) results = results.Where(o => o.ProjectId == projectId);
 
-            results = results.OrderBy(o => o.LookupId);
+            results = results.OrderBy(o => o.Name);
 
             return Ok((await GetPaginatedResponse(results, pagingOptions)).Select(o => ModelFactory.Create(o)));
         }
@@ -66,6 +69,7 @@ namespace WEB.Controllers
             if (isNew)
             {
                 lookup = new Lookup();
+
                 DbContext.Entry(lookup).State = EntityState.Added;
             }
             else
@@ -92,6 +96,12 @@ namespace WEB.Controllers
 
             if (lookup == null)
                 return NotFound();
+
+            if (DbContext.LookupOptions.Any(o => o.LookupId == lookup.LookupId))
+                return BadRequest("Unable to delete the lookup as it has related lookup options");
+
+            if (DbContext.Fields.Any(o => o.LookupId == lookup.LookupId))
+                return BadRequest("Unable to delete the lookup as it has related fields");
 
             DbContext.Entry(lookup).State = EntityState.Deleted;
 

@@ -29,15 +29,17 @@ namespace WEB.Models
     {
         public RelationshipFieldDTO Create(RelationshipField relationshipField)
         {
+            if (relationshipField == null) return null;
+
             var relationshipFieldDTO = new RelationshipFieldDTO();
 
             relationshipFieldDTO.RelationshipFieldId = relationshipField.RelationshipFieldId;
             relationshipFieldDTO.RelationshipId = relationshipField.RelationshipId;
             relationshipFieldDTO.ParentFieldId = relationshipField.ParentFieldId;
             relationshipFieldDTO.ChildFieldId = relationshipField.ChildFieldId;
-            relationshipFieldDTO.ChildField = relationshipField.ChildField == null ? null : Create(relationshipField.ChildField);
-            relationshipFieldDTO.ParentField = relationshipField.ParentField == null ? null : Create(relationshipField.ParentField);
-            relationshipFieldDTO.Relationship = relationshipField.Relationship == null ? null : Create(relationshipField.Relationship);
+            relationshipFieldDTO.ParentField = Create(relationshipField.ParentField);
+            relationshipFieldDTO.ChildField = Create(relationshipField.ChildField);
+            relationshipFieldDTO.Relationship = Create(relationshipField.Relationship);
 
             return relationshipFieldDTO;
         }

@@ -32,6 +32,8 @@ namespace WEB.Models
     {
         public LookupOptionDTO Create(LookupOption lookupOption)
         {
+            if (lookupOption == null) return null;
+
             var lookupOptionDTO = new LookupOptionDTO();
 
             lookupOptionDTO.LookupOptionId = lookupOption.LookupOptionId;
@@ -40,7 +42,7 @@ namespace WEB.Models
             lookupOptionDTO.FriendlyName = lookupOption.FriendlyName;
             lookupOptionDTO.Value = lookupOption.Value;
             lookupOptionDTO.SortOrder = lookupOption.SortOrder;
-            lookupOptionDTO.Lookup = lookupOption.Lookup == null ? null : Create(lookupOption.Lookup);
+            lookupOptionDTO.Lookup = Create(lookupOption.Lookup);
 
             return lookupOptionDTO;
         }

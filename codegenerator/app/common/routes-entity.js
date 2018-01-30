@@ -4,7 +4,7 @@
     angular.module('entityRoutes', []).config(entityRoutes);
     entityRoutes.$inject = ["$stateProvider"];
     function entityRoutes($stateProvider) {
-        var version = "?v=20171116115121";
+        var version = "?v=20180130150315";
         $stateProvider
             .state("app.codeReplacement", {
             url: "/projects/:projectId/entities/:entityId/codereplacements/:codeReplacementId",

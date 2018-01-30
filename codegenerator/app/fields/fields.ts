@@ -24,7 +24,7 @@
 
             var promises = [];
 
-            $q.all(promises).finally(() => runSearch(0))
+            $q.all(promises).finally(() => runSearch(0));
 
         }
 
@@ -38,6 +38,7 @@
                 fieldResource.query(
                     {
                         q: vm.search.q,
+                        includeEntities: true,
                         pageSize: 0
                     },
                     (data, headers) => {
@@ -53,7 +54,7 @@
                     }).$promise
             );
 
-            $q.all(promises).finally(() => vm.loading = false)
+            $q.all(promises).finally(() => vm.loading = false);
 
         };
 

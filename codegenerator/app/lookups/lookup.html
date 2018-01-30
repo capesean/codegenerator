@@ -61,11 +61,11 @@
         <h2>Lookup Options</h2>
 
         <fieldset ng-disabled="vm.loading">
-            <a class="btn btn-primary" href="projects/{{vm.project.projectId}}/lookups/{{vm.lookup.lookupId}}/lookupoptions/{{vm.appSettings.newGuid}}">Add Lookup Option<i class="fa fa-plus-circle"></i></a><br />
+            <a class="btn btn-primary" href="/projects/{{vm.project.projectId}}/lookups/{{vm.lookup.lookupId}}/lookupoptions/{{vm.appSettings.newGuid}}">Add Lookup Option<i class="fa fa-plus-circle ml-1"></i></a><br />
             <br />
         </fieldset>
 
-        <table class="table table-striped table-hover table-bordered row-navigation table-sm">
+        <table class="table table-striped table-hover table-bordered row-navigation table-sm" ng-class="{ 'disabled': vm.loading }">
             <thead>
                 <tr>
                     <th scope="col">Name</th>
@@ -82,7 +82,7 @@
             </tbody>
         </table>
 
-        <div class="row" ng-if="!vm.loading">
+        <div class="row" ng-class="{ 'disabled': vm.loading }">
             <div class="col-sm-7">
                <app-pager headers="vm.lookupOptionsHeaders" callback="vm.loadLookupOptions"></app-pager>
             </div>

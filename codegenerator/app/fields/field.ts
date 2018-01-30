@@ -79,16 +79,11 @@
                                 },
                                 err => {
 
-                                    if (err.status === 404) {
-                                        notifications.error("The requested entity does not exist.", "Error");
-                                    } else {
-                                        notifications.error("Failed to load the entity.", "Error", err);
-                                    }
-
+                                    errorService.handleApiError(err, "entity", "load");
                                     $state.go("app.entity", { projectId: $stateParams.projectId, entityId: $stateParams.entityId });
 
-                                })
-                                .$promise);
+                                }).$promise
+                        );
 
                         $q.all(promises).finally(() => vm.loading = false);
 
@@ -108,17 +103,11 @@
                                 },
                                 err => {
 
-                                    if (err.status === 404) {
-                                        notifications.error("The requested field does not exist.", "Error");
-                                    } else {
-                                        notifications.error("Failed to load the field.", "Error", err);
-                                    }
-
+                                    errorService.handleApiError(err, "field", "load");
                                     $state.go("app.entity", { projectId: $stateParams.projectId, entityId: $stateParams.entityId });
 
-                                })
-                                .$promise);
-
+                                }).$promise
+                        );
 
                         $q.all(promises).finally(() => vm.loading = false);
                     }
@@ -130,58 +119,52 @@
             if ($scope.mainForm.$invalid) {
 
                 notifications.error("The form has not been completed correctly.", "Error");
-
-            } else {
-
-                vm.loading = true;
-
-                vm.field.$save(
-                    data => {
-
-                        vm.field = data;
-                        notifications.success("The field has been saved.", "Saved");
-                        //if (vm.isNew)
-                            //$state.go("app.field", {
-                            //    fieldId: vm.field.fieldId
-                            //});
-                        //else 
-                            $state.go("app.entity", {
-                                projectId: $stateParams.projectId,
-                                entityId: $stateParams.entityId
-                            });
-                    },
-                    err=> {
-
-                        errorService.handleApiError(err, "field");
-
-                    }).finally(() => vm.loading = false);
+                return;
 
             }
+
+            vm.loading = true;
+
+            vm.field.$save(
+                data => {
+
+                    notifications.success("The field has been saved.", "Saved");
+                    if (vm.isNew)
+                        $state.go("app.field", {
+                            fieldId: vm.field.fieldId
+                        });
+
+                },
+                err=> {
+
+                    errorService.handleApiError(err, "field");
+
+                }).finally(() => vm.loading = false);
+
         };
 
         function del() {
 
-            if (confirm("Confirm delete?")) {
+            if (!confirm("Confirm delete?")) return;
 
-                vm.loading = true;
+            vm.loading = true;
 
-                fieldResource.delete(
-                    {
-                        fieldId: $stateParams.fieldId
-                    },
-                    () => {
+            fieldResource.delete(
+                {
+                    fieldId: $stateParams.fieldId
+                },
+                () => {
 
-                        notifications.success("The field has been deleted.", "Deleted");
-                        $state.go("app.entity", { projectId: $stateParams.projectId, entityId: $stateParams.entityId });
+                    notifications.success("The field has been deleted.", "Deleted");
+                    $state.go("app.entity", { projectId: $stateParams.projectId, entityId: $stateParams.entityId });
 
-                    }, err => {
+                }, err => {
 
-                        errorService.handleApiError(err, "field", "delete");
+                    errorService.handleApiError(err, "field", "delete");
 
-                    })
-                    .$promise.finally(() => vm.loading = false);
+                })
+                .$promise.finally(() => vm.loading = false);
 
-            }
         }
     };
 

@@ -28,6 +28,8 @@ namespace WEB.Models
         [Required]
         public int Length { get; set; }
 
+        public byte? MinLength { get; set; }
+
         [Required]
         public byte Precision { get; set; }
 

@@ -25,6 +25,8 @@ namespace WEB.Models
         [Required]
         public int Length { get; set; }
 
+        public byte? MinLength { get; set; }
+
         [Required]
         public byte Precision { get; set; }
 
@@ -71,9 +73,9 @@ namespace WEB.Models
         [MaxLength(500)]
         public string CalculatedFieldDefinition { get; set; }
 
-        public EntityDTO Entity { get; set; }
-
         public LookupDTO Lookup { get; set; }
+
+        public EntityDTO Entity { get; set; }
 
     }
 
@@ -81,6 +83,8 @@ namespace WEB.Models
     {
         public FieldDTO Create(Field field)
         {
+            if (field == null) return null;
+
             var fieldDTO = new FieldDTO();
 
             fieldDTO.FieldId = field.FieldId;
@@ -89,6 +93,7 @@ namespace WEB.Models
             fieldDTO.Label = field.Label;
             fieldDTO.FieldType = field.FieldType;
             fieldDTO.Length = field.Length;
+            fieldDTO.MinLength = field.MinLength;
             fieldDTO.Precision = field.Precision;
             fieldDTO.Scale = field.Scale;
             fieldDTO.KeyField = field.KeyField;
@@ -105,8 +110,8 @@ namespace WEB.Models
             fieldDTO.ControllerUpdateOverride = field.ControllerUpdateOverride;
             fieldDTO.EditPageDefault = field.EditPageDefault;
             fieldDTO.CalculatedFieldDefinition = field.CalculatedFieldDefinition;
-            fieldDTO.Entity = field.Entity == null ? null : Create(field.Entity);
-            fieldDTO.Lookup = field.Lookup == null ? null : Create(field.Lookup);
+            fieldDTO.Lookup = Create(field.Lookup);
+            fieldDTO.Entity = Create(field.Entity);
 
             return fieldDTO;
         }
@@ -118,6 +123,7 @@ namespace WEB.Models
             field.Label = fieldDTO.Label;
             field.FieldType = fieldDTO.FieldType;
             field.Length = fieldDTO.Length;
+            field.MinLength = fieldDTO.MinLength;
             field.Precision = fieldDTO.Precision;
             field.Scale = fieldDTO.Scale;
             field.KeyField = fieldDTO.KeyField;

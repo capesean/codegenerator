@@ -48,11 +48,11 @@ namespace WEB.Models
         [Required]
         public bool CascadeDelete { get; set; }
 
-        public EntityDTO ChildEntity { get; set; }
-
         public EntityDTO ParentEntity { get; set; }
 
         public FieldDTO ParentField { get; set; }
+
+        public EntityDTO ChildEntity { get; set; }
 
     }
 
@@ -60,6 +60,8 @@ namespace WEB.Models
     {
         public RelationshipDTO Create(Relationship relationship)
         {
+            if (relationship == null) return null;
+
             var relationshipDTO = new RelationshipDTO();
 
             relationshipDTO.RelationshipId = relationship.RelationshipId;
@@ -75,9 +77,9 @@ namespace WEB.Models
             relationshipDTO.SortOrder = relationship.SortOrder;
             relationshipDTO.RelationshipAncestorLimit = relationship.RelationshipAncestorLimit;
             relationshipDTO.CascadeDelete = relationship.CascadeDelete;
-            relationshipDTO.ChildEntity = relationship.ChildEntity == null ? null : Create(relationship.ChildEntity);
-            relationshipDTO.ParentEntity = relationship.ParentEntity == null ? null : Create(relationship.ParentEntity);
-            relationshipDTO.ParentField = relationship.ParentField == null ? null : Create(relationship.ParentField);
+            relationshipDTO.ChildEntity = Create(relationship.ChildEntity);
+            relationshipDTO.ParentEntity = Create(relationship.ParentEntity);
+            relationshipDTO.ParentField = Create(relationship.ParentField);
 
             return relationshipDTO;
         }

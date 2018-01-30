@@ -46,6 +46,8 @@ namespace WEB.Models
     {
         public ProjectDTO Create(Project project)
         {
+            if (project == null) return null;
+
             var projectDTO = new ProjectDTO();
 
             projectDTO.ProjectId = project.ProjectId;

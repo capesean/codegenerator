@@ -57,8 +57,8 @@
 
                                     $state.go("app.project", { projectId: $stateParams.projectId });
 
-                                })
-                                .$promise);
+                                }).$promise
+                        );
 
                         $q.all(promises).finally(() => vm.loading = false);
 
@@ -85,10 +85,10 @@
 
                                     $state.go("app.project", { projectId: $stateParams.projectId });
 
-                                })
-                                .$promise);
+                                }).$promise
+                        );
 
-                        promises.push(loadLookupOptions(0));
+                        promises.push(loadLookupOptions(0, true));
 
                         $q.all(promises).finally(() => vm.loading = false);
                     }
@@ -108,7 +108,6 @@
                 vm.lookup.$save(
                     data => {
 
-                        vm.lookup = data;
                         notifications.success("The lookup has been saved.", "Saved");
                         if (vm.isNew)
                             $state.go("app.lookup", {
@@ -150,14 +149,15 @@
             }
         }
 
-        function loadLookupOptions(pageIndex) {
+        function loadLookupOptions(pageIndex, dontSetLoading) {
 
-            vm.loading = true;
+            if (!dontSetLoading) vm.loading = true;
 
             var promise = lookupOptionResource.query(
                 {
                     lookupId: $stateParams.lookupId,
-                    pageIndex: pageIndex
+                    pageIndex: pageIndex,
+                    includeEntities: true
                 },
                 (data, headers) => {
                     vm.lookupOptionsHeaders = JSON.parse(headers("X-Pagination"))
@@ -170,7 +170,7 @@
 
                 }).$promise;
 
-            promise.finally(() => vm.loading = false);
+            promise.finally(() => { if (!dontSetLoading) vm.loading = false; });
 
             return promise;
         }

@@ -24,6 +24,7 @@
             var promises = [];
             promises.push(fieldResource.query({
                 q: vm.search.q,
+                includeEntities: true,
                 pageSize: 0
             }, function (data, headers) {
                 vm.fields = data;

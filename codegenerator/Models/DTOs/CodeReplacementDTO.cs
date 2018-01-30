@@ -37,6 +37,8 @@ namespace WEB.Models
     {
         public CodeReplacementDTO Create(CodeReplacement codeReplacement)
         {
+            if (codeReplacement == null) return null;
+
             var codeReplacementDTO = new CodeReplacementDTO();
 
             codeReplacementDTO.CodeReplacementId = codeReplacement.CodeReplacementId;
@@ -47,7 +49,7 @@ namespace WEB.Models
             codeReplacementDTO.FindCode = codeReplacement.FindCode;
             codeReplacementDTO.ReplacementCode = codeReplacement.ReplacementCode;
             codeReplacementDTO.SortOrder = codeReplacement.SortOrder;
-            codeReplacementDTO.Entity = codeReplacement.Entity == null ? null : Create(codeReplacement.Entity);
+            codeReplacementDTO.Entity = Create(codeReplacement.Entity);
 
             return codeReplacementDTO;
         }

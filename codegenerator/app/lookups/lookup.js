@@ -41,8 +41,7 @@
                             notifications.error("Failed to load the project.", "Error", err);
                         }
                         $state.go("app.project", { projectId: $stateParams.projectId });
-                    })
-                        .$promise);
+                    }).$promise);
                     $q.all(promises).finally(function () { return vm.loading = false; });
                 }
                 else {
@@ -60,9 +59,8 @@
                             notifications.error("Failed to load the lookup.", "Error", err);
                         }
                         $state.go("app.project", { projectId: $stateParams.projectId });
-                    })
-                        .$promise);
-                    promises.push(loadLookupOptions(0));
+                    }).$promise);
+                    promises.push(loadLookupOptions(0, true));
                     $q.all(promises).finally(function () { return vm.loading = false; });
                 }
             });
@@ -74,7 +72,6 @@
             else {
                 vm.loading = true;
                 vm.lookup.$save(function (data) {
-                    vm.lookup = data;
                     notifications.success("The lookup has been saved.", "Saved");
                     if (vm.isNew)
                         $state.go("app.lookup", {
@@ -100,11 +97,13 @@
                     .$promise.finally(function () { return vm.loading = false; });
             }
         }
-        function loadLookupOptions(pageIndex) {
-            vm.loading = true;
+        function loadLookupOptions(pageIndex, dontSetLoading) {
+            if (!dontSetLoading)
+                vm.loading = true;
             var promise = lookupOptionResource.query({
                 lookupId: $stateParams.lookupId,
-                pageIndex: pageIndex
+                pageIndex: pageIndex,
+                includeEntities: true
             }, function (data, headers) {
                 vm.lookupOptionsHeaders = JSON.parse(headers("X-Pagination"));
                 vm.lookupOptions = data;
@@ -112,7 +111,8 @@
                 notifications.error("Failed to load the lookup Options.", "Error", err);
                 $state.go("app.lookups");
             }).$promise;
-            promise.finally(function () { return vm.loading = false; });
+            promise.finally(function () { if (!dontSetLoading)
+                vm.loading = false; });
             return promise;
         }
         function updateOrders(e, ui) {

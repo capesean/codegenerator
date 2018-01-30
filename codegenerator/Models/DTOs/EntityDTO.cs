@@ -86,6 +86,8 @@ namespace WEB.Models
     {
         public EntityDTO Create(Entity entity)
         {
+            if (entity == null) return null;
+
             var entityDTO = new EntityDTO();
 
             entityDTO.EntityId = entity.EntityId;
@@ -111,7 +113,7 @@ namespace WEB.Models
             entityDTO.PreventEditTypeScriptDeployment = entity.PreventEditTypeScriptDeployment;
             entityDTO.AuthorizationType = entity.AuthorizationType;
             entityDTO.Exclude = entity.Exclude;
-            entityDTO.Project = entity.Project == null ? null : Create(entity.Project);
+            entityDTO.Project = Create(entity.Project);
 
             return entityDTO;
         }

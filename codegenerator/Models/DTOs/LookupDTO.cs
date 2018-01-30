@@ -23,12 +23,14 @@ namespace WEB.Models
     {
         public LookupDTO Create(Lookup lookup)
         {
+            if (lookup == null) return null;
+
             var lookupDTO = new LookupDTO();
 
             lookupDTO.LookupId = lookup.LookupId;
             lookupDTO.ProjectId = lookup.ProjectId;
             lookupDTO.Name = lookup.Name;
-            lookupDTO.Project = lookup.Project == null ? null : Create(lookup.Project);
+            lookupDTO.Project = Create(lookup.Project);
 
             return lookupDTO;
         }

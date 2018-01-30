@@ -81,6 +81,8 @@ namespace WEB.Controllers
             //var firstLink = Url.Link("DefaultApi", new { pagingOptions.PageSize, page = 0 });
             //var lastLink = Url.Link("DefaultApi", new { pagingOptions.PageSize, page = totalPages - 1 });
 
+            pagingOptions.PageIndex = pagingOptions.PageIndex < 0 ? 0 : pagingOptions.PageIndex;
+
             var results = await (pagingOptions.PageSize <= 0
                 ? query.ToListAsync()
                 : query.Skip(pagingOptions.PageSize * pagingOptions.PageIndex)
