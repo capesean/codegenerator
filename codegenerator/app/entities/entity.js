@@ -154,6 +154,8 @@
             });
             vm.loading = true;
             fieldResource.sort({
+                entityId: $stateParams.entityId
+            }, {
                 ids: ids
             }, function (data) {
                 notifications.success("The sort order has been updated", "Field Ordering");

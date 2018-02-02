@@ -24,7 +24,7 @@
                             <label class="control-label">
                                 Child Entity:
                             </label>
-                            <ol id="childEntityId" name="childEntityId" class="nya-bs-select" ng-model="vm.relationship.childEntityId" ng-required="true" disabled="{{!vm.isNew}}">
+                            <ol id="childEntityId" name="childEntityId" class="nya-bs-select" ng-model="vm.relationship.childEntityId" ng-required="true" disabled="{{!vm.isNew}}" data-live-search="true">
                                 <li nya-bs-option="entity in vm.entities" class="nya-bs-option" value="entity.entityId">
                                     <a>{{entity.friendlyName}}<span class="fa fa-check check-mark"></span></a>
                                 </li>

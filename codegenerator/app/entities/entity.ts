@@ -233,6 +233,9 @@
             vm.loading = true;
             fieldResource.sort(
                 {
+                    entityId: $stateParams.entityId
+                },
+                {
                     ids: ids
                 },
                 data => {

@@ -120,9 +120,9 @@ namespace WEB.Controllers
         }
 
         [HttpPost, Route("sort")]
-        public async Task<IHttpActionResult> Sort([FromBody]SortedGuids sortedIds)
+        public async Task<IHttpActionResult> Sort([FromBody]SortedGuids sortedIds, [FromUri] Guid? entityId)
         {
-            var fields = await DbContext.Fields.ToListAsync();
+            var fields = await DbContext.Fields.Where(o => !entityId.HasValue || o.EntityId == entityId.Value).ToListAsync();
             if (fields.Count != sortedIds.ids.Length) return BadRequest("Some of the fields could not be found");
 
             var sortOrder = 0;

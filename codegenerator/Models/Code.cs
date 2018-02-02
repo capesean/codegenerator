@@ -112,7 +112,11 @@ namespace WEB.Models
 
                 if (field.KeyField)
                 {
-                    s.Add($"        [Key]");
+                    // probably shouldn't include decimals etc...
+                    if (CurrentEntity.KeyFields.Count == 1 && field.CustomType == CustomType.Number)
+                        s.Add($"        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]");
+                    else
+                        s.Add($"        [Key]");
                     if (CurrentEntity.KeyFields.Count > 1)
                         s.Add($"        [Column(Order = {keyCounter})]");
                     keyCounter++;
@@ -190,8 +194,13 @@ namespace WEB.Models
                 s.Add($"        public {CurrentEntity.Name}()");
                 s.Add($"        {{");
                 foreach (var field in CurrentEntity.KeyFields)
+                {
+                    // where the primary key is a composite with the guid being a fk, don't init the field. e.g. IXESHA.ConsultantMonths.ConsultantId (+Year+Month)
+                    if (CurrentEntity.KeyFields.Count > 1 && CurrentEntity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(rf => rf.ChildFieldId == field.FieldId)))
+                        continue;
                     if (field.FieldType == FieldType.Guid)
                         s.Add($"            {field.Name} = Guid.NewGuid();");
+                }
                 s.Add($"        }}");
             }
 
@@ -301,7 +310,7 @@ namespace WEB.Models
                             s.Add($"        [Required]");
                     }
                     if (field.NetType == "string" && field.Length > 0)
-                        s.Add($"        [MaxLength({field.Length})]");
+                        s.Add($"        [MaxLength({field.Length}){(field.MinLength > 0 ? $", MinLength({field.MinLength})" : "")}]");
                 }
                 // force nullable for readonly fields
                 s.Add($"        public {Field.GetNetType(field.FieldType, field.EditPageType == EditPageType.ReadOnly ? true : field.IsNullable, field.Lookup)} {field.Name} {{ get; set; }}");
@@ -332,7 +341,7 @@ namespace WEB.Models
             if (CurrentEntity.EntityType == EntityType.User)
             {
                 s.Add($"            var roleIds = new List<Guid>();");
-                s.Add($"            foreach (var role in user.Roles)");
+                s.Add($"            foreach (var role in {CurrentEntity.CamelCaseName}.Roles)");
                 s.Add($"                roleIds.Add(role.RoleId);");
                 s.Add($"");
             }
@@ -694,7 +703,7 @@ namespace WEB.Models
                 else
                 {
                     var joins = relationship.RelationshipFields.Select(o => $"o.{o.ChildField.Name} == {CurrentEntity.CamelCaseName}.{o.ParentField.Name}").Aggregate((current, next) => current + " && " + next);
-                    s.Add($"            if (DbContext.{relationship.ChildEntity.PluralName}.Any(o => {joins}))");
+                    s.Add($"            if (DbContext.{(relationship.ChildEntity.EntityType == EntityType.User ? "Users" : relationship.ChildEntity.PluralName)}.Any(o => {joins}))");
                     s.Add($"                return BadRequest(\"Unable to delete the {CurrentEntity.FriendlyName.ToLower()} as it has related {relationship.ChildEntity.PluralFriendlyName.ToLower()}\");");
                     s.Add($"");
                 }
@@ -856,7 +865,7 @@ namespace WEB.Models
                 s.Add($"            {{");
                 foreach (var field in e.KeyFields)
                     s.Add($"                {field.Name.ToCamelCase()}: \"@{field.Name.ToCamelCase()}\"{(field == e.KeyFields.Last() ? "" : ",")}");
-                s.Add($"            }}" + (e.HasASortField || e.KeyFields.Count > 1 ? "," : string.Empty));
+                s.Add($"            }}" + (e.HasCompositePrimaryKey || e.HasASortField || e.KeyFields.Count > 1 ? "," : string.Empty));
                 if (e.HasCompositePrimaryKey)
                 {
                     // composite primary keys can't use the .query method because: http://stackoverflow.com/questions/39405452/ngresource-query-with-composite-key-parameter/40087371#40087371
@@ -916,7 +925,7 @@ namespace WEB.Models
                     {
                         s.Add($"            <div class=\"col-sm-6 col-md-4 col-lg-3\">");
                         s.Add($"                <div class=\"form-group\">");
-                        s.Add($"                    <ol id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" title=\"{field.Label}\" class=\"nya-bs-select form-control\" ng-model=\"vm.search.{field.Name.ToCamelCase()}\" data-size=\"10\" live-search=\"true\">");
+                        s.Add($"                    <ol id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" title=\"{field.Label}\" class=\"nya-bs-select form-control\" ng-model=\"vm.search.{field.Name.ToCamelCase()}\" data-live-search=\"true\" data-size=\"10\">");
                         s.Add($"                        <li nya-bs-option=\"item in vm.appSettings.{field.Lookup.Name.ToCamelCase()}\" class=\"nya-bs-option\" value=\"item.id\">");
                         s.Add($"                            <a>{{{{item.label}}}}<span class=\"fa fa-check check-mark\"></span></a>");
                         s.Add($"                        </li>");
@@ -932,7 +941,7 @@ namespace WEB.Models
                         var relField = relationship.RelationshipFields.Single();
                         s.Add($"            <div class=\"col-sm-6 col-md-4 col-lg-3\">");
                         s.Add($"                <div class=\"form-group\">");
-                        s.Add($"                    <ol id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" title=\"{parentEntity.PluralFriendlyName}\" class=\"nya-bs-select form-control\" ng-model=\"vm.search.{field.Name.ToCamelCase()}\" data-size=\"10\" live-search=\"true\">");
+                        s.Add($"                    <ol id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" title=\"{parentEntity.PluralFriendlyName}\" class=\"nya-bs-select form-control\" ng-model=\"vm.search.{field.Name.ToCamelCase()}\" data-live-search=\"true\" data-size=\"10\">");
                         s.Add($"                        <li nya-bs-option=\"{parentEntity.Name.ToCamelCase()} in vm.{parentEntity.PluralName.ToCamelCase()}\" class=\"nya-bs-option\" value=\"{parentEntity.Name.ToCamelCase()}.{relField.ParentField.Name.ToCamelCase()}\">");
                         s.Add($"                            <a>{{{{{parentEntity.Name.ToCamelCase()}.{relationship.ParentField.Name.ToCamelCase()}}}}}<span class=\"fa fa-check check-mark\"></span></a>");
                         s.Add($"                        </li>");
@@ -1278,7 +1287,7 @@ namespace WEB.Models
                     s.Add(t + $"                        <label class=\"control-label\">");
                     s.Add(t + $"                            {field.Label}:");
                     s.Add(t + $"                        </label>");
-                    s.Add(t + $"                        <ol id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" class=\"nya-bs-select form-control\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} data-live-search=\"true\"{(field.KeyField ? " disabled=\"!vm.isNew\"" : string.Empty)}>");
+                    s.Add(t + $"                        <ol id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" class=\"nya-bs-select form-control\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} data-live-search=\"true\" data-size=\"10\"{(field.KeyField ? " disabled=\"!vm.isNew\"" : string.Empty)}>");
                     s.Add(t + $"                            <li nya-bs-option=\"{relationship.ParentEntity.Name.ToCamelCase()} in vm.{relationship.ParentEntity.PluralName.ToCamelCase()}\" class=\"nya-bs-option\" value=\"{relationship.ParentEntity.Name.ToCamelCase()}.{relationshipField.ParentField.Name.ToCamelCase()}\">");
                     s.Add(t + $"                                <a>{{{{{relationship.ParentEntity.Name.ToCamelCase()}.{relationship.ParentField.Name.ToCamelCase()}}}}}<span class=\"fa fa-check check-mark\"></span></a>");
                     s.Add(t + $"                            </li>");
@@ -1294,7 +1303,7 @@ namespace WEB.Models
                     s.Add(t + $"                        <label for=\"{field.Name.ToCamelCase()}\" class=\"control-label\">");
                     s.Add(t + $"                            {field.Label}:");
                     s.Add(t + $"                        </label>");
-                    s.Add(t + $"                        <ol id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" class=\"nya-bs-select form-control\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} data-live-search=\"true\">");
+                    s.Add(t + $"                        <ol id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" class=\"nya-bs-select form-control\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} data-live-search=\"true\" data-size=\"10\">");
                     // todo: replace with lookups
                     s.Add(t + $"                            <li nya-bs-option=\"{field.Name.ToCamelCase()} in vm.appSettings.{field.Lookup.Name.ToCamelCase()}\" class=\"nya-bs-option\" value=\"{field.Name.ToCamelCase()}.id\">");
                     s.Add(t + $"                                <a>{{{{{field.Name.ToCamelCase()}.label}}}}<span class=\"fa fa-check check-mark\"></span></a>");
@@ -1317,7 +1326,7 @@ namespace WEB.Models
                     }
                     else
                     {
-                        s.Add(t + $"                        <input type=\"text\" id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\"" + (field.Length == 0 ? string.Empty : $" maxlength=\"{field.Length}\"") + $" class=\"form-control\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} />");
+                        s.Add(t + $"                        <input type=\"text\" id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\"" + (field.Length == 0 ? string.Empty : $" maxlength=\"{field.Length}\"") + (field.MinLength > 0 ? " ng-minlength=\"" + field.MinLength + "\"" : "") + $" class=\"form-control\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} />");
                     }
                     s.Add(t + $"                    </div>");
                     s.Add(t + $"                </div>");
@@ -1426,9 +1435,10 @@ namespace WEB.Models
                 s.Add($"                </li>");
                 s.Add($"");
             }
-            foreach (var field in CurrentEntity.Fields.OrderBy(o => o.FieldOrder))
+            foreach (var field in CurrentEntity.Fields
+                .Where(f => f.EditPageType != EditPageType.ReadOnly && f.EditPageType != EditPageType.Exclude && f.EditPageType != EditPageType.SortField && f.EditPageType != EditPageType.CalculatedField)
+                .OrderBy(o => o.FieldOrder))
             {
-                if (field.EditPageType == EditPageType.ReadOnly || field.EditPageType == EditPageType.Exclude || field.EditPageType == EditPageType.SortField) continue;
                 if (field.KeyField && field.CustomType != CustomType.String && !CurrentEntity.HasCompositePrimaryKey) continue;
 
                 if (CurrentEntity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(f => f.ChildFieldId == field.FieldId)))
@@ -1607,7 +1617,7 @@ namespace WEB.Models
             s.Add($"        vm.appSettings = appSettings;");
             if (CurrentEntity.Fields.Any(f => f.CustomType == CustomType.Date))
                 s.Add($"        vm.moment = moment;");
-            s.Add($"        vm.user = null;");
+            //s.Add($"        vm.user = null;");
             s.Add($"        vm.save = save;");
             s.Add($"        vm.delete = del;");
             s.Add($"        vm.isNew = {CurrentEntity.KeyFields.Select(f => "$stateParams." + f.Name.ToCamelCase() + " === vm.appSettings." + f.NewVariable).Aggregate((current, next) => current + " && " + next)};");

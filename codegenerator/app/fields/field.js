@@ -88,10 +88,7 @@
             vm.loading = true;
             vm.field.$save(function (data) {
                 notifications.success("The field has been saved.", "Saved");
-                if (vm.isNew)
-                    $state.go("app.field", {
-                        fieldId: vm.field.fieldId
-                    });
+                $state.go("app.entity", { projectId: $stateParams.projectId, entityId: $stateParams.entityId });
             }, function (err) {
                 errorService.handleApiError(err, "field");
             }).finally(function () { return vm.loading = false; });
