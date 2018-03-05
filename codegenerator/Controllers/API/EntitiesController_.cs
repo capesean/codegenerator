@@ -99,6 +99,8 @@ namespace WEB.Controllers
             if (entity == null)
                 return NotFound();
 
+            if (entity.Exclude) return BadRequest("Entity has been excluded");
+
             var result = Models.Code.RunDeployment(DbContext, entity, deploymentOptions);
 
             if (result != null) return BadRequest(result);

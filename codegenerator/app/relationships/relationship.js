@@ -17,6 +17,21 @@
         vm.loadRelationshipFields = loadRelationshipFields;
         initPage();
         function initPage() {
+            $scope.$watch("vm.relationship.childEntityId", function (newValue, oldValue) {
+                if (oldValue !== newValue && vm.isNew) {
+                    var entity;
+                    angular.forEach(vm.entities, function (e) {
+                        if (e.entityId === newValue)
+                            entity = e;
+                    });
+                    if (!entity)
+                        return;
+                    if (!vm.relationship.collectionName)
+                        vm.relationship.collectionName = entity.pluralName;
+                    if (!vm.relationship.collectionFriendlyName)
+                        vm.relationship.collectionFriendlyName = entity.pluralFriendlyName;
+                }
+            });
             var promises = [];
             promises.push(entityResource.query({
                 pageSize: 0,
@@ -46,17 +61,19 @@
             }).$promise);
             $q.all(promises)
                 .then(function () {
+                promises = [];
                 if (vm.isNew) {
                     vm.relationship = new relationshipResource();
                     vm.relationship.relationshipId = appSettings.newGuid;
                     vm.relationship.relationshipAncestorLimit = 1;
                     vm.relationship.parentEntityId = $stateParams.entityId;
-                    promises = [];
                     promises.push(entityResource.get({
                         entityId: $stateParams.entityId
                     }, function (data) {
                         vm.entity = data;
                         vm.project = vm.entity.project;
+                        vm.relationship.parentName = data.name;
+                        vm.relationship.parentFriendlyName = data.friendlyName;
                     }, function (err) {
                         if (err.status === 404) {
                             notifications.error("The requested entity does not exist.", "Error");
@@ -67,10 +84,8 @@
                         $state.go("app.entity", { projectId: $stateParams.projectId, entityId: $stateParams.entityId });
                     })
                         .$promise);
-                    $q.all(promises).finally(function () { return vm.loading = false; });
                 }
                 else {
-                    promises = [];
                     promises.push(relationshipResource.get({
                         relationshipId: $stateParams.relationshipId
                     }, function (data) {
@@ -88,8 +103,10 @@
                     })
                         .$promise);
                     promises.push(loadRelationshipFields(0, true));
-                    $q.all(promises).finally(function () { return vm.loading = false; });
                 }
+                $q.all(promises).finally(function () {
+                    vm.loading = false;
+                });
             });
         }
         function save() {

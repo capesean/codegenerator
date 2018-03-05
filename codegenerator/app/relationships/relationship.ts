@@ -24,6 +24,22 @@
 
         function initPage() {
 
+            $scope.$watch("vm.relationship.childEntityId", (newValue, oldValue) => {
+                if (oldValue !== newValue && vm.isNew) {
+                    var entity;
+                    angular.forEach(vm.entities, e => {
+                        if (e.entityId === newValue)
+                            entity = e;
+                    })
+
+                    if (!entity) return;
+
+                    if (!vm.relationship.collectionName) vm.relationship.collectionName = entity.pluralName;
+                    if (!vm.relationship.collectionFriendlyName) vm.relationship.collectionFriendlyName = entity.pluralFriendlyName;
+
+                }
+            });
+
             var promises = [];
 
             promises.push(
@@ -51,7 +67,7 @@
                         $state.go("app.relationships");
 
                     }).$promise
-                );
+            );
 
             promises.push(
                 fieldResource.query(
@@ -71,14 +87,14 @@
             $q.all(promises)
                 .then(() => {
 
+                    promises = [];
+
                     if (vm.isNew) {
 
                         vm.relationship = new relationshipResource();
                         vm.relationship.relationshipId = appSettings.newGuid;
                         vm.relationship.relationshipAncestorLimit = 1;
                         vm.relationship.parentEntityId = $stateParams.entityId;
-
-                        promises = [];
 
                         promises.push(
                             entityResource.get(
@@ -88,6 +104,8 @@
                                 data => {
                                     vm.entity = data;
                                     vm.project = vm.entity.project;
+                                    vm.relationship.parentName = data.name;
+                                    vm.relationship.parentFriendlyName = data.friendlyName;
                                 },
                                 err => {
 
@@ -102,11 +120,7 @@
                                 })
                                 .$promise);
 
-                        $q.all(promises).finally(() => vm.loading = false);
-
                     } else {
-
-                        promises = [];
 
                         promises.push(
                             relationshipResource.get(
@@ -132,9 +146,12 @@
                                 .$promise);
 
                         promises.push(loadRelationshipFields(0, true));
-
-                        $q.all(promises).finally(() => vm.loading = false);
                     }
+
+                    $q.all(promises).finally(() => {
+
+                        vm.loading = false;
+                    });
                 });
         }
 
@@ -158,7 +175,7 @@
                             });
 
                     },
-                    err=> {
+                    err => {
 
                         errorService.handleApiError(err, "relationship");
 
@@ -218,4 +235,4 @@
         }
     };
 
-} ());
+}());

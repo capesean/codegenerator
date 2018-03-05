@@ -33,24 +33,6 @@
                     </div>
 
                     <div class="col-sm-6 col-md-4">
-                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.collectionName.$invalid }">
-                            <label for="collectionName" class="control-label">
-                                Name of Collection on Parent:
-                            </label>
-                            <input type="text" id="collectionName" name="collectionName" ng-model="vm.relationship.collectionName" maxlength="50" class="form-control" ng-required="true" />
-                        </div>
-                    </div>
-
-                    <div class="col-sm-6 col-md-4">
-                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.collectionFriendlyName.$invalid }">
-                            <label for="collectionFriendlyName" class="control-label">
-                                Collection Friendly Name:
-                            </label>
-                            <input type="text" id="collectionFriendlyName" name="collectionFriendlyName" ng-model="vm.relationship.collectionFriendlyName" maxlength="50" class="form-control" ng-required="true" />
-                        </div>
-                    </div>
-
-                    <div class="col-sm-6 col-md-4">
                         <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.parentName.$invalid }">
                             <label for="parentName" class="control-label">
                                 Name of Parent on Child:
@@ -65,6 +47,24 @@
                                 Parent Friendly Name:
                             </label>
                             <input type="text" id="parentFriendlyName" name="parentFriendlyName" ng-model="vm.relationship.parentFriendlyName" maxlength="50" class="form-control" ng-required="true" />
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.collectionName.$invalid }">
+                            <label for="collectionName" class="control-label">
+                                Name of Collection on Parent:
+                            </label>
+                            <input type="text" id="collectionName" name="collectionName" ng-model="vm.relationship.collectionName" maxlength="50" class="form-control" ng-required="true" />
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.collectionFriendlyName.$invalid }">
+                            <label for="collectionFriendlyName" class="control-label">
+                                Collection Friendly Name:
+                            </label>
+                            <input type="text" id="collectionFriendlyName" name="collectionFriendlyName" ng-model="vm.relationship.collectionFriendlyName" maxlength="50" class="form-control" ng-required="true" />
                         </div>
                     </div>
 

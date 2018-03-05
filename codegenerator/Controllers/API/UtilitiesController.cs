@@ -48,6 +48,8 @@ namespace WEB.Controllers
 
                     if (entity == null) return BadRequest("Invalid Entity Id");
 
+                    if (entity.Exclude) continue;
+
                     if (option.Model) RunDeploy(entity, CodeType.Model, results);
                     if (option.Enums) RunDeploy(entity, CodeType.Enums, results);
                     if (option.DTO) RunDeploy(entity, CodeType.DTO, results);
