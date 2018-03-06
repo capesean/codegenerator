@@ -170,7 +170,7 @@
             <div class="row">
                 <div class="col-sm-12">
 
-                    <div class="col-sm-4 col-md-3 col-lg-2">
+                    <div class="col-sm-4 col-md-3 col-lg-1">
                         <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.sortPriority.$invalid }">
                             <label for="sortPriority" class="control-label">
                                 Sort Priority:
@@ -206,7 +206,7 @@
                         </div>
                     </div>
 
-                    <div class="col-sm-6 col-md-4">
+                    <div class="col-sm-6 col-md-4 col-lg-3">
                         <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.editPageType.$invalid }">
                             <label for="editPageType" class="control-label">
                                 Edit Page Type:
@@ -219,7 +219,7 @@
                         </div>
                     </div>
 
-                    <div class="col-sm-6 col-md-4">
+                    <div class="col-sm-6 col-md-4 col-lg-3">
                         <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.controllerInsertOverride.$invalid }">
                             <label for="controllerInsertOverride" class="control-label">
                                 Controller Insert Override:
@@ -228,7 +228,7 @@
                         </div>
                     </div>
 
-                    <div class="col-sm-6 col-md-4">
+                    <div class="col-sm-6 col-md-4 col-lg-3">
                         <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.controllerUpdateOverride.$invalid }">
                             <label for="controllerUpdateOverride" class="control-label">
                                 Controller Update Override:
@@ -237,7 +237,7 @@
                         </div>
                     </div>
 
-                    <div class="col-sm-6 col-md-4">
+                    <div class="col-sm-6 col-md-4 col-lg-3">
                         <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.editPageDefault.$invalid }">
                             <label for="editPageDefault" class="control-label">
                                 Edit Page Default:
@@ -246,12 +246,21 @@
                         </div>
                     </div>
 
-                    <div class="col-sm-6 col-md-4">
+                    <div class="col-sm-6 col-md-4 col-lg-3">
                         <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.calculatedFieldDefinition.$invalid }">
                             <label for="calculatedFieldDefinition" class="control-label">
                                 Calculated Field Definition:
                             </label>
                             <input type="text" id="calculatedFieldDefinition" name="calculatedFieldDefinition" ng-model="vm.field.calculatedFieldDefinition" maxlength="500" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4 col-lg-3">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.regexValidation.$invalid }">
+                            <label for="regexValidation" class="control-label">
+                                Regex Validation:
+                            </label>
+                            <input type="text" id="regexValidation" name="regexValidation" ng-model="vm.field.regexValidation" maxlength="250" class="form-control" />
                         </div>
                     </div>
 

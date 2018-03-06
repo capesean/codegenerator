@@ -73,9 +73,12 @@ namespace WEB.Models
         [MaxLength(500)]
         public string CalculatedFieldDefinition { get; set; }
 
-        public LookupDTO Lookup { get; set; }
+        [MaxLength(250)]
+        public string RegexValidation { get; set; }
 
         public EntityDTO Entity { get; set; }
+
+        public LookupDTO Lookup { get; set; }
 
     }
 
@@ -110,6 +113,7 @@ namespace WEB.Models
             fieldDTO.ControllerUpdateOverride = field.ControllerUpdateOverride;
             fieldDTO.EditPageDefault = field.EditPageDefault;
             fieldDTO.CalculatedFieldDefinition = field.CalculatedFieldDefinition;
+            fieldDTO.RegexValidation = field.RegexValidation;
             fieldDTO.Lookup = Create(field.Lookup);
             fieldDTO.Entity = Create(field.Entity);
 
@@ -140,6 +144,7 @@ namespace WEB.Models
             field.ControllerUpdateOverride = fieldDTO.ControllerUpdateOverride;
             field.EditPageDefault = fieldDTO.EditPageDefault;
             field.CalculatedFieldDefinition = fieldDTO.CalculatedFieldDefinition;
+            field.RegexValidation = fieldDTO.RegexValidation;
         }
     }
 }

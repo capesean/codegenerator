@@ -32,15 +32,14 @@
 
             vm.loading = true;
 
+            vm.search.includeEntities = true;
+            vm.search.pageSize = 0;
+
             var promises = [];
 
             promises.push(
                 fieldResource.query(
-                    {
-                        q: vm.search.q,
-                        includeEntities: true,
-                        pageSize: 0
-                    },
+                    vm.search,
                     (data, headers) => {
 
                         vm.fields = data;

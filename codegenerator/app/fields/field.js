@@ -9,7 +9,6 @@
         var vm = this;
         vm.loading = true;
         vm.appSettings = appSettings;
-        vm.user = null;
         vm.save = save;
         vm.delete = del;
         vm.isNew = $stateParams.fieldId === vm.appSettings.newGuid;

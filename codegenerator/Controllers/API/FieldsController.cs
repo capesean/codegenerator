@@ -35,7 +35,6 @@ namespace WEB.Controllers
         public async Task<IHttpActionResult> Get(Guid fieldId)
         {
             var field = await DbContext.Fields
-                .Include(o => o.Lookup.Project)
                 .Include(o => o.Entity.Project)
                 .SingleOrDefaultAsync(o => o.FieldId == fieldId);
 
@@ -103,13 +102,13 @@ namespace WEB.Controllers
             if (field == null)
                 return NotFound();
 
-            if (DbContext.RelationshipFields.Any(o => o.ChildFieldId == field.FieldId))
+            if (await DbContext.RelationshipFields.AnyAsync(o => o.ChildFieldId == field.FieldId))
                 return BadRequest("Unable to delete the field as it has related relationship fields");
 
-            if (DbContext.RelationshipFields.Any(o => o.ParentFieldId == field.FieldId))
+            if (await DbContext.RelationshipFields.AnyAsync(o => o.ParentFieldId == field.FieldId))
                 return BadRequest("Unable to delete the field as it has related relationship fields");
 
-            if (DbContext.Relationships.Any(o => o.ParentFieldId == field.FieldId))
+            if (await DbContext.Relationships.AnyAsync(o => o.ParentFieldId == field.FieldId))
                 return BadRequest("Unable to delete the field as it has related relationships");
 
             DbContext.Entry(field).State = EntityState.Deleted;
@@ -120,9 +119,9 @@ namespace WEB.Controllers
         }
 
         [HttpPost, Route("sort")]
-        public async Task<IHttpActionResult> Sort([FromBody]SortedGuids sortedIds, [FromUri] Guid? entityId)
+        public async Task<IHttpActionResult> Sort([FromBody]SortedGuids sortedIds)
         {
-            var fields = await DbContext.Fields.Where(o => !entityId.HasValue || o.EntityId == entityId.Value).ToListAsync();
+            var fields = await DbContext.Fields.Where(o => sortedIds.ids.Contains(o.FieldId)).ToListAsync();
             if (fields.Count != sortedIds.ids.Length) return BadRequest("Some of the fields could not be found");
 
             var sortOrder = 0;

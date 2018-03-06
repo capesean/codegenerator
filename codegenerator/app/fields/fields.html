@@ -20,31 +20,27 @@
 
     </form>
 
-    <div ng-hide="vm.loading">
+    <hr />
 
-        <hr />
-
-        <table class="table table-striped table-hover table-bordered row-navigation table-sm" ng-class="{ 'disabled': vm.loading }">
-            <thead>
-                <tr>
-                    <th scope="col">Entity</th>
-                    <th scope="col">Name</th>
-                    <th scope="col">Key Field</th>
-                    <th scope="col">Show In Search Results</th>
-                    <th scope="col">Search Type</th>
-                </tr>
-            </thead>
-            <tbody ui-sortable="vm.sortOptions" ng-model="vm.fields">
-                <tr ng-repeat="field in vm.fields" ng-click="vm.goToField(field.entity.project.projectId, field.entity.entityId, field.fieldId)">
-                    <td><i class="fa fa-sort sortable-handle mt-1" ng-if="vm.fields.length > 1" ng-click="$event.stopPropagation();"></i><div class="sortColumnText">{{ field.entity.name }}</div></td>
-                    <td>{{ field.name }}</td>
-                    <td>{{ field.keyField ? "Yes" : "No" }}</td>
-                    <td>{{ field.showInSearchResults ? "Yes" : "No" }}</td>
-                    <td>{{ vm.appSettings.find(vm.appSettings.searchType, field.searchType).label }}</td>
-                </tr>
-            </tbody>
-        </table>
-
-    </div>
+    <table class="table table-striped table-hover table-bordered row-navigation" ng-class="{ 'disabled': vm.loading }">
+        <thead>
+            <tr>
+                <th scope="col">Entity</th>
+                <th scope="col">Name</th>
+                <th scope="col">Key Field</th>
+                <th scope="col">Show In Search Results</th>
+                <th scope="col">Search Type</th>
+            </tr>
+        </thead>
+        <tbody ui-sortable="vm.sortOptions" ng-model="vm.fields">
+            <tr ng-repeat="field in vm.fields" ng-click="vm.goToField(field.entity.project.projectId, field.entity.entityId, field.fieldId)">
+                <td><i class="fa fa-sort sortable-handle mt-1" ng-if="vm.fields.length > 1" ng-click="$event.stopPropagation();"></i><div class="sortColumnText">{{ field.entity.name }}</div></td>
+                <td>{{ field.name }}</td>
+                <td>{{ field.keyField ? "Yes" : "No" }}</td>
+                <td>{{ field.showInSearchResults ? "Yes" : "No" }}</td>
+                <td>{{ vm.appSettings.find(vm.appSettings.searchType, field.searchType).label }}</td>
+            </tr>
+        </tbody>
+    </table>
 
 </div>

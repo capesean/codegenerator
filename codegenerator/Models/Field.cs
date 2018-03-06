@@ -76,6 +76,9 @@ namespace WEB.Models
         [MaxLength(500)]
         public string CalculatedFieldDefinition { get; set; }
 
+        [MaxLength(250)]
+        public string RegexValidation { get; set; }
+
         public virtual ICollection<RelationshipField> RelationshipFieldsAsChild { get; set; } = new List<RelationshipField>();
 
         public virtual ICollection<RelationshipField> RelationshipFieldsAsParent { get; set; } = new List<RelationshipField>();

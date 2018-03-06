@@ -754,8 +754,11 @@ namespace WEB.Models
                 s.Add($"        [{(CurrentEntity.AuthorizationType == AuthorizationType.ProtectChanges ? (CurrentEntity.Project.UseStringAuthorizeAttributes ? "Authorize(Roles = \"Administrator\"), " : "AuthorizeRoles(Roles.Administrator), ") : "")}HttpPost, Route(\"sort\")]");
                 s.Add($"        public async Task<IHttpActionResult> Sort([FromBody]SortedGuids sortedIds)");
                 s.Add($"        {{");
-                //s.Add($"            var {CurrentEntity.PluralName.ToCamelCase()} = await {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName}.Where(o => sortedIds.ids.Contains(o.{CurrentEntity.KeyFields[0].Name})).ToListAsync();");
-                s.Add($"            var {CurrentEntity.PluralName.ToCamelCase()} = await {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName}.ToListAsync();");
+                // if it's a child entity, just sort the id's that were sent
+                if (CurrentEntity.RelationshipsAsChild.Any(r => r.Hierarchy))
+                    s.Add($"            var {CurrentEntity.PluralName.ToCamelCase()} = await {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName}.Where(o => sortedIds.ids.Contains(o.{CurrentEntity.KeyFields[0].Name})).ToListAsync();");
+                else
+                    s.Add($"            var {CurrentEntity.PluralName.ToCamelCase()} = await {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName}.ToListAsync();");
                 s.Add($"            if ({CurrentEntity.PluralName.ToCamelCase()}.Count != sortedIds.ids.Length) return BadRequest(\"Some of the {CurrentEntity.PluralFriendlyName.ToLower()} could not be found\");");
                 s.Add($"");
                 s.Add($"            var sortOrder = 0;");
@@ -1365,7 +1368,7 @@ namespace WEB.Models
                     }
                     else
                     {
-                        s.Add(t + $"                        <input type=\"text\" id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\"" + (field.Length == 0 ? string.Empty : $" maxlength=\"{field.Length}\"") + (field.MinLength > 0 ? " ng-minlength=\"" + field.MinLength + "\"" : "") + $" class=\"form-control\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} />");
+                        s.Add(t + $"                        <input type=\"text\" id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\"" + (field.Length == 0 ? string.Empty : $" maxlength=\"{field.Length}\"") + (field.MinLength > 0 ? " ng-minlength=\"" + field.MinLength + "\"" : "") + (field.RegexValidation != null ? " ng-pattern=\"/" + field.RegexValidation + "/\"" : "") + $" class=\"form-control\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} />");
                     }
                     s.Add(t + $"                    </div>");
                     s.Add(t + $"                </div>");
@@ -1494,9 +1497,10 @@ namespace WEB.Models
                 {
                     if (field.IsNullable
                         && field.CustomType != CustomType.Number
-                        && (field.MinLength ?? 0) == 0) continue;
+                        && (field.MinLength ?? 0) == 0
+                        && field.RegexValidation == null) continue;
 
-                    s.Add($"                <li class=\"help-block has-error\"ng-messages=\"mainForm.{field.Name.ToCamelCase()}.$error\">");
+                    s.Add($"                <li class=\"help-block has-error\" ng-messages=\"mainForm.{field.Name.ToCamelCase()}.$error\">");
                     if (!field.IsNullable)
                     {
                         s.Add($"                    <span ng-message=\"required\">");
@@ -1513,6 +1517,12 @@ namespace WEB.Models
                     {
                         s.Add($"                    <span ng-message=\"minlength\">");
                         s.Add($"                        {field.Label} is too short.");
+                        s.Add($"                    </span>");
+                    }
+                    if (field.RegexValidation != null)
+                    {
+                        s.Add($"                    <span ng-message=\"pattern\">");
+                        s.Add($"                        {field.Label} is not valid.");
                         s.Add($"                    </span>");
                     }
                     s.Add($"                </li>");

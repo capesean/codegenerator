@@ -21,12 +21,10 @@
         }
         function runSearch(pageIndex) {
             vm.loading = true;
+            vm.search.includeEntities = true;
+            vm.search.pageSize = 0;
             var promises = [];
-            promises.push(fieldResource.query({
-                q: vm.search.q,
-                includeEntities: true,
-                pageSize: 0
-            }, function (data, headers) {
+            promises.push(fieldResource.query(vm.search, function (data, headers) {
                 vm.fields = data;
             }, function (err) {
                 notifications.error("Failed to load the fields.", "Error", err);
