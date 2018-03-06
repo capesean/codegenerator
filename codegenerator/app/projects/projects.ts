@@ -23,7 +23,7 @@
 
             var promises = [];
 
-            $q.all(promises).finally(() => runSearch(0))
+            $q.all(promises).finally(() => runSearch(0));
 
         }
 
@@ -31,14 +31,13 @@
 
             vm.loading = true;
 
+            vm.search.pageIndex = pageIndex;
+
             var promises = [];
 
             promises.push(
                 projectResource.query(
-                    {
-                        q: vm.search.q,
-                        pageIndex: pageIndex
-                    },
+                    vm.search,
                     (data, headers) => {
 
                         vm.projects = data;
@@ -53,7 +52,7 @@
                     }).$promise
             );
 
-            $q.all(promises).finally(() => vm.loading = false)
+            $q.all(promises).finally(() => vm.loading = false);
 
         };
 

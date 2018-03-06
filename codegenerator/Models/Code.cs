@@ -107,7 +107,6 @@ namespace WEB.Models
             var keyCounter = 0;
             foreach (var field in CurrentEntity.Fields.OrderBy(f => f.FieldOrder))
             {
-                var parentHierarchyRelationshipIndexFieldCount = 0;
                 if (field.KeyField && CurrentEntity.EntityType == EntityType.User) continue;
 
                 if (field.KeyField)
@@ -493,7 +492,7 @@ namespace WEB.Models
 
             s.Add($"        public async Task<IHttpActionResult> Search([FromUri]PagingOptions pagingOptions{(CurrentEntity.TextSearchFields.Count > 0 ? ", [FromUri]string q = null" : "")}{(fieldsToSearch.Count > 0 ? $", {fieldsToSearch.Select(f => "[FromUri]" + (new Field { Name = f.Name, Lookup = f.Lookup, FieldType = f.FieldType, IsNullable = true }).NetType + " " + f.Name.ToCamelCase() + " = null").Aggregate((current, next) => current + ", " + next)}" : "")})");
             s.Add($"        {{");
-            s.Add($"            IQueryable<{CurrentEntity.Name}> results = DbContext.{CurrentEntity.PluralName};");
+            s.Add($"            IQueryable<{CurrentEntity.Name}> results = {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName};");
 
             if (CurrentEntity.RelationshipsAsChild.Where(r => r.RelationshipAncestorLimit != RelationshipAncestorLimits.Exclude).Any())
             {
@@ -545,11 +544,12 @@ namespace WEB.Models
             s.Add($"        [HttpGet, Route(\"{CurrentEntity.RoutePath}\")]");
             s.Add($"        public async Task<IHttpActionResult> Get({CurrentEntity.ControllerParameters})");
             s.Add($"        {{");
-            s.Add($"            var {CurrentEntity.CamelCaseName} = await DbContext.{CurrentEntity.PluralName}");
+            s.Add($"            var {CurrentEntity.CamelCaseName} = await {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName}");
             foreach (var relationship in CurrentEntity.RelationshipsAsChild.Where(r => r.RelationshipAncestorLimit != RelationshipAncestorLimits.Exclude).OrderBy(r => r.SortOrder))
             {
-                foreach (var result in GetTopAncestors(new List<string>(), "o", relationship, relationship.RelationshipAncestorLimit))
-                    s.Add($"                .Include(o => {result})");
+                if (relationship.Hierarchy)
+                    foreach (var result in GetTopAncestors(new List<string>(), "o", relationship, relationship.RelationshipAncestorLimit, includeIfHierarchy: true))
+                        s.Add($"                .Include(o => {result})");
             }
             s.Add($"                .SingleOrDefaultAsync(o => {GetKeyFieldLinq("o")});");
             s.Add($"");
@@ -609,14 +609,14 @@ namespace WEB.Models
                         hierarchyFields += (hierarchyFields == string.Empty ? "" : " && ") + "o." + relField.ChildField.Name + " == " + CurrentEntity.DTOName.ToCamelCase() + "." + relField.ChildField.Name;
                     hierarchyFields += " && ";
                 }
-                s.Add($"            if (await DbContext.{CurrentEntity.PluralName}.AnyAsync(o => {hierarchyFields}o.{field.Name} == {CurrentEntity.DTOName.ToCamelCase()}.{field.Name} && !({GetKeyFieldLinq("o", CurrentEntity.DTOName.ToCamelCase())})))");
+                s.Add($"            if (await {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName}.AnyAsync(o => {hierarchyFields}o.{field.Name} == {CurrentEntity.DTOName.ToCamelCase()}.{field.Name} && !({GetKeyFieldLinq("o", CurrentEntity.DTOName.ToCamelCase())})))");
                 s.Add($"                return BadRequest(\"{field.Label} already exists{(ParentHierarchyRelationship == null ? string.Empty : " on this " + ParentHierarchyRelationship.ParentEntity.FriendlyName)}.\");");
                 s.Add($"");
             }
             if (CurrentEntity.HasCompositePrimaryKey)
             {
                 // composite keys don't use the insert method, they use the update for both inserts & updates
-                s.Add($"            var {CurrentEntity.CamelCaseName} = await DbContext.{CurrentEntity.PluralName}.SingleOrDefaultAsync(o => {GetKeyFieldLinq("o", CurrentEntity.DTOName.ToCamelCase())});");
+                s.Add($"            var {CurrentEntity.CamelCaseName} = await {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName}.SingleOrDefaultAsync(o => {GetKeyFieldLinq("o", CurrentEntity.DTOName.ToCamelCase())});");
                 s.Add($"            var isNew = {CurrentEntity.CamelCaseName} == null;");
                 s.Add($"");
                 s.Add($"            if (isNew)");
@@ -636,7 +636,7 @@ namespace WEB.Models
                 if (CurrentEntity.HasASortField)
                 {
                     var field = CurrentEntity.SortField;
-                    var sort = $"                {CurrentEntity.DTOName.ToCamelCase()}.{field.Name} = (await DbContext.{CurrentEntity.PluralName}";
+                    var sort = $"                {CurrentEntity.DTOName.ToCamelCase()}.{field.Name} = (await {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName}";
                     if (CurrentEntity.RelationshipsAsChild.Any(r => r.Hierarchy) && CurrentEntity.RelationshipsAsChild.Count(r => r.Hierarchy) == 1)
                     {
                         sort += ".Where(o => " + (CurrentEntity.RelationshipsAsChild.Single(r => r.Hierarchy).RelationshipFields.Select(o => $"o.{o.ChildField.Name} == {CurrentEntity.DTOName.ToCamelCase()}.{o.ChildField.Name}").Aggregate((current, next) => current + " && " + next)) + ")";
@@ -645,7 +645,7 @@ namespace WEB.Models
                     s.Add(sort);
                     s.Add($"");
                 }
-                s.Add($"                DbContext.Entry({CurrentEntity.CamelCaseName}).State = EntityState.Added;");
+                s.Add($"                {CurrentEntity.Project.DbContextVariable}.Entry({CurrentEntity.CamelCaseName}).State = EntityState.Added;");
                 s.Add($"            }}");
                 s.Add($"            else");
                 s.Add($"            {{");
@@ -655,7 +655,7 @@ namespace WEB.Models
                 }
                 if (CurrentEntity.Fields.Any(f => !string.IsNullOrWhiteSpace(f.ControllerUpdateOverride)))
                     s.Add($"");
-                s.Add($"                DbContext.Entry({CurrentEntity.CamelCaseName}).State = EntityState.Modified;");
+                s.Add($"                {CurrentEntity.Project.DbContextVariable}.Entry({CurrentEntity.CamelCaseName}).State = EntityState.Modified;");
                 s.Add($"            }}");
             }
             else
@@ -676,7 +676,7 @@ namespace WEB.Models
                 if (CurrentEntity.HasASortField)
                 {
                     var field = CurrentEntity.SortField;
-                    var sort = $"                {CurrentEntity.DTOName.ToCamelCase()}.{field.Name} = (await DbContext.{CurrentEntity.PluralName}";
+                    var sort = $"                {CurrentEntity.DTOName.ToCamelCase()}.{field.Name} = (await {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName}";
                     if (CurrentEntity.RelationshipsAsChild.Any(r => r.Hierarchy) && CurrentEntity.RelationshipsAsChild.Count(r => r.Hierarchy) == 1)
                     {
                         sort += ".Where(o => " + (CurrentEntity.RelationshipsAsChild.Single(r => r.Hierarchy).RelationshipFields.Select(o => $"o.{o.ChildField.Name} == {CurrentEntity.DTOName.ToCamelCase()}.{o.ChildField.Name}").Aggregate((current, next) => current + " && " + next)) + ")";
@@ -685,11 +685,11 @@ namespace WEB.Models
                     s.Add(sort);
                     s.Add($"");
                 }
-                s.Add($"                DbContext.Entry({CurrentEntity.CamelCaseName}).State = EntityState.Added;");
+                s.Add($"                {CurrentEntity.Project.DbContextVariable}.Entry({CurrentEntity.CamelCaseName}).State = EntityState.Added;");
                 s.Add($"            }}");
                 s.Add($"            else");
                 s.Add($"            {{");
-                s.Add($"                {CurrentEntity.CamelCaseName} = await DbContext.{CurrentEntity.PluralName}.SingleOrDefaultAsync(o => {GetKeyFieldLinq("o", CurrentEntity.DTOName.ToCamelCase())});");
+                s.Add($"                {CurrentEntity.CamelCaseName} = await {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName}.SingleOrDefaultAsync(o => {GetKeyFieldLinq("o", CurrentEntity.DTOName.ToCamelCase())});");
                 s.Add($"");
                 s.Add($"                if ({CurrentEntity.CamelCaseName} == null)");
                 s.Add($"                    return NotFound();");
@@ -700,13 +700,13 @@ namespace WEB.Models
                 }
                 if (CurrentEntity.Fields.Any(f => !string.IsNullOrWhiteSpace(f.ControllerUpdateOverride)))
                     s.Add($"");
-                s.Add($"                DbContext.Entry({CurrentEntity.CamelCaseName}).State = EntityState.Modified;");
+                s.Add($"                {CurrentEntity.Project.DbContextVariable}.Entry({CurrentEntity.CamelCaseName}).State = EntityState.Modified;");
                 s.Add($"            }}");
             }
             s.Add($"");
             s.Add($"            ModelFactory.Hydrate({CurrentEntity.CamelCaseName}, {CurrentEntity.DTOName.ToCamelCase()});");
             s.Add($"");
-            s.Add($"            await DbContext.SaveChangesAsync();");
+            s.Add($"            await {CurrentEntity.Project.DbContextVariable}.SaveChangesAsync();");
             s.Add($"");
             s.Add($"            return await Get({CurrentEntity.KeyFields.Select(f => CurrentEntity.CamelCaseName + "." + f.Name).Aggregate((current, next) => current + ", " + next)});");
             s.Add($"        }}");
@@ -717,7 +717,7 @@ namespace WEB.Models
             s.Add($"        [{(CurrentEntity.AuthorizationType == AuthorizationType.ProtectChanges ? (CurrentEntity.Project.UseStringAuthorizeAttributes ? "Authorize(Roles = \"Administrator\"), " : "AuthorizeRoles(Roles.Administrator), ") : string.Empty)}HttpDelete, Route(\"{CurrentEntity.RoutePath}\")]");
             s.Add($"        public async Task<IHttpActionResult> Delete({CurrentEntity.ControllerParameters})");
             s.Add($"        {{");
-            s.Add($"            var {CurrentEntity.CamelCaseName} = await DbContext.{CurrentEntity.PluralName}.SingleOrDefaultAsync(o => {GetKeyFieldLinq("o")});");
+            s.Add($"            var {CurrentEntity.CamelCaseName} = await {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName}.SingleOrDefaultAsync(o => {GetKeyFieldLinq("o")});");
             s.Add($"");
             s.Add($"            if ({CurrentEntity.CamelCaseName} == null)");
             s.Add($"                return NotFound();");
@@ -726,22 +726,22 @@ namespace WEB.Models
             {
                 if (relationship.CascadeDelete)
                 {
-                    s.Add($"            foreach (var {relationship.ChildEntity.CamelCaseName} in DbContext.{relationship.ChildEntity.PluralName}.Where(o => {relationship.RelationshipFields.Select(rf => "o." + rf.ChildField.Name + " == " + CurrentEntity.CamelCaseName + "." + rf.ParentField.Name).Aggregate((current, next) => current + " && " + next)}))");
-                    s.Add($"                DbContext.Entry({relationship.ChildEntity.CamelCaseName}).State = EntityState.Deleted;");
+                    s.Add($"            foreach (var {relationship.ChildEntity.CamelCaseName} in {CurrentEntity.Project.DbContextVariable}.{relationship.ChildEntity.PluralName}.Where(o => {relationship.RelationshipFields.Select(rf => "o." + rf.ChildField.Name + " == " + CurrentEntity.CamelCaseName + "." + rf.ParentField.Name).Aggregate((current, next) => current + " && " + next)}))");
+                    s.Add($"                {CurrentEntity.Project.DbContextVariable}.Entry({relationship.ChildEntity.CamelCaseName}).State = EntityState.Deleted;");
                     s.Add($"");
                 }
                 else
                 {
                     var joins = relationship.RelationshipFields.Select(o => $"o.{o.ChildField.Name} == {CurrentEntity.CamelCaseName}.{o.ParentField.Name}").Aggregate((current, next) => current + " && " + next);
-                    s.Add($"            if (await DbContext.{(relationship.ChildEntity.EntityType == EntityType.User ? "Users" : relationship.ChildEntity.PluralName)}.AnyAsync(o => {joins}))");
+                    s.Add($"            if (await {CurrentEntity.Project.DbContextVariable}.{(relationship.ChildEntity.EntityType == EntityType.User ? "Users" : relationship.ChildEntity.PluralName)}.AnyAsync(o => {joins}))");
                     s.Add($"                return BadRequest(\"Unable to delete the {CurrentEntity.FriendlyName.ToLower()} as it has related {relationship.ChildEntity.PluralFriendlyName.ToLower()}\");");
                     s.Add($"");
                 }
             }
             // need to add fk checks here!
-            s.Add($"            DbContext.Entry({CurrentEntity.CamelCaseName}).State = EntityState.Deleted;");
+            s.Add($"            {CurrentEntity.Project.DbContextVariable}.Entry({CurrentEntity.CamelCaseName}).State = EntityState.Deleted;");
             s.Add($"");
-            s.Add($"            await DbContext.SaveChangesAsync();");
+            s.Add($"            await {CurrentEntity.Project.DbContextVariable}.SaveChangesAsync();");
             s.Add($"");
             s.Add($"            return Ok();");
             s.Add($"        }}");
@@ -754,19 +754,19 @@ namespace WEB.Models
                 s.Add($"        [{(CurrentEntity.AuthorizationType == AuthorizationType.ProtectChanges ? (CurrentEntity.Project.UseStringAuthorizeAttributes ? "Authorize(Roles = \"Administrator\"), " : "AuthorizeRoles(Roles.Administrator), ") : "")}HttpPost, Route(\"sort\")]");
                 s.Add($"        public async Task<IHttpActionResult> Sort([FromBody]SortedGuids sortedIds)");
                 s.Add($"        {{");
-                //s.Add($"            var {CurrentEntity.PluralName.ToCamelCase()} = await DbContext.{CurrentEntity.PluralName}.Where(o => sortedIds.ids.Contains(o.{CurrentEntity.KeyFields[0].Name})).ToListAsync();");
-                s.Add($"            var {CurrentEntity.PluralName.ToCamelCase()} = await DbContext.{CurrentEntity.PluralName}.ToListAsync();");
+                //s.Add($"            var {CurrentEntity.PluralName.ToCamelCase()} = await {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName}.Where(o => sortedIds.ids.Contains(o.{CurrentEntity.KeyFields[0].Name})).ToListAsync();");
+                s.Add($"            var {CurrentEntity.PluralName.ToCamelCase()} = await {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName}.ToListAsync();");
                 s.Add($"            if ({CurrentEntity.PluralName.ToCamelCase()}.Count != sortedIds.ids.Length) return BadRequest(\"Some of the {CurrentEntity.PluralFriendlyName.ToLower()} could not be found\");");
                 s.Add($"");
                 s.Add($"            var sortOrder = 0;");
                 s.Add($"            foreach (var {CurrentEntity.Name.ToCamelCase()} in {CurrentEntity.PluralName.ToCamelCase()})");
                 s.Add($"            {{");
-                s.Add($"                DbContext.Entry({CurrentEntity.Name.ToCamelCase()}).State = EntityState.Modified;");
+                s.Add($"                {CurrentEntity.Project.DbContextVariable}.Entry({CurrentEntity.Name.ToCamelCase()}).State = EntityState.Modified;");
                 s.Add($"                {CurrentEntity.Name.ToCamelCase()}.{CurrentEntity.SortField.Name} = Array.IndexOf(sortedIds.ids, {CurrentEntity.Name.ToCamelCase()}.{CurrentEntity.KeyFields[0].Name});");
                 s.Add($"                sortOrder++;");
                 s.Add($"            }}");
                 s.Add($"");
-                s.Add($"            await DbContext.SaveChangesAsync();");
+                s.Add($"            await {CurrentEntity.Project.DbContextVariable}.SaveChangesAsync();");
                 s.Add($"");
                 s.Add($"            return Ok();");
                 s.Add($"        }}");
@@ -1150,30 +1150,43 @@ namespace WEB.Models
             s.Add($"");
             s.Add($"            vm.loading = true;");
             s.Add($"");
+            foreach (var field in CurrentEntity.Fields.Where(f => f.ShowInSearchResults).OrderBy(f => f.FieldOrder))
+                if (CurrentEntity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(f => f.ChildFieldId == field.FieldId)))
+                {
+                    s.Add($"            vm.search.includeEntities = true;");
+                    break;
+                }
+            if (CurrentEntity.HasASortField)
+                s.Add($"            vm.search.pageSize = 0;");
+            else
+                s.Add($"            vm.search.pageIndex = pageIndex;");
+            s.Add($"");
             s.Add($"            var promises = [];");
             s.Add($"");
             s.Add($"            promises.push(");
             // composite primary keys can't use the .query method because: http://stackoverflow.com/questions/39405452/ngresource-query-with-composite-key-parameter/40087371#40087371
             s.Add($"                {CurrentEntity.ResourceName}.{(!CurrentEntity.HasCompositePrimaryKey ? "query" : "search")}(");
-            s.Add($"                    {{");
-            foreach (var field in CurrentEntity.Fields.Where(f => f.SearchType == SearchType.Exact))
-            {
-                s.Add($"                        {field.Name.ToCamelCase()}: vm.search.{field.Name.ToCamelCase()},");
-            }
-            if (CurrentEntity.Fields.Any(f => f.SearchType == SearchType.Text))
-                s.Add($"                        q: vm.search.q,"); // todo: what would happen if searching and the entity is sortable? should disable sorting? 
-            // instruct api to load related entities as this entity has parent entities in results grid
-            foreach (var field in CurrentEntity.Fields.Where(f => f.ShowInSearchResults).OrderBy(f => f.FieldOrder))
-                if (CurrentEntity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(f => f.ChildFieldId == field.FieldId)))
-                {
-                    s.Add($"                        includeEntities: true,");
-                    break;
-                }
-            if (CurrentEntity.HasASortField)
-                s.Add($"                        pageSize: 0");
-            else
-                s.Add($"                        pageIndex: pageIndex");
-            s.Add($"                    }},");
+            s.Add($"                    vm.search,");
+
+            //s.Add($"                    {{");
+            //foreach (var field in CurrentEntity.Fields.Where(f => f.SearchType == SearchType.Exact))
+            //{
+            //    s.Add($"                        {field.Name.ToCamelCase()}: vm.search.{field.Name.ToCamelCase()},");
+            //}
+            //if (CurrentEntity.Fields.Any(f => f.SearchType == SearchType.Text))
+            //    s.Add($"                        q: vm.search.q,"); // todo: what would happen if searching and the entity is sortable? should disable sorting? 
+            //// instruct api to load related entities as this entity has parent entities in results grid
+            //foreach (var field in CurrentEntity.Fields.Where(f => f.ShowInSearchResults).OrderBy(f => f.FieldOrder))
+            //    if (CurrentEntity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(f => f.ChildFieldId == field.FieldId)))
+            //    {
+            //        s.Add($"                        includeEntities: true,");
+            //        break;
+            //    }
+            //if (CurrentEntity.HasASortField)
+            //    s.Add($"                        pageSize: 0");
+            //else
+            //    s.Add($"                        pageIndex: pageIndex");
+            //s.Add($"                    }},");
             s.Add($"                    (data, headers) => {{");
             s.Add($"");
             s.Add($"                        vm.{CurrentEntity.PluralName.ToCamelCase()} = data;");
@@ -1434,8 +1447,7 @@ namespace WEB.Models
             s.Add($"");
             s.Add($"        <div class=\"form-group error-messages has-error alert alert-danger\" ng-if=\"mainForm.$submitted && mainForm.$invalid\">");
             s.Add($"");
-            s.Add($"            <span class=\"help-block has-error\"");
-            s.Add($"                  ng-if=\"mainForm.$submitted\">");
+            s.Add($"            <span class=\"help-block has-error\">");
             s.Add($"                <span>");
             s.Add($"                    Please correct the following errors:");
             s.Add($"                </span>");
@@ -1446,9 +1458,7 @@ namespace WEB.Models
             #region form validation
             if (CurrentEntity.EntityType == EntityType.User)
             {
-                s.Add($"                <li class=\"help-block has-error\"");
-                s.Add($"                    ng-if=\"mainForm.$submitted\"");
-                s.Add($"                    ng-messages=\"mainForm.email.$error\">");
+                s.Add($"                <li class=\"help-block has-error\" ng-messages=\"mainForm.email.$error\">");
                 s.Add($"                    <span ng-message=\"required\">");
                 s.Add($"                        Email address is required.");
                 s.Add($"                    </span>");
@@ -1473,9 +1483,7 @@ namespace WEB.Models
                     var relationship = CurrentEntity.GetParentSearchRelationship(field);
                     if (relationship.Hierarchy) continue;
 
-                    s.Add($"                <li class=\"help-block has-error\"");
-                    s.Add($"                    ng-if=\"mainForm.$submitted\"");
-                    s.Add($"                    ng-messages=\"mainForm.{field.Name.ToCamelCase()}.$error\">");
+                    s.Add($"                <li class=\"help-block has-error\" ng-messages=\"mainForm.{field.Name.ToCamelCase()}.$error\">");
                     s.Add($"                    <span ng-message=\"required\">");
                     s.Add($"                        {field.Label} is required.");
                     s.Add($"                    </span>");
@@ -1484,10 +1492,11 @@ namespace WEB.Models
                 }
                 else if (field.CustomType == CustomType.Enum || field.CustomType == CustomType.String || field.CustomType == CustomType.Number)
                 {
-                    if (field.IsNullable && field.CustomType != CustomType.Number) continue;
-                    s.Add($"                <li class=\"help-block has-error\"");
-                    s.Add($"                    ng-if=\"mainForm.$submitted\"");
-                    s.Add($"                    ng-messages=\"mainForm.{field.Name.ToCamelCase()}.$error\">");
+                    if (field.IsNullable
+                        && field.CustomType != CustomType.Number
+                        && (field.MinLength ?? 0) == 0) continue;
+
+                    s.Add($"                <li class=\"help-block has-error\"ng-messages=\"mainForm.{field.Name.ToCamelCase()}.$error\">");
                     if (!field.IsNullable)
                     {
                         s.Add($"                    <span ng-message=\"required\">");
@@ -1511,9 +1520,7 @@ namespace WEB.Models
                 }
                 else if (field.CustomType == CustomType.Date)
                 {
-                    s.Add($"                <li class=\"help-block has-error\"");
-                    s.Add($"                    ng-if=\"mainForm.$submitted\"");
-                    s.Add($"                    ng-messages=\"mainForm.{field.Name.ToCamelCase()}.$error\">");
+                    s.Add($"                <li class=\"help-block has-error\" ng-messages=\"mainForm.{field.Name.ToCamelCase()}.$error\">");
                     s.Add($"                    <span ng-message=\"date\">");
                     s.Add($"                        {field.Label} is not a valid date.");
                     s.Add($"                    </span>");
@@ -1956,15 +1963,18 @@ namespace WEB.Models
             return CurrentEntity.KeyFields.Select(o => $"{entityName}.{o.Name} {comparison} " + (otherEntityName == null ? o.Name.ToCamelCase() : $"{otherEntityName}.{o.Name}")).Aggregate((current, next) => $"{current} {joiner} {next}");
         }
 
-        public List<string> GetTopAncestors(List<string> list, string prefix, Relationship relationship, RelationshipAncestorLimits ancestorLimit, int level = 0)
+        public List<string> GetTopAncestors(List<string> list, string prefix, Relationship relationship, RelationshipAncestorLimits ancestorLimit, int level = 0, bool includeIfHierarchy = false)
         {
+            // override is for the controller.get, when in a hierarchy. need to return the full hierarchy, so that the breadcrumb will be set correctly
+            var overrideLimit = relationship.Hierarchy && includeIfHierarchy && ancestorLimit != RelationshipAncestorLimits.IncludeAllParents;
+
             //if (relationship.RelationshipAncestorLimit == RelationshipAncestorLimits.Exclude) return list;
             prefix += "." + relationship.ParentName;
-            if (ancestorLimit == RelationshipAncestorLimits.IncludeRelatedEntity && level == 0)
+            if (!overrideLimit && ancestorLimit == RelationshipAncestorLimits.IncludeRelatedEntity && level == 0)
             {
                 list.Add(prefix);
             }
-            else if (ancestorLimit == RelationshipAncestorLimits.IncludeRelatedParents && level == 1)
+            else if (!overrideLimit && ancestorLimit == RelationshipAncestorLimits.IncludeRelatedParents && level == 1)
             {
                 list.Add(prefix);
             }
@@ -1972,7 +1982,9 @@ namespace WEB.Models
             {
                 foreach (var parentRelationship in relationship.ParentEntity.RelationshipsAsChild.Where(r => r.RelationshipAncestorLimit != RelationshipAncestorLimits.Exclude))
                 {
-                    list = GetTopAncestors(list, prefix, parentRelationship, ancestorLimit, level + 1);
+                    // if got here because not overrideLimit, otherwise if it IS, then only if the parent relationship is the hierarchy
+                    if (!overrideLimit || parentRelationship.Hierarchy)
+                        list = GetTopAncestors(list, prefix, parentRelationship, ancestorLimit, level + 1);
                 }
             }
             else

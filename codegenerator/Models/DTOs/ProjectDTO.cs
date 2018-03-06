@@ -40,6 +40,10 @@ namespace WEB.Models
         [Required]
         public bool UseStringAuthorizeAttributes { get; set; }
 
+        [DisplayFormat(ConvertEmptyStringToNull = false)]
+        [MaxLength(20)]
+        public string DbContextVariable { get; set; }
+
     }
 
     public partial class ModelFactory
@@ -60,6 +64,7 @@ namespace WEB.Models
             projectDTO.ExcludeTypes = project.ExcludeTypes;
             projectDTO.UrlPrefix = project.UrlPrefix;
             projectDTO.UseStringAuthorizeAttributes = project.UseStringAuthorizeAttributes;
+            projectDTO.DbContextVariable = project.DbContextVariable;
 
             return projectDTO;
         }
@@ -75,6 +80,7 @@ namespace WEB.Models
             project.ExcludeTypes = projectDTO.ExcludeTypes;
             project.UrlPrefix = projectDTO.UrlPrefix;
             project.UseStringAuthorizeAttributes = projectDTO.UseStringAuthorizeAttributes;
+            project.DbContextVariable = projectDTO.DbContextVariable;
         }
     }
 }

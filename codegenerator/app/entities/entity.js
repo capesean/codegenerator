@@ -36,7 +36,7 @@
                     vm.entity = new entityResource();
                     vm.entity.entityId = appSettings.newGuid;
                     vm.entity.projectId = $stateParams.projectId;
-                    vm.entity.authorizationType = 1;
+                    vm.entity.authorizationType = 2;
                     vm.entity.entityType = 0;
                     promises = [];
                     promises.push(projectResource.get({

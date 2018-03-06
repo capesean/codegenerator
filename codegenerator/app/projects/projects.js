@@ -20,11 +20,9 @@
         }
         function runSearch(pageIndex) {
             vm.loading = true;
+            vm.search.pageIndex = pageIndex;
             var promises = [];
-            promises.push(projectResource.query({
-                q: vm.search.q,
-                pageIndex: pageIndex
-            }, function (data, headers) {
+            promises.push(projectResource.query(vm.search, function (data, headers) {
                 vm.projects = data;
                 vm.headers = JSON.parse(headers("X-Pagination"));
             }, function (err) {

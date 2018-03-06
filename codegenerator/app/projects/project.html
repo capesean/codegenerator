@@ -37,7 +37,7 @@
                         </div>
                     </div>
 
-                    <div class="col-sm-6 col-md-4">
+                    <div class="col-sm-6 col-md-4 col-lg-3">
                         <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.angularModuleName.$invalid }">
                             <label for="angularModuleName" class="control-label">
                                 Angular Module Name:
@@ -46,7 +46,7 @@
                         </div>
                     </div>
 
-                    <div class="col-sm-6 col-md-4">
+                    <div class="col-sm-6 col-md-4 col-lg-3">
                         <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.angularDirectivePrefix.$invalid }">
                             <label for="angularDirectivePrefix" class="control-label">
                                 Angular Directive Prefix:
@@ -55,12 +55,21 @@
                         </div>
                     </div>
 
-                    <div class="col-sm-6 col-md-4">
+                    <div class="col-sm-6 col-md-4 col-lg-3">
                         <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.urlPrefix.$invalid }">
                             <label for="urlPrefix" class="control-label">
                                 URL Prefix:
                             </label>
                             <input type="text" id="urlPrefix" name="urlPrefix" ng-model="vm.project.urlPrefix" maxlength="50" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4 col-lg-3">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.dbContextVariable.$invalid }">
+                            <label for="dbContextVariable" class="control-label">
+                                DbContext Variable:
+                            </label>
+                            <input type="text" id="dbContextVariable" name="dbContextVariable" ng-model="vm.project.dbContextVariable" maxlength="20" class="form-control" />
                         </div>
                     </div>
 
@@ -100,7 +109,7 @@
                             <div class="checkbox">
                                 <label>
                                     <input type="checkbox" id="useStringAuthorizeAttributes" name="useStringAuthorizeAttributes" ng-model="vm.project.useStringAuthorizeAttributes" />
-                                    Use String Authorize Attributes
+                                    Use String Attributes
                                 </label>
                             </div>
                         </div>
@@ -159,6 +168,14 @@
                     ng-messages="mainForm.angularDirectivePrefix.$error">
                     <span ng-message="required">
                         Angular Directive Prefix is required.
+                    </span>
+                </li>
+
+                <li class="help-block has-error"
+                    ng-if="mainForm.$submitted"
+                    ng-messages="mainForm.dbContextVariable.$error">
+                    <span ng-message="required">
+                        DbContext Variable is required.
                     </span>
                 </li>
 

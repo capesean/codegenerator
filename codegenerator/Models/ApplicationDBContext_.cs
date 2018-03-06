@@ -17,14 +17,14 @@ namespace WEB.Models
         public void ConfigureModelBuilder(DbModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Relationship>()
-                .HasRequired(o => o.ChildEntity)
-                .WithMany(o => o.RelationshipsAsChild)
-                .HasForeignKey(o => o.ChildEntityId);
-
-            modelBuilder.Entity<Relationship>()
                 .HasRequired(o => o.ParentEntity)
                 .WithMany(o => o.RelationshipsAsParent)
                 .HasForeignKey(o => o.ParentEntityId);
+
+            modelBuilder.Entity<Relationship>()
+                .HasRequired(o => o.ChildEntity)
+                .WithMany(o => o.RelationshipsAsChild)
+                .HasForeignKey(o => o.ChildEntityId);
 
             modelBuilder.Entity<RelationshipField>()
                 .HasRequired(o => o.ChildField)

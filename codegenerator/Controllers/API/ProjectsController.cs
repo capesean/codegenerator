@@ -56,7 +56,7 @@ namespace WEB.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (DbContext.Projects.Any(o => o.Name == projectDTO.Name && !(o.ProjectId == projectDTO.ProjectId)))
+            if (await DbContext.Projects.AnyAsync(o => o.Name == projectDTO.Name && !(o.ProjectId == projectDTO.ProjectId)))
                 return BadRequest("Name already exists.");
 
             var isNew = projectDTO.ProjectId == Guid.Empty;
@@ -93,10 +93,10 @@ namespace WEB.Controllers
             if (project == null)
                 return NotFound();
 
-            if (DbContext.Entities.Any(o => o.ProjectId == project.ProjectId))
+            if (await DbContext.Entities.AnyAsync(o => o.ProjectId == project.ProjectId))
                 return BadRequest("Unable to delete the project as it has related entities");
 
-            if (DbContext.Lookups.Any(o => o.ProjectId == project.ProjectId))
+            if (await DbContext.Lookups.AnyAsync(o => o.ProjectId == project.ProjectId))
                 return BadRequest("Unable to delete the project as it has related lookups");
 
             DbContext.Entry(project).State = EntityState.Deleted;
