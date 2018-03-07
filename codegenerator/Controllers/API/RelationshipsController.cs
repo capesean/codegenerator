@@ -104,7 +104,7 @@ namespace WEB.Controllers
             if (relationship == null)
                 return NotFound();
 
-            if (DbContext.RelationshipFields.Any(o => o.RelationshipId == relationship.RelationshipId))
+            if (await DbContext.RelationshipFields.AnyAsync(o => o.RelationshipId == relationship.RelationshipId))
                 return BadRequest("Unable to delete the relationship as it has related relationship fields");
 
             DbContext.Entry(relationship).State = EntityState.Deleted;
@@ -117,7 +117,7 @@ namespace WEB.Controllers
         [HttpPost, Route("sort")]
         public async Task<IHttpActionResult> Sort([FromBody]SortedGuids sortedIds)
         {
-            var relationships = await DbContext.Relationships.Where(r => sortedIds.ids.Contains(r.RelationshipId)).ToListAsync();
+            var relationships = await DbContext.Relationships.Where(o => sortedIds.ids.Contains(o.RelationshipId)).ToListAsync();
             if (relationships.Count != sortedIds.ids.Length) return BadRequest("Some of the relationships could not be found");
 
             var sortOrder = 0;

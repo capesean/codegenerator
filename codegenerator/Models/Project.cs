@@ -48,6 +48,8 @@ namespace WEB.Models
         [MaxLength(20)]
         public string DbContextVariable { get; set; }
 
+        public string Notes { get; set; }
+
         public virtual ICollection<Entity> Entities { get; set; } = new List<Entity>();
 
         public virtual ICollection<Lookup> Lookups { get; set; } = new List<Lookup>();

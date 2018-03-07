@@ -44,6 +44,8 @@ namespace WEB.Models
         [MaxLength(20)]
         public string DbContextVariable { get; set; }
 
+        public string Notes { get; set; }
+
     }
 
     public partial class ModelFactory
@@ -65,6 +67,7 @@ namespace WEB.Models
             projectDTO.UrlPrefix = project.UrlPrefix;
             projectDTO.UseStringAuthorizeAttributes = project.UseStringAuthorizeAttributes;
             projectDTO.DbContextVariable = project.DbContextVariable;
+            projectDTO.Notes = project.Notes;
 
             return projectDTO;
         }
@@ -81,6 +84,7 @@ namespace WEB.Models
             project.UrlPrefix = projectDTO.UrlPrefix;
             project.UseStringAuthorizeAttributes = projectDTO.UseStringAuthorizeAttributes;
             project.DbContextVariable = projectDTO.DbContextVariable;
+            project.Notes = projectDTO.Notes;
         }
     }
 }

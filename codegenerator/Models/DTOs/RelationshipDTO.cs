@@ -48,11 +48,14 @@ namespace WEB.Models
         [Required]
         public bool CascadeDelete { get; set; }
 
+        [Required]
+        public bool UseSelectorDirective { get; set; }
+
+        public EntityDTO ChildEntity { get; set; }
+
         public EntityDTO ParentEntity { get; set; }
 
         public FieldDTO ParentField { get; set; }
-
-        public EntityDTO ChildEntity { get; set; }
 
     }
 
@@ -77,6 +80,7 @@ namespace WEB.Models
             relationshipDTO.SortOrder = relationship.SortOrder;
             relationshipDTO.RelationshipAncestorLimit = relationship.RelationshipAncestorLimit;
             relationshipDTO.CascadeDelete = relationship.CascadeDelete;
+            relationshipDTO.UseSelectorDirective = relationship.UseSelectorDirective;
             relationshipDTO.ChildEntity = Create(relationship.ChildEntity);
             relationshipDTO.ParentEntity = Create(relationship.ParentEntity);
             relationshipDTO.ParentField = Create(relationship.ParentField);
@@ -98,6 +102,7 @@ namespace WEB.Models
             relationship.SortOrder = relationshipDTO.SortOrder;
             relationship.RelationshipAncestorLimit = relationshipDTO.RelationshipAncestorLimit;
             relationship.CascadeDelete = relationshipDTO.CascadeDelete;
+            relationship.UseSelectorDirective = relationshipDTO.UseSelectorDirective;
         }
     }
 }

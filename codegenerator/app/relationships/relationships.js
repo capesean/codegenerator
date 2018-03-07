@@ -29,12 +29,10 @@
         }
         function runSearch(pageIndex) {
             vm.loading = true;
+            vm.search.includeEntities = true;
+            vm.search.pageSize = 0;
             var promises = [];
-            promises.push(relationshipResource.query({
-                parentEntityId: vm.search.parentEntityId,
-                childEntityId: vm.search.childEntityId,
-                pageSize: 0
-            }, function (data, headers) {
+            promises.push(relationshipResource.query(vm.search, function (data, headers) {
                 vm.relationships = data;
             }, function (err) {
                 notifications.error("Failed to load the relationships.", "Error", err);

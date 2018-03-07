@@ -115,6 +115,15 @@
                         </div>
                     </div>
 
+                    <div class="col-sm-12">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.notes.$invalid }">
+                            <label for="notes" class="control-label">
+                                Notes:
+                            </label>
+                            <textarea id="notes" name="notes" ng-model="vm.project.notes" class="form-control" rows="6"></textarea>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 

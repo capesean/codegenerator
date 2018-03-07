@@ -547,9 +547,9 @@ namespace WEB.Models
             s.Add($"            var {CurrentEntity.CamelCaseName} = await {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName}");
             foreach (var relationship in CurrentEntity.RelationshipsAsChild.Where(r => r.RelationshipAncestorLimit != RelationshipAncestorLimits.Exclude).OrderBy(r => r.SortOrder))
             {
-                if (relationship.Hierarchy)
-                    foreach (var result in GetTopAncestors(new List<string>(), "o", relationship, relationship.RelationshipAncestorLimit, includeIfHierarchy: true))
-                        s.Add($"                .Include(o => {result})");
+                //if (relationship.Hierarchy) -- these are needed e.g. when using select-directives, then it needs to have the related entities to show the label (not just the id, which nya-bs-select could make do with)
+                foreach (var result in GetTopAncestors(new List<string>(), "o", relationship, relationship.RelationshipAncestorLimit, includeIfHierarchy: relationship.Hierarchy))
+                    s.Add($"                .Include(o => {result})");
             }
             s.Add($"                .SingleOrDefaultAsync(o => {GetKeyFieldLinq("o")});");
             s.Add($"");
@@ -972,17 +972,28 @@ namespace WEB.Models
                         var relationship = CurrentEntity.GetParentSearchRelationship(field);
                         var parentEntity = relationship.ParentEntity;
                         var relField = relationship.RelationshipFields.Single();
-                        s.Add($"            <div class=\"col-sm-6 col-md-4 col-lg-3\">");
-                        s.Add($"                <div class=\"form-group\">");
-                        s.Add($"                    <ol id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" title=\"{parentEntity.PluralFriendlyName}\" class=\"nya-bs-select form-control\" ng-model=\"vm.search.{field.Name.ToCamelCase()}\" data-live-search=\"true\" data-size=\"10\">");
-                        s.Add($"                        <li nya-bs-option=\"{parentEntity.Name.ToCamelCase()} in vm.{parentEntity.PluralName.ToCamelCase()}\" class=\"nya-bs-option\" data-value=\"{parentEntity.Name.ToCamelCase()}.{relField.ParentField.Name.ToCamelCase()}\">");
-                        s.Add($"                            <a>{{{{{parentEntity.Name.ToCamelCase()}.{relationship.ParentField.Name.ToCamelCase()}}}}}<span class=\"fa fa-check check-mark\"></span></a>");
-                        s.Add($"                        </li>");
-                        s.Add($"                    </ol>");
-                        s.Add($"                </div>");
-                        s.Add($"            </div>");
-                        s.Add($"");
-
+                        if (relationship.UseSelectorDirective)
+                        {
+                            s.Add($"            <div class=\"col-sm-6 col-md-4 col-lg-3\">");
+                            s.Add($"                <div class=\"form-group\">");
+                            s.Add($"                    <{CurrentEntity.Project.AngularDirectivePrefix}-select-{parentEntity.Name.ToLower()} id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"vm.search.{field.Name.ToCamelCase()}\" placeholder=\"Select {relationship.ParentFriendlyName.ToLower()}\" {parentEntity.Name.ToLower()}=\"vm.search.{parentEntity.Name.ToLower()}\"></{CurrentEntity.Project.AngularDirectivePrefix}-select-{parentEntity.Name.ToLower()}>");
+                            s.Add($"                </div>");
+                            s.Add($"            </div>");
+                            s.Add($"");
+                        }
+                        else
+                        {
+                            s.Add($"            <div class=\"col-sm-6 col-md-4 col-lg-3\">");
+                            s.Add($"                <div class=\"form-group\">");
+                            s.Add($"                    <ol id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" title=\"{parentEntity.PluralFriendlyName}\" class=\"nya-bs-select form-control\" ng-model=\"vm.search.{field.Name.ToCamelCase()}\" data-live-search=\"true\" data-size=\"10\">");
+                            s.Add($"                        <li nya-bs-option=\"{parentEntity.Name.ToCamelCase()} in vm.{parentEntity.PluralName.ToCamelCase()}\" class=\"nya-bs-option\" data-value=\"{parentEntity.Name.ToCamelCase()}.{relField.ParentField.Name.ToCamelCase()}\">");
+                            s.Add($"                            <a>{{{{{parentEntity.Name.ToCamelCase()}.{relationship.ParentField.Name.ToCamelCase()}}}}}<span class=\"fa fa-check check-mark\"></span></a>");
+                            s.Add($"                        </li>");
+                            s.Add($"                    </ol>");
+                            s.Add($"                </div>");
+                            s.Add($"            </div>");
+                            s.Add($"");
+                        }
                     }
                 }
                 s.Add($"        </div>");
@@ -1088,7 +1099,7 @@ namespace WEB.Models
                 {
                     var relationship = CurrentEntity.GetParentSearchRelationship(field);
                     var parentEntity = relationship.ParentEntity;
-                    if (!lookupEntities.ContainsKey(parentEntity.ResourceName))
+                    if (!lookupEntities.ContainsKey(parentEntity.ResourceName) && !relationship.UseSelectorDirective)
                         lookupEntities.Add(parentEntity.ResourceName, parentEntity.TypeScriptResource);
                 }
             }
@@ -1121,7 +1132,7 @@ namespace WEB.Models
                     var relationship = CurrentEntity.GetParentSearchRelationship(field);
                     var parentEntity = relationship.ParentEntity;
                     var relField = relationship.RelationshipFields.Single();
-                    if (processedEntities.Contains(parentEntity.EntityId)) continue;
+                    if (processedEntities.Contains(parentEntity.EntityId) || relationship.UseSelectorDirective) continue;
                     processedEntities.Add(parentEntity.EntityId);
 
                     s.Add($"            promises.push(");
@@ -1324,19 +1335,34 @@ namespace WEB.Models
                     var relationshipField = relationship.RelationshipFields.Single(f => f.ChildFieldId == field.FieldId);
                     if (relationship.Hierarchy) continue;
 
-                    s.Add(t + $"                <div class=\"col-sm-6 col-md-4\">");
-                    s.Add(t + $"                    <div class=\"form-group\" ng-class=\"{{ 'has-error':  mainForm.$submitted && mainForm.{field.Name.ToCamelCase()}.$invalid}}\">");
-                    s.Add(t + $"                        <label class=\"control-label\">");
-                    s.Add(t + $"                            {field.Label}:");
-                    s.Add(t + $"                        </label>");
-                    s.Add(t + $"                        <ol id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" class=\"nya-bs-select form-control\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} data-live-search=\"true\" data-size=\"10\"{(field.KeyField ? " disabled=\"!vm.isNew\"" : string.Empty)}>");
-                    s.Add(t + $"                            <li nya-bs-option=\"{relationship.ParentEntity.Name.ToCamelCase()} in vm.{relationship.ParentEntity.PluralName.ToCamelCase()}\" class=\"nya-bs-option\" data-value=\"{relationship.ParentEntity.Name.ToCamelCase()}.{relationshipField.ParentField.Name.ToCamelCase()}\">");
-                    s.Add(t + $"                                <a>{{{{{relationship.ParentEntity.Name.ToCamelCase()}.{relationship.ParentField.Name.ToCamelCase()}}}}}<span class=\"fa fa-check check-mark\"></span></a>");
-                    s.Add(t + $"                            </li>");
-                    s.Add(t + $"                        </ol>");
-                    s.Add(t + $"                    </div>");
-                    s.Add(t + $"                </div>");
-                    s.Add($"");
+                    if (relationship.UseSelectorDirective)
+                    {
+                        s.Add(t + $"                <div class=\"col-sm-6 col-md-4\">");
+                        s.Add(t + $"                    <div class=\"form-group\" ng-class=\"{{ 'has-error':  mainForm.$submitted && mainForm.{field.Name.ToCamelCase()}.$invalid}}\">");
+                        s.Add(t + $"                        <label class=\"control-label\">");
+                        s.Add(t + $"                            {field.Label}:");
+                        s.Add(t + $"                        </label>");
+                        s.Add(t + $"                        <{CurrentEntity.Project.AngularDirectivePrefix}-select-{relationship.ParentEntity.Name.ToLower()} id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} placeholder=\"Select {field.Label.ToLower()}\" {relationship.ParentEntity.Name.ToLower()}=\"{CurrentEntity.ViewModelObject}.{relationship.ParentName.ToCamelCase()}\"></{CurrentEntity.Project.AngularDirectivePrefix}-select-{relationship.ParentEntity.Name.ToLower()}>");
+                        s.Add(t + $"                    </div>");
+                        s.Add(t + $"                </div>");
+                        s.Add(t + $"");
+                    }
+                    else
+                    {
+                        s.Add(t + $"                <div class=\"col-sm-6 col-md-4\">");
+                        s.Add(t + $"                    <div class=\"form-group\" ng-class=\"{{ 'has-error':  mainForm.$submitted && mainForm.{field.Name.ToCamelCase()}.$invalid}}\">");
+                        s.Add(t + $"                        <label class=\"control-label\">");
+                        s.Add(t + $"                            {field.Label}:");
+                        s.Add(t + $"                        </label>");
+                        s.Add(t + $"                        <ol id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" class=\"nya-bs-select form-control\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} data-live-search=\"true\" data-size=\"10\"{(field.KeyField ? " disabled=\"!vm.isNew\"" : string.Empty)}>");
+                        s.Add(t + $"                            <li nya-bs-option=\"{relationship.ParentEntity.Name.ToCamelCase()} in vm.{relationship.ParentEntity.PluralName.ToCamelCase()}\" class=\"nya-bs-option\" data-value=\"{relationship.ParentEntity.Name.ToCamelCase()}.{relationshipField.ParentField.Name.ToCamelCase()}\">");
+                        s.Add(t + $"                                <a>{{{{{relationship.ParentEntity.Name.ToCamelCase()}.{relationship.ParentField.Name.ToCamelCase()}}}}}<span class=\"fa fa-check check-mark\"></span></a>");
+                        s.Add(t + $"                            </li>");
+                        s.Add(t + $"                        </ol>");
+                        s.Add(t + $"                    </div>");
+                        s.Add(t + $"                </div>");
+                        s.Add($"");
+                    }
                 }
                 else if (field.CustomType == CustomType.Enum)
                 {
@@ -1562,16 +1588,37 @@ namespace WEB.Models
             #region child lists
             if (CurrentEntity.RelationshipsAsParent.Any(r => r.DisplayListOnParent))
             {
+                var relationships = CurrentEntity.RelationshipsAsParent.Where(r => r.DisplayListOnParent).OrderBy(r => r.SortOrder);
+                var counter = 0;
+
                 s.Add($"    <div ng-show=\"!vm.isNew\">");
                 s.Add($"");
-                foreach (var relationship in CurrentEntity.RelationshipsAsParent.Where(r => r.DisplayListOnParent).OrderBy(r => r.SortOrder))
+                s.Add($"        <hr />");
+                s.Add($"");
+                s.Add($"        <ul class=\"nav nav-tabs\">");
+                foreach (var relationship in relationships)
                 {
+                    counter++;
+
+                    s.Add($"            <li class=\"nav-item\">");
+                    s.Add($"                <a class=\"nav-link{(counter == 1 ? " active" : "")}\" data-toggle=\"tab\" href=\"#{relationship.CollectionName.ToCamelCase()}\">{relationship.CollectionFriendlyName}</a>");
+                    s.Add($"            </li>");
+                }
+                s.Add($"        </ul>");
+                s.Add($"");
+                s.Add($"        <div class=\"tab-content\">");
+                s.Add($"");
+
+                counter = 0;
+                foreach (var relationship in relationships)
+                {
+                    counter++;
+
+                    s.Add($"            <div class=\"tab-pane fade show{(counter == 1 ? " active" : "")}\" id=\"{relationship.CollectionName.ToCamelCase()}\">");
+                    s.Add($"");
+
                     var childEntity = relationship.ChildEntity;
-                    s.Add($"        <hr />");
-                    s.Add($"");
-                    s.Add($"        <h2>{relationship.CollectionFriendlyName}</h2>");
-                    s.Add($"");
-                    s.Add($"        <fieldset ng-disabled=\"vm.loading\">");
+                    s.Add($"                <fieldset ng-disabled=\"vm.loading\">");
                     var href = "/";
                     foreach (var entity in childEntity.GetNavigationEntities())
                     {
@@ -1584,45 +1631,50 @@ namespace WEB.Models
                                 href += "/{{vm." + entity.Name.ToCamelCase() + "." + field.Name.ToCamelCase() + "}}";
                         }
                     }
-                    s.Add($"            <a class=\"btn btn-primary\" href=\"{href}\">Add {childEntity.FriendlyName}<i class=\"fa fa-plus-circle ml-1\"></i></a><br />");
-                    s.Add($"            <br />");
-                    s.Add($"        </fieldset>");
+                    s.Add($"                    <a class=\"btn btn-primary\" href=\"{href}\">Add {childEntity.FriendlyName}<i class=\"fa fa-plus-circle ml-1\"></i></a><br />");
+                    s.Add($"                    <br />");
+                    s.Add($"                </fieldset>");
                     s.Add($"");
-                    s.Add($"        <table class=\"table table-striped table-hover table-bordered row-navigation{(CurrentEntity.Project.Bootstrap3 ? string.Empty : " table-sm")}\" ng-class=\"{{ 'disabled': vm.loading }}\">");
-                    s.Add($"            <thead>");
-                    s.Add($"                <tr>");
+                    s.Add($"                <table class=\"table table-striped table-hover table-bordered row-navigation{(CurrentEntity.Project.Bootstrap3 ? string.Empty : " table-sm")}\" ng-class=\"{{ 'disabled': vm.loading }}\">");
+                    s.Add($"                    <thead>");
+                    s.Add($"                        <tr>");
                     foreach (var column in childEntity.GetSearchResultsFields(CurrentEntity))
                     {
-                        s.Add($"                    <th scope=\"col\">{column.Header}</th>");
+                        s.Add($"                            <th scope=\"col\">{column.Header}</th>");
                     }
-                    s.Add($"                </tr>");
-                    s.Add($"            </thead>");
-                    s.Add($"            <tbody" + (childEntity.HasASortField ? $" ui-sortable=\"vm.{childEntity.PluralName.ToCamelCase()}SortOptions\" ng-model=\"vm.{childEntity.PluralName.ToCamelCase()}\"" : string.Empty) + ">");
-                    s.Add($"                <tr ng-repeat=\"{childEntity.Name.ToCamelCase()} in vm.{relationship.CollectionName.ToCamelCase()}\" ng-click=\"vm.goTo{childEntity.Name}({childEntity.GetNavigationString()})\">");
+                    s.Add($"                        </tr>");
+                    s.Add($"                    </thead>");
+                    s.Add($"                    <tbody" + (childEntity.HasASortField ? $" ui-sortable=\"vm.{childEntity.PluralName.ToCamelCase()}SortOptions\" ng-model=\"vm.{childEntity.PluralName.ToCamelCase()}\"" : string.Empty) + ">");
+                    s.Add($"                        <tr ng-repeat=\"{childEntity.Name.ToCamelCase()} in vm.{relationship.CollectionName.ToCamelCase()}\" ng-click=\"vm.goTo{childEntity.Name}({childEntity.GetNavigationString()})\">");
                     var firstCol = true;
                     foreach (var column in childEntity.GetSearchResultsFields(CurrentEntity))
                     {
-                        s.Add($"                    <td>{(firstCol && childEntity.HasASortField ? $"<i class=\"fa fa-sort sortable-handle mt-1\" ng-if=\"vm.{relationship.CollectionName.ToCamelCase()}.length > 1\" ng-click=\"$event.stopPropagation();\"></i>" : string.Empty)}{(firstCol && childEntity.HasASortField ? "<div class=\"sortColumnText\">" + column.Value + "</div>" : column.Value)}</td>");
+                        s.Add($"                            <td>{(firstCol && childEntity.HasASortField ? $"<i class=\"fa fa-sort sortable-handle mt-1\" ng-if=\"vm.{relationship.CollectionName.ToCamelCase()}.length > 1\" ng-click=\"$event.stopPropagation();\"></i>" : string.Empty)}{(firstCol && childEntity.HasASortField ? "<div class=\"sortColumnText\">" + column.Value + "</div>" : column.Value)}</td>");
                         firstCol = false;
                     }
-                    s.Add($"                </tr>");
-                    s.Add($"            </tbody>");
-                    s.Add($"        </table>");
+                    s.Add($"                        </tr>");
+                    s.Add($"                    </tbody>");
+                    s.Add($"                </table>");
                     s.Add($"");
                     // entities with sort fields need to show all (pageSize = 0) for sortability, so no paging needed
                     if (!childEntity.HasASortField)
                     {
-                        s.Add($"        <div class=\"row\" ng-class=\"{{ 'disabled': vm.loading }}\">");
-                        s.Add($"            <div class=\"col-sm-7\">");
-                        s.Add($"               <{CurrentEntity.Project.AngularDirectivePrefix}-pager headers=\"vm.{relationship.ChildEntity.PluralName.ToCamelCase()}Headers\" callback=\"vm.load{relationship.ChildEntity.PluralName}\"></{CurrentEntity.Project.AngularDirectivePrefix}-pager>");
-                        s.Add($"            </div>");
-                        s.Add($"            <div class=\"col-sm-5 text-right resultsInfo\">");
-                        s.Add($"               <{CurrentEntity.Project.AngularDirectivePrefix}-pager-info headers=\"vm.{relationship.ChildEntity.PluralName.ToCamelCase()}Headers\"></{CurrentEntity.Project.AngularDirectivePrefix}-pager-info>");
-                        s.Add($"            </div>");
-                        s.Add($"        </div>");
+                        s.Add($"                <div class=\"row\" ng-class=\"{{ 'disabled': vm.loading }}\">");
+                        s.Add($"                    <div class=\"col-sm-7\">");
+                        s.Add($"                       <{CurrentEntity.Project.AngularDirectivePrefix}-pager headers=\"vm.{relationship.ChildEntity.PluralName.ToCamelCase()}Headers\" callback=\"vm.load{relationship.ChildEntity.PluralName}\"></{CurrentEntity.Project.AngularDirectivePrefix}-pager>");
+                        s.Add($"                    </div>");
+                        s.Add($"                    <div class=\"col-sm-5 text-right resultsInfo\">");
+                        s.Add($"                       <{CurrentEntity.Project.AngularDirectivePrefix}-pager-info headers=\"vm.{relationship.ChildEntity.PluralName.ToCamelCase()}Headers\"></{CurrentEntity.Project.AngularDirectivePrefix}-pager-info>");
+                        s.Add($"                    </div>");
+                        s.Add($"                </div>");
                         s.Add($"");
                     }
+
+                    s.Add($"            </div>");
+                    s.Add($"");
                 }
+                s.Add($"        </div>");
+                s.Add($"");
                 s.Add($"    </div>");
                 s.Add($"");
             }
@@ -1680,7 +1732,7 @@ namespace WEB.Models
             s.Add($"");
             s.Add($"            var promises = [];");
             s.Add($"");
-            foreach (var entity in CurrentEntity.RelationshipsAsChild.Where(r => !r.Hierarchy).Select(r => r.ParentEntity).Distinct())
+            foreach (var entity in CurrentEntity.RelationshipsAsChild.Where(r => !r.Hierarchy && !r.UseSelectorDirective).Select(r => r.ParentEntity).Distinct())
             {
                 s.Add($"            promises.push(");
                 s.Add($"                { entity.ResourceName}.query(");

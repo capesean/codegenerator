@@ -51,6 +51,9 @@ namespace WEB.Models
         [Required]
         public bool CascadeDelete { get; set; }
 
+        [Required]
+        public bool UseSelectorDirective { get; set; }
+
         public virtual ICollection<RelationshipField> RelationshipFields { get; set; } = new List<RelationshipField>();
 
         [ForeignKey("ChildEntityId")]

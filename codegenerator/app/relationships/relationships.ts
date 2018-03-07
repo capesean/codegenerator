@@ -42,7 +42,7 @@
                     }).$promise
             );
 
-            $q.all(promises).finally(() => runSearch(0))
+            $q.all(promises).finally(() => runSearch(0));
 
         }
 
@@ -50,15 +50,14 @@
 
             vm.loading = true;
 
+            vm.search.includeEntities = true;
+            vm.search.pageSize = 0;
+
             var promises = [];
 
             promises.push(
                 relationshipResource.query(
-                    {
-                        parentEntityId: vm.search.parentEntityId,
-                        childEntityId: vm.search.childEntityId,
-                        pageSize: 0
-                    },
+                    vm.search,
                     (data, headers) => {
 
                         vm.relationships = data;
@@ -72,7 +71,7 @@
                     }).$promise
             );
 
-            $q.all(promises).finally(() => vm.loading = false)
+            $q.all(promises).finally(() => vm.loading = false);
 
         };
 

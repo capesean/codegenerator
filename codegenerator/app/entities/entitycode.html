@@ -223,6 +223,8 @@
 
             <br />
 
+            <div class="alert alert-info" ng-if="vm.entity.preventModelDeployment">Deployment disabled</div>
+
             <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('model')">Copy<i class="fa fa-copy"></i></button></div></div>
 
             <pre><code class="csharp" ng-bind-html="vm.escapedCode.model"></code></pre>
@@ -240,6 +242,8 @@
         <div role="tabpanel" class="tab-pane" id="dtoTab">
 
             <br />
+
+            <div class="alert alert-info" ng-if="vm.entity.preventDTODeployment">Deployment disabled</div>
 
             <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('dto')">Copy<i class="fa fa-copy"></i></button></div></div>
 
@@ -259,6 +263,8 @@
 
             <br />
 
+            <div class="alert alert-info" ng-if="vm.entity.preventDbContextDeployment">Deployment disabled</div>
+
             <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('dbContext')">Copy<i class="fa fa-copy"></i></button></div></div>
 
             <pre><code class="csharp" ng-bind-html="vm.escapedCode.dbContext"></code></pre>
@@ -267,6 +273,8 @@
         <div role="tabpanel" class="tab-pane" id="bundleConfigTab">
 
             <br />
+
+            <div class="alert alert-info" ng-if="vm.entity.preventBundleConfigDeployment">Deployment disabled</div>
 
             <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('bundleConfig')">Copy<i class="fa fa-copy"></i></button></div></div>
 
@@ -277,6 +285,8 @@
 
             <br />
 
+            <div class="alert alert-info" ng-if="vm.entity.preventAppRouterDeployment">Deployment disabled</div>
+
             <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('appRouter')">Copy<i class="fa fa-copy"></i></button></div></div>
 
             <pre><code class="typescript" ng-bind-html="vm.escapedCode.appRouter"></code></pre>
@@ -285,6 +295,8 @@
         <div role="tabpanel" class="tab-pane" id="apiResourceTab">
 
             <br />
+
+            <div class="alert alert-info" ng-if="vm.entity.preventApiResourceDeployment">Deployment disabled</div>
 
             <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('apiResource')">Copy<i class="fa fa-copy"></i></button></div></div>
 
@@ -295,6 +307,8 @@
 
             <br />
 
+            <div class="alert alert-info" ng-if="vm.entity.preventControllerDeployment">Deployment disabled</div>
+
             <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('controller')">Copy<i class="fa fa-copy"></i></button></div></div>
 
             <pre><code class="csharp" ng-bind-html="vm.escapedCode.controller"></code></pre>
@@ -303,6 +317,8 @@
         <div role="tabpanel" class="tab-pane" id="listHtmlTab">
 
             <br />
+
+            <div class="alert alert-info" ng-if="vm.entity.preventListHtmlDeployment">Deployment disabled</div>
 
             <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('listHtml')">Copy<i class="fa fa-copy"></i></button></div></div>
 
@@ -313,6 +329,8 @@
 
             <br />
 
+            <div class="alert alert-info" ng-if="vm.entity.preventListTypeScriptDeployment">Deployment disabled</div>
+
             <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('listTypeScript')">Copy<i class="fa fa-copy"></i></button></div></div>
 
             <pre><code class="typescript" ng-bind-html="vm.escapedCode.listTypeScript"></code></pre>
@@ -322,6 +340,8 @@
 
             <br />
 
+            <div class="alert alert-info" ng-if="vm.entity.preventEditHtmlDeployment">Deployment disabled</div>
+
             <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('editHtml')">Copy<i class="fa fa-copy"></i></button></div></div>
 
             <pre><code class="html" ng-bind-html="vm.escapedCode.editHtml"></code></pre>
@@ -330,6 +350,8 @@
         <div role="tabpanel" class="tab-pane" id="editTypeScriptTab">
 
             <br />
+
+            <div class="alert alert-info" ng-if="vm.entity.preventEditTypeScriptDeployment">Deployment disabled</div>
 
             <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('editTypeScript')">Copy<i class="fa fa-copy"></i></button></div></div>
 

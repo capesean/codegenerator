@@ -136,6 +136,20 @@
                         </div>
                     </div>
 
+                    <div class="col-sm-4 col-md-3 col-lg-2">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.useSelectorDirective.$invalid }">
+                            <label for="useSelectorDirective" class="control-label">
+                                Use Selector Directive:
+                            </label>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" id="useSelectorDirective" name="useSelectorDirective" ng-model="vm.relationship.useSelectorDirective" />
+                                    Use Selector Directive
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
