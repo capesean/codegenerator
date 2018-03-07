@@ -934,7 +934,7 @@ namespace WEB.Models
                 s.Add($"    //#endregion");
                 s.Add($"");
             }
-            s.Add($"}} ());");
+            s.Add($"}}());");
 
             return RunCodeReplacements(s.ToString(), CodeType.ApiResource);
 
@@ -1281,7 +1281,7 @@ namespace WEB.Models
                 s.Add($"");
             }
             s.Add($"    }};");
-            s.Add($"}} ());");
+            s.Add($"}}());");
 
             return RunCodeReplacements(s.ToString(), CodeType.ListTypeScript);
         }
@@ -1779,97 +1779,85 @@ namespace WEB.Models
                 s.Add($"            );");
                 s.Add($"");
             }
-            s.Add($"            $q.all(promises)");
-            s.Add($"                .then(() => {{");
+            s.Add($"            if (vm.isNew) {{");
             s.Add($"");
-            s.Add($"                    if (vm.isNew) {{");
-            s.Add($"");
-            s.Add($"                        {CurrentEntity.ViewModelObject} = new {CurrentEntity.ResourceName}();");
+            s.Add($"                {CurrentEntity.ViewModelObject} = new {CurrentEntity.ResourceName}();");
             // without the HasCompositePrimaryKey check, it sets the values of the FK fields to newGuid, which then changes the coloring of nasBySelect (not 'empty') and sometimes selects an option (e.g. municipality in iber/datum)
             if (!CurrentEntity.HasCompositePrimaryKey)
                 foreach (var field in CurrentEntity.KeyFields.OrderBy(f => f.FieldOrder))
-                    s.Add($"                        {CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()} = appSettings.{field.NewVariable};");
+                    s.Add($"                {CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()} = appSettings.{field.NewVariable};");
             foreach (var field in CurrentEntity.Fields.Where(f => !string.IsNullOrWhiteSpace(f.EditPageDefault)))
-                s.Add($"                        {CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()} = {field.EditPageDefault};");
+                s.Add($"                {CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()} = {field.EditPageDefault};");
             var relationship = CurrentEntity.RelationshipsAsChild.FirstOrDefault(r => r.Hierarchy);
             if (relationship != null)
             {
                 foreach (var relationshipField in relationship.RelationshipFields)
-                    s.Add($"                        {CurrentEntity.ViewModelObject}.{relationshipField.ChildField.Name.ToCamelCase()} = $stateParams.{relationshipField.ParentField.Name.ToCamelCase()};");
+                    s.Add($"                {CurrentEntity.ViewModelObject}.{relationshipField.ChildField.Name.ToCamelCase()} = $stateParams.{relationshipField.ParentField.Name.ToCamelCase()};");
                 s.Add($"");
-                s.Add($"                        promises = [];");
-                s.Add($"");
-                s.Add($"                        promises.push(");
-                s.Add($"                            {relationship.ParentEntity.ResourceName}.get(");
-                s.Add($"                                {{");
+                s.Add($"                promises.push(");
+                s.Add($"                    {relationship.ParentEntity.ResourceName}.get(");
+                s.Add($"                        {{");
                 foreach (var field in relationship.ParentEntity.KeyFields)
-                    s.Add($"                                    {field.Name.ToCamelCase()}: $stateParams.{field.Name.ToCamelCase()}" + (field == relationship.ParentEntity.KeyFields.Last() ? string.Empty : ","));
-                s.Add($"                                }},");
-                s.Add($"                                data => {{");
-                s.Add($"                                    vm.{relationship.ParentEntity.Name.ToCamelCase()} = data;");
+                    s.Add($"                            {field.Name.ToCamelCase()}: $stateParams.{field.Name.ToCamelCase()}" + (field == relationship.ParentEntity.KeyFields.Last() ? string.Empty : ","));
+                s.Add($"                        }},");
+                s.Add($"                        data => {{");
+                s.Add($"                            vm.{relationship.ParentEntity.Name.ToCamelCase()} = data;");
                 var nextRelationship = relationship.ParentEntity.RelationshipsAsChild.Where(r => r.Hierarchy).FirstOrDefault();
                 while (nextRelationship != null)
                 {
-                    s.Add($"                                    vm.{nextRelationship.ParentEntity.Name.ToCamelCase()} = vm.{nextRelationship.ChildEntity.Name.ToCamelCase()}.{nextRelationship.ParentEntity.Name.ToCamelCase()};");
+                    s.Add($"                            vm.{nextRelationship.ParentEntity.Name.ToCamelCase()} = vm.{nextRelationship.ChildEntity.Name.ToCamelCase()}.{nextRelationship.ParentEntity.Name.ToCamelCase()};");
                     nextRelationship = nextRelationship.ParentEntity.RelationshipsAsChild.Where(r => r.Hierarchy).FirstOrDefault();
                 }
-                s.Add($"                                }},");
-                s.Add($"                                err => {{");
+                s.Add($"                        }},");
+                s.Add($"                        err => {{");
                 s.Add($"");
-                s.Add($"                                    errorService.handleApiError(err, \"{relationship.ParentEntity.FriendlyName.ToLower()}\", \"load\");");
-                s.Add($"                                    {CurrentEntity.DefaultGo}");
+                s.Add($"                            errorService.handleApiError(err, \"{relationship.ParentEntity.FriendlyName.ToLower()}\", \"load\");");
+                s.Add($"                            {CurrentEntity.DefaultGo}");
                 s.Add($"");
-                s.Add($"                                }}).$promise");
-                s.Add($"                        );");
-                s.Add($"");
-                s.Add($"                        $q.all(promises).finally(() => vm.loading = false);");
-            }
-            else
-            {
-                s.Add($"                        vm.loading = false;");
+                s.Add($"                        }}).$promise");
+                s.Add($"                );");
             }
             s.Add($"");
-            s.Add($"                    }} else {{");
+            s.Add($"            }} else {{");
             s.Add($"");
-            s.Add($"                        promises = [];");
-            s.Add($"");
-            s.Add($"                        promises.push(");
-            s.Add($"                            {CurrentEntity.ResourceName}.get(");
-            s.Add($"                                {{");
+            s.Add($"                promises.push(");
+            s.Add($"                    {CurrentEntity.ResourceName}.get(");
+            s.Add($"                        {{");
             foreach (var field in CurrentEntity.KeyFields.OrderBy(f => f.FieldOrder))
-                s.Add($"                                    {field.Name.ToCamelCase()}: $stateParams.{field.Name.ToCamelCase()}" + (field == CurrentEntity.KeyFields.OrderBy(f => f.FieldOrder).Last() ? string.Empty : ","));
-            s.Add($"                                }},");
-            s.Add($"                                data => {{");
+                s.Add($"                            {field.Name.ToCamelCase()}: $stateParams.{field.Name.ToCamelCase()}" + (field == CurrentEntity.KeyFields.OrderBy(f => f.FieldOrder).Last() ? string.Empty : ","));
+            s.Add($"                        }},");
+            s.Add($"                        data => {{");
             if (CurrentEntity.Project.ExcludeTypes)
-                s.Add($"                                    {CurrentEntity.ViewModelObject} = data;");
+                s.Add($"                            {CurrentEntity.ViewModelObject} = data;");
             else
-                s.Add($"                                    angular.copy(data, {CurrentEntity.ViewModelObject});");
+                s.Add($"                            angular.copy(data, {CurrentEntity.ViewModelObject});");
             var lastEntity = CurrentEntity;
             foreach (var entity in CurrentEntity.GetNavigationEntities(true))
             {
                 if (entity == CurrentEntity) continue;
-                s.Add($"                                    vm.{entity.Name.ToCamelCase()} = vm.{lastEntity.Name.ToCamelCase()}.{entity.Name.ToCamelCase()};");
+                s.Add($"                            vm.{entity.Name.ToCamelCase()} = vm.{lastEntity.Name.ToCamelCase()}.{entity.Name.ToCamelCase()};");
                 lastEntity = entity;
             }
-            s.Add($"                                }},");
-            s.Add($"                                err => {{");
+            s.Add($"                        }},");
+            s.Add($"                        err => {{");
             s.Add($"");
-            s.Add($"                                    errorService.handleApiError(err, \"{CurrentEntity.FriendlyName.ToLower()}\", \"load\");");
-            s.Add($"                                    {CurrentEntity.DefaultGo}");
+            s.Add($"                            errorService.handleApiError(err, \"{CurrentEntity.FriendlyName.ToLower()}\", \"load\");");
+            s.Add($"                            {CurrentEntity.DefaultGo}");
             s.Add($"");
-            s.Add($"                                }}).$promise");
-            s.Add($"                        );");
+            s.Add($"                        }}).$promise");
+            s.Add($"                );");
             s.Add($"");
             foreach (var rel in CurrentEntity.RelationshipsAsParent.Where(r => r.DisplayListOnParent))
             {
-                s.Add($"                        promises.push(load{rel.ChildEntity.PluralName}(0, true));");
+                s.Add($"                promises.push(load{rel.ChildEntity.PluralName}(0, true));");
             }
             if (CurrentEntity.RelationshipsAsParent.Where(r => r.DisplayListOnParent).Count() > 0)
                 s.Add($"");
-            s.Add($"                        $q.all(promises).finally(() => vm.loading = false);");
-            s.Add($"                    }}");
-            s.Add($"                }});");
+            s.Add($"            }}");
+            s.Add($"");
+            s.Add($"            $q.all(promises).finally(() => vm.loading = false);");
             s.Add($"        }}");
+
             #endregion
 
             #region save
@@ -1898,7 +1886,7 @@ namespace WEB.Models
             s.Add($"                        }});");
             s.Add($"");
             s.Add($"                }},");
-            s.Add($"                err=> {{");
+            s.Add($"                err => {{");
             s.Add($"");
             s.Add($"                    errorService.handleApiError(err, \"{CurrentEntity.FriendlyName.ToLower()}\");");
             s.Add($"");
@@ -1925,7 +1913,8 @@ namespace WEB.Models
             s.Add($"                    notifications.success(\"The {CurrentEntity.FriendlyName.ToLower()} has been deleted.\", \"Deleted\");");
             s.Add($"                    {CurrentEntity.DefaultGo}");
             s.Add($"");
-            s.Add($"                }}, err => {{");
+            s.Add($"                }},");
+            s.Add($"                err => {{");
             s.Add($"");
             s.Add($"                    errorService.handleApiError(err, \"{CurrentEntity.FriendlyName.ToLower()}\", \"delete\");");
             s.Add($"");
@@ -2012,7 +2001,7 @@ namespace WEB.Models
 
             s.Add($"    }};");
             s.Add($"");
-            s.Add($"}} ());");
+            s.Add($"}}());");
 
             return RunCodeReplacements(s.ToString(), CodeType.EditTypeScript);
 
@@ -2075,7 +2064,7 @@ namespace WEB.Models
                 foreach (var parentRelationship in relationship.ParentEntity.RelationshipsAsChild.Where(r => r.RelationshipAncestorLimit != RelationshipAncestorLimits.Exclude))
                 {
                     // if got here because not overrideLimit, otherwise if it IS, then only if the parent relationship is the hierarchy
-                    if (!overrideLimit || parentRelationship.Hierarchy)
+                    if (overrideLimit || parentRelationship.Hierarchy)
                         list = GetTopAncestors(list, prefix, parentRelationship, ancestorLimit, level + 1);
                 }
             }
