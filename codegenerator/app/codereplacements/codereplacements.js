@@ -10,6 +10,7 @@
         vm.loading = true;
         vm.appSettings = appSettings;
         vm.search = {};
+        vm.searchObjects = {};
         vm.runSearch = runSearch;
         vm.goToCodeReplacement = function (projectId, entityId, codeReplacementId) { return $state.go("app.codeReplacement", { projectId: projectId, entityId: entityId, codeReplacementId: codeReplacementId }); };
         vm.sortOptions = { stop: sortItems, handle: "i.sortable-handle", axis: "y" };
@@ -21,13 +22,10 @@
         }
         function runSearch(pageIndex) {
             vm.loading = true;
+            vm.search.includeEntities = true;
+            vm.search.pageSize = 0;
             var promises = [];
-            promises.push(codeReplacementResource.query({
-                findCode: vm.search.findCode,
-                replacementCode: vm.search.replacementCode,
-                q: vm.search.q,
-                pageSize: 0
-            }, function (data, headers) {
+            promises.push(codeReplacementResource.query(vm.search, function (data, headers) {
                 vm.codeReplacements = data;
             }, function (err) {
                 notifications.error("Failed to load the code replacements.", "Error", err);

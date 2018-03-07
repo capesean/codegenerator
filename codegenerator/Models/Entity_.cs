@@ -36,6 +36,15 @@ namespace WEB.Models
         }
 
         [NotMapped]
+        public virtual List<Field> RangeSearchFields
+        {
+            get
+            {
+                return Fields.Where(o => o.SearchType == SearchType.Range).OrderBy(o => o.FieldOrder).ToList();
+            }
+        }
+
+        [NotMapped]
         public virtual List<Field> SortOrderFields
         {
             get
@@ -68,7 +77,8 @@ namespace WEB.Models
         {
             get
             {
-                var entities = RelationshipsAsChild.Where(r => r.ParentEntityId != EntityId).Select(r => r.ParentEntity).ToList();
+                // exclude UseSelectorDirectives to remove them from the edit typescript controller defn
+                var entities = RelationshipsAsChild.Where(r => r.ParentEntityId != EntityId && !r.UseSelectorDirective).Select(r => r.ParentEntity).ToList();
                 entities.AddRange(RelationshipsAsParent.Where(r => r.DisplayListOnParent).Select(r => r.ChildEntity).ToList());
                 return entities.Distinct().ToList();
             }

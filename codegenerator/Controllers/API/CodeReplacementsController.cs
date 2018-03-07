@@ -14,7 +14,10 @@ namespace WEB.Controllers
         public async Task<IHttpActionResult> Search([FromUri]PagingOptions pagingOptions, [FromUri]string q = null, [FromUri]Guid? entityId = null, [FromUri]string findCode = null, [FromUri]string replacementCode = null)
         {
             IQueryable<CodeReplacement> results = DbContext.CodeReplacements;
-            results = results.Include(o => o.Entity.Project);
+            if (pagingOptions.IncludeEntities)
+            {
+                results = results.Include(o => o.Entity.Project);
+            }
 
             if (!string.IsNullOrWhiteSpace(q))
                 results = results.Where(o => o.Purpose.Contains(q));
@@ -31,14 +34,14 @@ namespace WEB.Controllers
         [HttpGet, Route("{codeReplacementId:Guid}")]
         public async Task<IHttpActionResult> Get(Guid codeReplacementId)
         {
-            var codereplacement = await DbContext.CodeReplacements
+            var codeReplacement = await DbContext.CodeReplacements
                 .Include(o => o.Entity.Project)
                 .SingleOrDefaultAsync(o => o.CodeReplacementId == codeReplacementId);
 
-            if (codereplacement == null)
+            if (codeReplacement == null)
                 return NotFound();
 
-            return Ok(ModelFactory.Create(codereplacement));
+            return Ok(ModelFactory.Create(codeReplacement));
         }
 
         [HttpPost, Route("")]
@@ -68,8 +71,10 @@ namespace WEB.Controllers
             if (isNew)
             {
                 codeReplacement = new CodeReplacement();
-                DbContext.Entry(codeReplacement).State = EntityState.Added;
+
                 codeReplacementDTO.SortOrder = (await DbContext.CodeReplacements.Where(o => o.EntityId == codeReplacementDTO.EntityId).MaxAsync(o => (int?)o.SortOrder) ?? 0) + 1;
+
+                DbContext.Entry(codeReplacement).State = EntityState.Added;
             }
             else
             {
@@ -106,15 +111,14 @@ namespace WEB.Controllers
         [HttpPost, Route("sort")]
         public async Task<IHttpActionResult> Sort([FromBody]SortedGuids sortedIds)
         {
+            var codeReplacements = await DbContext.CodeReplacements.Where(o => sortedIds.ids.Contains(o.CodeReplacementId)).ToListAsync();
+            if (codeReplacements.Count != sortedIds.ids.Length) return BadRequest("Some of the code replacements could not be found");
+
             var sortOrder = 0;
-            foreach (var id in sortedIds.ids)
+            foreach (var codeReplacement in codeReplacements)
             {
-                var item = await DbContext.CodeReplacements.SingleOrDefaultAsync(o => o.CodeReplacementId == id);
-
-                if (item == null) return BadRequest("One of the code replacements could not be found");
-
-                DbContext.Entry(item).State = EntityState.Modified;
-                item.SortOrder = sortOrder;
+                DbContext.Entry(codeReplacement).State = EntityState.Modified;
+                codeReplacement.SortOrder = Array.IndexOf(sortedIds.ids, codeReplacement.CodeReplacementId);
                 sortOrder++;
             }
 

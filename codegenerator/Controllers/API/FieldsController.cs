@@ -35,6 +35,7 @@ namespace WEB.Controllers
         public async Task<IHttpActionResult> Get(Guid fieldId)
         {
             var field = await DbContext.Fields
+                .Include(o => o.Lookup.Project)
                 .Include(o => o.Entity.Project)
                 .SingleOrDefaultAsync(o => o.FieldId == fieldId);
 

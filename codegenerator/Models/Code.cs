@@ -489,8 +489,10 @@ namespace WEB.Models
             foreach (var field in CurrentEntity.ExactSearchFields)
                 if (!fieldsToSearch.Contains(field))
                     fieldsToSearch.Add(field);
+            foreach (var field in CurrentEntity.RangeSearchFields)
+                fieldsToSearch.Add(field);
 
-            s.Add($"        public async Task<IHttpActionResult> Search([FromUri]PagingOptions pagingOptions{(CurrentEntity.TextSearchFields.Count > 0 ? ", [FromUri]string q = null" : "")}{(fieldsToSearch.Count > 0 ? $", {fieldsToSearch.Select(f => "[FromUri]" + (new Field { Name = f.Name, Lookup = f.Lookup, FieldType = f.FieldType, IsNullable = true }).NetType + " " + f.Name.ToCamelCase() + " = null").Aggregate((current, next) => current + ", " + next)}" : "")})");
+            s.Add($"        public async Task<IHttpActionResult> Search([FromUri]PagingOptions pagingOptions{(CurrentEntity.TextSearchFields.Count > 0 ? ", [FromUri]string q = null" : "")}{(fieldsToSearch.Count > 0 ? $", {fieldsToSearch.Select(f => f.ControllerSearchParams).Aggregate((current, next) => current + ", " + next)}" : "")})");
             s.Add($"        {{");
             s.Add($"            IQueryable<{CurrentEntity.Name}> results = {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName};");
 
@@ -520,7 +522,15 @@ namespace WEB.Models
                 s.Add($"");
                 foreach (var field in fieldsToSearch)
                 {
-                    s.Add($"            if ({field.Name.ToCamelCase()}{(field.CustomType == CustomType.String ? " != null" : ".HasValue")}) results = results.Where(o => o.{field.Name} == {field.Name.ToCamelCase()});");
+                    if (field.SearchType == SearchType.Range && field.CustomType == CustomType.Date)
+                    {
+                        s.Add($"            if (from{field.Name}.HasValue) {{ var from{field.Name}Utc = from{field.Name}.Value.ToUniversalTime(); results = results.Where(o => o.{ field.Name} >= from{field.Name}Utc); }} ");
+                        s.Add($"            if (to{field.Name}.HasValue) {{ var to{field.Name}Utc = to{field.Name}.Value.ToUniversalTime(); results = results.Where(o => o.{ field.Name} <= to{field.Name}Utc); }} ");
+                    }
+                    else
+                    {
+                        s.Add($"            if ({field.Name.ToCamelCase()}{(field.CustomType == CustomType.String ? " != null" : ".HasValue")}) results = results.Where(o => o.{field.Name} == {field.Name.ToCamelCase()});");
+                    }
                 }
             }
 
@@ -976,7 +986,7 @@ namespace WEB.Models
                         {
                             s.Add($"            <div class=\"col-sm-6 col-md-4 col-lg-3\">");
                             s.Add($"                <div class=\"form-group\">");
-                            s.Add($"                    <{CurrentEntity.Project.AngularDirectivePrefix}-select-{parentEntity.Name.ToLower()} id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"vm.search.{field.Name.ToCamelCase()}\" placeholder=\"Select {relationship.ParentFriendlyName.ToLower()}\" {parentEntity.Name.ToLower()}=\"vm.search.{parentEntity.Name.ToLower()}\"></{CurrentEntity.Project.AngularDirectivePrefix}-select-{parentEntity.Name.ToLower()}>");
+                            s.Add($"                    <{CurrentEntity.Project.AngularDirectivePrefix}-select-{parentEntity.Name.ToLower()} id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"vm.search.{field.Name.ToCamelCase()}\" placeholder=\"Select {relationship.ParentFriendlyName.ToLower()}\" {parentEntity.Name.ToLower()}=\"vm.searchObjects.{parentEntity.Name.ToLower()}\"></{CurrentEntity.Project.AngularDirectivePrefix}-select-{parentEntity.Name.ToLower()}>");
                             s.Add($"                </div>");
                             s.Add($"            </div>");
                             s.Add($"");
@@ -994,6 +1004,24 @@ namespace WEB.Models
                             s.Add($"            </div>");
                             s.Add($"");
                         }
+                    }
+                }
+                foreach (var field in CurrentEntity.Fields.Where(f => f.SearchType == SearchType.Range))
+                {
+                    if (field.CustomType == CustomType.Date)
+                    {
+                        s.Add($"            <div class=\"col-sm-6 col-md-3 col-lg-2\">");
+                        s.Add($"                <div class=\"form-group\" uib-tooltip=\"From {field.Label}\">");
+                        s.Add($"                    <input type=\"{(field.FieldType == FieldType.Date ? "date" : "datetime-local")}\" id=\"from{field.Name}\" name=\"from{field.Name}\" ng-model=\"vm.search.from{field.Name}\" {(field.FieldType == FieldType.Date ? "ng-model-options=\"{timezone: 'utc'}\" " : "")} class=\"form-control\" />");
+                        s.Add($"                </div>");
+                        s.Add($"            </div>");
+                        s.Add($"");
+                        s.Add($"            <div class=\"col-sm-6 col-md-3 col-lg-2\">");
+                        s.Add($"                <div class=\"form-group\" uib-tooltip=\"To {field.Label}\">");
+                        s.Add($"                    <input type=\"{(field.FieldType == FieldType.Date ? "date" : "datetime-local")}\" id=\"to{field.Name}\" name=\"to{field.Name}\" ng-model=\"vm.search.to{field.Name}\" {(field.FieldType == FieldType.Date ? "ng-model-options=\"{timezone: 'utc'}\" " : "")} class=\"form-control\" />");
+                        s.Add($"                </div>");
+                        s.Add($"            </div>");
+                        s.Add($"");
                     }
                 }
                 s.Add($"        </div>");
@@ -1110,6 +1138,7 @@ namespace WEB.Models
             s.Add($"        vm.loading = true;");
             s.Add($"        vm.appSettings = appSettings;");
             s.Add($"        vm.search = {{ }};");
+            s.Add($"        vm.searchObjects = {{ }};");
             s.Add($"        vm.runSearch = runSearch;");
             s.Add($"        {CurrentEntity.GetGoToEntityCode()}");
             if (CurrentEntity.HasASortField)

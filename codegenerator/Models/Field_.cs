@@ -146,6 +146,20 @@ namespace WEB.Models
             }
         }
 
+        [NotMapped]
+        public string ControllerSearchParams
+        {
+            get
+            {
+                var netType = (new Field { Name = Name, Lookup = Lookup, FieldType = FieldType, IsNullable = true }).NetType;
+                if (SearchType == SearchType.Range)
+                    return "[FromUri]" + netType + " from" + Name + " = null, [FromUri]" + netType + " to" + Name + " = null";
+                else
+                    return "[FromUri]" + netType + " " + Name.ToCamelCase() + " = null";
+            }
+        }
+
+
         public override string ToString()
         {
             return Name;

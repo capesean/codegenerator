@@ -13,6 +13,7 @@
         vm.loading = true;
         vm.appSettings = appSettings;
         vm.search = { };
+        vm.searchObjects = { };
         vm.runSearch = runSearch;
         vm.goToField = (projectId, entityId, fieldId) => $state.go("app.field", { projectId: projectId, entityId: entityId, fieldId: fieldId });
         vm.sortOptions = { stop: sortItems, handle: "i.sortable-handle", axis: "y" };

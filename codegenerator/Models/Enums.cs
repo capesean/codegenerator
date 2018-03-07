@@ -77,7 +77,8 @@ namespace WEB.Models
     {
         None,
         Exact,
-        Text
+        Text,
+        Range
     }
 
     public static class Extensions
@@ -244,6 +245,8 @@ namespace WEB.Models
                     return "Exact";
                 case SearchType.Text:
                     return "Text";
+                case SearchType.Range:
+                    return "Range";
                 default:
                     return null;
             }

@@ -13,6 +13,7 @@
         vm.loading = true;
         vm.appSettings = appSettings;
         vm.search = { };
+        vm.searchObjects = { };
         vm.runSearch = runSearch;
         vm.goToCodeReplacement = (projectId, entityId, codeReplacementId) => $state.go("app.codeReplacement", { projectId: projectId, entityId: entityId, codeReplacementId: codeReplacementId });
         vm.sortOptions = { stop: sortItems, handle: "i.sortable-handle", axis: "y" };
@@ -24,7 +25,7 @@
 
             var promises = [];
 
-            $q.all(promises).finally(() => runSearch(0))
+            $q.all(promises).finally(() => runSearch(0));
 
         }
 
@@ -32,16 +33,14 @@
 
             vm.loading = true;
 
+            vm.search.includeEntities = true;
+            vm.search.pageSize = 0;
+
             var promises = [];
 
             promises.push(
                 codeReplacementResource.query(
-                    {
-                        findCode: vm.search.findCode,
-                        replacementCode: vm.search.replacementCode,
-                        q: vm.search.q,
-                        pageSize: 0
-                    },
+                    vm.search,
                     (data, headers) => {
 
                         vm.codeReplacements = data;
@@ -55,7 +54,7 @@
                     }).$promise
             );
 
-            $q.all(promises).finally(() => vm.loading = false)
+            $q.all(promises).finally(() => vm.loading = false);
 
         };
 
