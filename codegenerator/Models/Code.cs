@@ -1010,14 +1010,15 @@ namespace WEB.Models
                 {
                     if (field.CustomType == CustomType.Date)
                     {
+                        // should use uib-tooltip, but angular-bootstrap-ui doesn't work (little arrow is missing)
                         s.Add($"            <div class=\"col-sm-6 col-md-3 col-lg-2\">");
-                        s.Add($"                <div class=\"form-group\" uib-tooltip=\"From {field.Label}\">");
+                        s.Add($"                <div class=\"form-group\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"From {field.Label}\">");
                         s.Add($"                    <input type=\"{(field.FieldType == FieldType.Date ? "date" : "datetime-local")}\" id=\"from{field.Name}\" name=\"from{field.Name}\" ng-model=\"vm.search.from{field.Name}\" {(field.FieldType == FieldType.Date ? "ng-model-options=\"{timezone: 'utc'}\" " : "")} class=\"form-control\" />");
                         s.Add($"                </div>");
                         s.Add($"            </div>");
                         s.Add($"");
                         s.Add($"            <div class=\"col-sm-6 col-md-3 col-lg-2\">");
-                        s.Add($"                <div class=\"form-group\" uib-tooltip=\"To {field.Label}\">");
+                        s.Add($"                <div class=\"form-group\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"To {field.Label}\">");
                         s.Add($"                    <input type=\"{(field.FieldType == FieldType.Date ? "date" : "datetime-local")}\" id=\"to{field.Name}\" name=\"to{field.Name}\" ng-model=\"vm.search.to{field.Name}\" {(field.FieldType == FieldType.Date ? "ng-model-options=\"{timezone: 'utc'}\" " : "")} class=\"form-control\" />");
                         s.Add($"                </div>");
                         s.Add($"            </div>");
