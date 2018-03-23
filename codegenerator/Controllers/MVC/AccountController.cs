@@ -151,6 +151,12 @@ namespace WEB.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Reset(ResetViewModel model)
         {
+            if(model.Email == "demo@capesean.co.za")
+            {
+                ModelState.AddModelError("lName", "You are not allowed to change the password on the demo site");
+                return View(model);
+            }
+
             if (!ModelState.IsValid)
             {
                 ModelState.AddModelError("lName", "Last Name  not found");

@@ -66,6 +66,8 @@ namespace WEB.Controllers
             {
                 project = new Project();
 
+                project.DateCreated = DateTime.Today;
+
                 DbContext.Entry(project).State = EntityState.Added;
             }
             else

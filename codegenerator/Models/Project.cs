@@ -50,6 +50,10 @@ namespace WEB.Models
 
         public string Notes { get; set; }
 
+        [Required]
+        [Column(TypeName = "Date")]
+        public DateTime DateCreated { get; set; }
+
         public virtual ICollection<Entity> Entities { get; set; } = new List<Entity>();
 
         public virtual ICollection<Lookup> Lookups { get; set; } = new List<Lookup>();

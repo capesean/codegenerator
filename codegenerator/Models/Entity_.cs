@@ -120,6 +120,7 @@ namespace WEB.Models
         {
             public string Header { get; set; }
             public string Value { get; set; }
+            public bool IsOnAnotherEntity { get; set; }
         }
 
         internal Relationship GetParentSearchRelationship(Field field)
@@ -140,11 +141,16 @@ namespace WEB.Models
                     var rel = RelationshipsAsChild.Single(r => r.RelationshipFields.Any(f => f.ChildFieldId == field.FieldId));
                     if (rel.ParentEntity == currentEntity) continue;
 
-                    result.Add(new SearchResultColumn { Header = rel.ParentEntity.FriendlyName, Value = $"{{{{ { field.Entity.Name.ToCamelCase()}.{ rel.ParentName.ToCamelCase() }.{ rel.ParentField.Name.ToCamelCase() } }}}}" });
+                    result.Add(new SearchResultColumn
+                    {
+                        Header = rel.ParentEntity.FriendlyName,
+                        Value = $"{{{{ { field.Entity.Name.ToCamelCase()}.{ rel.ParentName.ToCamelCase() }.{ rel.ParentField.Name.ToCamelCase() } }}}}",
+                        IsOnAnotherEntity = true
+                    });
                 }
                 else
                 {
-                    var column = new SearchResultColumn { Header = field.Label };
+                    var column = new SearchResultColumn { Header = field.Label, IsOnAnotherEntity = false };
                     if (field.FieldType == FieldType.Enum)
                         column.Value = $"{{{{ vm.appSettings.find(vm.appSettings.{ field.Lookup.Name.ToCamelCase() }, {field.Entity.Name.ToCamelCase()}.{ field.Name.ToCamelCase() }).label }}}}";
                     else if (field.FieldType == FieldType.Bit)

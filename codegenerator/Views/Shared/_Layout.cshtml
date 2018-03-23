@@ -34,10 +34,10 @@
             <!-- /.navbar-header -->
 
             <ul id="topmenu" class="nav navbar-top-links navbar-right">
-                <li class="dropdown">
+                <li class="dropdown" ng-if="vm.isAdmin">
                     <a href="/users"><i class="fa fa-chevron-circle-down fa-fw"></i><span class="hidden-xs visible-sm-inline-block visible-md-inline-block visible-lg-inline-block inline-block">Users</span></a>
                 </li>
-                <li class="dropdown">
+                <li class="dropdown" ng-if="vm.isAdmin">
                     <a href="/settings"><i class="fa fa-chevron-circle-down fa-fw"></i><span class="hidden-xs visible-sm-inline-block visible-md-inline-block visible-lg-inline-block inline-block">Settings</span></a>
                 </li>
                 <!-- /.dropdown -->
@@ -59,13 +59,30 @@
         <div id="page-wrapper">
 
             <ol id="breadcrumb" ncy-breadcrumb>&nbsp;</ol>
-            
+
+            <div class="alert alert-warning" ng-if="vm.isDemo">
+                <i class="fa fa-warning"></i>&nbsp;You are not allowed to modify the demo project.
+            </div>
+
             <div ng-cloak ui-view>
                 @RenderBody()
             </div>
 
+            <div ng-if="vm.ShowInfo">
+                
+                <hr />
+
+                <div class="well">
+                    <p>Hi there!</p>
+                    <p>If you're interested in using this system to speed up your development, you'll need to get in touch with me to get the latest shell project that has the up-to-date controllers, stylesheets, directives, etc.</p>
+                    <p>Most of it is up on <a href="https://github.com/capesean/codegenerator">Github</a>, but I don't keep it as up-to-date as I could, as I'm not sure if other people will find it useful or not. I use it almost every day, though.</p>
+                    <p>So if you think this <strong>code generator</strong> might be useful to you, get in touch and I can help set you up properly. If enough people are interested, then I'll try keeping GitHub more updated!</p>
+                    <p>You can get in touch via Github, or Twitter <a href="https://twitter.com/capesean">&commat;CapeSean</a></p>
+                </div>
+
+            </div>
+
         </div>
-        <!-- /#page-wrapper -->
 
     </div>
 
@@ -77,8 +94,6 @@
         </div>
 
     </div>
-
-    <!-- /#wrapper -->
 
     @Scripts.Render("~/scripts/main")
 

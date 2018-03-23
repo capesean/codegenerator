@@ -1,9 +1,13 @@
 ﻿@using WEB.Models
 @model LoginViewModel
-
 @using (Html.BeginForm("Login", "Account", new { ReturnUrl = ViewBag.ReturnUrl }, FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
-            {
+{
     @Html.AntiForgeryToken()
+
+    <div class="alert alert-info">
+        You can log into this demo site with username: demo@capesean.co.za and password: L3tM3!n<br /><br />
+        For more information, visit: <a href="https://github.com/capesean/codegenerator">Code Generator</a>
+    </div>
 
     @Html.ValidationSummary(true, "", new { @class = "text-danger" })
 
@@ -29,7 +33,6 @@
     </p>
 
 }
-
 
 @section scripts{
     <script>
@@ -67,5 +70,4 @@
             toastr.success("You have been logged out");
         </script>
     }
-
 }

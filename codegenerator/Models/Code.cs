@@ -524,8 +524,8 @@ namespace WEB.Models
                 {
                     if (field.SearchType == SearchType.Range && field.CustomType == CustomType.Date)
                     {
-                        s.Add($"            if (from{field.Name}.HasValue) {{ var from{field.Name}Utc = from{field.Name}.Value.ToUniversalTime(); results = results.Where(o => o.{ field.Name} >= from{field.Name}Utc); }} ");
-                        s.Add($"            if (to{field.Name}.HasValue) {{ var to{field.Name}Utc = to{field.Name}.Value.ToUniversalTime(); results = results.Where(o => o.{ field.Name} <= to{field.Name}Utc); }} ");
+                        s.Add($"            if (from{field.Name}.HasValue) {{ var from{field.Name}Utc = from{field.Name}.Value.ToUniversalTime(); results = results.Where(o => o.{ field.Name} >= from{field.Name}Utc); }}");
+                        s.Add($"            if (to{field.Name}.HasValue) {{ var to{field.Name}Utc = to{field.Name}.Value.ToUniversalTime(); results = results.Where(o => o.{ field.Name} <= to{field.Name}Utc); }}");
                     }
                     else
                     {
@@ -612,6 +612,8 @@ namespace WEB.Models
             s.Add($"");
             foreach (var field in CurrentEntity.Fields.Where(f => f.IsUnique))
             {
+                if (field.EditPageType == EditPageType.ReadOnly) continue;
+
                 string hierarchyFields = string.Empty;
                 if (ParentHierarchyRelationship != null)
                 {
@@ -619,7 +621,7 @@ namespace WEB.Models
                         hierarchyFields += (hierarchyFields == string.Empty ? "" : " && ") + "o." + relField.ChildField.Name + " == " + CurrentEntity.DTOName.ToCamelCase() + "." + relField.ChildField.Name;
                     hierarchyFields += " && ";
                 }
-                s.Add($"            if (await {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName}.AnyAsync(o => {hierarchyFields}o.{field.Name} == {CurrentEntity.DTOName.ToCamelCase()}.{field.Name} && !({GetKeyFieldLinq("o", CurrentEntity.DTOName.ToCamelCase())})))");
+                s.Add($"            if (await {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName}.AnyAsync(o => {hierarchyFields}o.{field.Name} == {CurrentEntity.DTOName.ToCamelCase()}.{field.Name} && {GetKeyFieldLinq("o", CurrentEntity.DTOName.ToCamelCase(), "!=", "||", true)}))");
                 s.Add($"                return BadRequest(\"{field.Label} already exists{(ParentHierarchyRelationship == null ? string.Empty : " on this " + ParentHierarchyRelationship.ParentEntity.FriendlyName)}.\");");
                 s.Add($"");
             }
@@ -969,7 +971,7 @@ namespace WEB.Models
                         s.Add($"            <div class=\"col-sm-6 col-md-4 col-lg-3\">");
                         s.Add($"                <div class=\"form-group\">");
                         s.Add($"                    <ol id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" title=\"{field.Label}\" class=\"nya-bs-select form-control\" ng-model=\"vm.search.{field.Name.ToCamelCase()}\" data-live-search=\"true\" data-size=\"10\">");
-                        s.Add($"                        <li nya-bs-option=\"item in vm.appSettings.{field.Lookup.Name.ToCamelCase()}\" class=\"nya-bs-option\" data-value=\"item.id\">");
+                        s.Add($"                        <li nya-bs-option=\"item in vm.appSettings.{field.Lookup.Name.ToCamelCase()}\" class=\"nya-bs-option{(CurrentEntity.Project.Bootstrap3 ? "" : " dropdown-item")}\" data-value=\"item.id\">");
                         s.Add($"                            <a>{{{{item.label}}}}<span class=\"fa fa-check check-mark\"></span></a>");
                         s.Add($"                        </li>");
                         s.Add($"                    </ol>");
@@ -996,7 +998,7 @@ namespace WEB.Models
                             s.Add($"            <div class=\"col-sm-6 col-md-4 col-lg-3\">");
                             s.Add($"                <div class=\"form-group\">");
                             s.Add($"                    <ol id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" title=\"{parentEntity.PluralFriendlyName}\" class=\"nya-bs-select form-control\" ng-model=\"vm.search.{field.Name.ToCamelCase()}\" data-live-search=\"true\" data-size=\"10\">");
-                            s.Add($"                        <li nya-bs-option=\"{parentEntity.Name.ToCamelCase()} in vm.{parentEntity.PluralName.ToCamelCase()}\" class=\"nya-bs-option\" data-value=\"{parentEntity.Name.ToCamelCase()}.{relField.ParentField.Name.ToCamelCase()}\">");
+                            s.Add($"                        <li nya-bs-option=\"{parentEntity.Name.ToCamelCase()} in vm.{parentEntity.PluralName.ToCamelCase()}\" class=\"nya-bs-option{(CurrentEntity.Project.Bootstrap3 ? "" : " dropdown-item")}\" data-value=\"{parentEntity.Name.ToCamelCase()}.{relField.ParentField.Name.ToCamelCase()}\">");
                             s.Add($"                            <a>{{{{{parentEntity.Name.ToCamelCase()}.{relationship.ParentField.Name.ToCamelCase()}}}}}<span class=\"fa fa-check check-mark\"></span></a>");
                             s.Add($"                        </li>");
                             s.Add($"                    </ol>");
@@ -1186,13 +1188,15 @@ namespace WEB.Models
 
                 }
             }
-            s.Add($"            $q.all(promises).finally(() => runSearch(0));");
+            s.Add($"            promises.push(runSearch(0, true));");
+            s.Add($"");
+            s.Add($"            $q.all(promises).finally(() => vm.loading = false);");
             s.Add($"");
             s.Add($"        }}");
             s.Add($"");
-            s.Add($"        function runSearch(pageIndex) {{");
+            s.Add($"        function runSearch(pageIndex, dontSetLoading) {{");
             s.Add($"");
-            s.Add($"            vm.loading = true;");
+            s.Add($"            if (!dontSetLoading) vm.loading = true;");
             s.Add($"");
             foreach (var field in CurrentEntity.Fields.Where(f => f.ShowInSearchResults).OrderBy(f => f.FieldOrder))
                 if (CurrentEntity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(f => f.ChildFieldId == field.FieldId)))
@@ -1205,32 +1209,10 @@ namespace WEB.Models
             else
                 s.Add($"            vm.search.pageIndex = pageIndex;");
             s.Add($"");
-            s.Add($"            var promises = [];");
-            s.Add($"");
-            s.Add($"            promises.push(");
+            s.Add($"            var promise =");
             // composite primary keys can't use the .query method because: http://stackoverflow.com/questions/39405452/ngresource-query-with-composite-key-parameter/40087371#40087371
             s.Add($"                {CurrentEntity.ResourceName}.{(!CurrentEntity.HasCompositePrimaryKey ? "query" : "search")}(");
             s.Add($"                    vm.search,");
-
-            //s.Add($"                    {{");
-            //foreach (var field in CurrentEntity.Fields.Where(f => f.SearchType == SearchType.Exact))
-            //{
-            //    s.Add($"                        {field.Name.ToCamelCase()}: vm.search.{field.Name.ToCamelCase()},");
-            //}
-            //if (CurrentEntity.Fields.Any(f => f.SearchType == SearchType.Text))
-            //    s.Add($"                        q: vm.search.q,"); // todo: what would happen if searching and the entity is sortable? should disable sorting? 
-            //// instruct api to load related entities as this entity has parent entities in results grid
-            //foreach (var field in CurrentEntity.Fields.Where(f => f.ShowInSearchResults).OrderBy(f => f.FieldOrder))
-            //    if (CurrentEntity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(f => f.ChildFieldId == field.FieldId)))
-            //    {
-            //        s.Add($"                        includeEntities: true,");
-            //        break;
-            //    }
-            //if (CurrentEntity.HasASortField)
-            //    s.Add($"                        pageSize: 0");
-            //else
-            //    s.Add($"                        pageIndex: pageIndex");
-            //s.Add($"                    }},");
             s.Add($"                    (data, headers) => {{");
             s.Add($"");
             s.Add($"                        vm.{CurrentEntity.PluralName.ToCamelCase()} = data;");
@@ -1243,10 +1225,11 @@ namespace WEB.Models
             s.Add($"                        notifications.error(\"Failed to load the {CurrentEntity.PluralFriendlyName.ToLower()}.\", \"Error\", err);");
             s.Add($"                        $state.go(\"app.home\");");
             s.Add($"");
-            s.Add($"                    }}).$promise");
-            s.Add($"            );");
+            s.Add($"                    }}).$promise;");
             s.Add($"");
-            s.Add($"            $q.all(promises).finally(() => vm.loading = false);");
+            s.Add($"            if (!dontSetLoading) promise.then(() => vm.loading = false);");
+            s.Add($"");
+            s.Add($"            return promise;");
             s.Add($"");
             s.Add($"        }};");
             s.Add($"");
@@ -1385,7 +1368,7 @@ namespace WEB.Models
                         s.Add(t + $"                            {field.Label}:");
                         s.Add(t + $"                        </label>");
                         s.Add(t + $"                        <ol id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" class=\"nya-bs-select form-control\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} data-live-search=\"true\" data-size=\"10\"{(field.KeyField ? " disabled=\"!vm.isNew\"" : string.Empty)}>");
-                        s.Add(t + $"                            <li nya-bs-option=\"{relationship.ParentEntity.Name.ToCamelCase()} in vm.{relationship.ParentEntity.PluralName.ToCamelCase()}\" class=\"nya-bs-option\" data-value=\"{relationship.ParentEntity.Name.ToCamelCase()}.{relationshipField.ParentField.Name.ToCamelCase()}\">");
+                        s.Add(t + $"                            <li nya-bs-option=\"{relationship.ParentEntity.Name.ToCamelCase()} in vm.{relationship.ParentEntity.PluralName.ToCamelCase()}\" class=\"nya-bs-option{(CurrentEntity.Project.Bootstrap3 ? "" : " dropdown-item")}\" data-value=\"{relationship.ParentEntity.Name.ToCamelCase()}.{relationshipField.ParentField.Name.ToCamelCase()}\">");
                         s.Add(t + $"                                <a>{{{{{relationship.ParentEntity.Name.ToCamelCase()}.{relationship.ParentField.Name.ToCamelCase()}}}}}<span class=\"fa fa-check check-mark\"></span></a>");
                         s.Add(t + $"                            </li>");
                         s.Add(t + $"                        </ol>");
@@ -1403,7 +1386,7 @@ namespace WEB.Models
                     s.Add(t + $"                        </label>");
                     s.Add(t + $"                        <ol id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" class=\"nya-bs-select form-control\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} data-live-search=\"true\" data-size=\"10\">");
                     // todo: replace with lookups
-                    s.Add(t + $"                            <li nya-bs-option=\"{field.Name.ToCamelCase()} in vm.appSettings.{field.Lookup.Name.ToCamelCase()}\" class=\"nya-bs-option\" data-value=\"{field.Name.ToCamelCase()}.id\">");
+                    s.Add(t + $"                            <li nya-bs-option=\"{field.Name.ToCamelCase()} in vm.appSettings.{field.Lookup.Name.ToCamelCase()}\" class=\"nya-bs-option{(CurrentEntity.Project.Bootstrap3 ? "" : " dropdown-item")}\" data-value=\"{field.Name.ToCamelCase()}.id\">");
                     s.Add(t + $"                                <a>{{{{{field.Name.ToCamelCase()}.label}}}}<span class=\"fa fa-check check-mark\"></span></a>");
                     s.Add(t + $"                            </li>");
                     s.Add(t + $"                        </ol>");
@@ -1488,7 +1471,7 @@ namespace WEB.Models
                 s.Add(t + $"                            Roles:");
                 s.Add(t + $"                        </label>");
                 s.Add(t + $"                        <ol id=\"roles\" name=\"roles\" class=\"nya-bs-select form-control\" ng-model=\"vm.user.roleIds\" multiple>");
-                s.Add(t + $"                            <li nya-bs-option=\"role in vm.appSettings.roles\" class=\"nya-bs-option\" data-value=\"role.id\">");
+                s.Add(t + $"                            <li nya-bs-option=\"role in vm.appSettings.roles\" class=\"nya-bs-option{(CurrentEntity.Project.Bootstrap3 ? "" : " dropdown-item")}\" data-value=\"role.id\">");
                 s.Add(t + $"                                <a>{{{{role.label}}}}<span class=\"fa fa-check check-mark\"></span></a>");
                 s.Add(t + $"                            </li>");
                 s.Add(t + $"                        </ol>");
@@ -1729,8 +1712,18 @@ namespace WEB.Models
             s.Add($"        .module(\"{CurrentEntity.Project.AngularModuleName}\")");
             s.Add($"        .controller(\"{CurrentEntity.CamelCaseName}\", {CurrentEntity.CamelCaseName});");
             s.Add($"");
-            s.Add($"    {CurrentEntity.CamelCaseName}.$inject = [\"$scope\", \"$state\", \"$stateParams\", \"{CurrentEntity.ResourceName}\", \"notifications\", \"appSettings\", \"$q\", \"errorService\"{CurrentEntity.RequiredRelationshipEntities.Select(e => ", \"" + e.ResourceName + "\"").DefaultIfEmpty(string.Empty).Aggregate((current, next) => current + next)}];");
-            s.Add($"    function {CurrentEntity.CamelCaseName}($scope, $state, $stateParams, {CurrentEntity.ResourceName + (CurrentEntity.Project.ExcludeTypes ? string.Empty : ": " + CurrentEntity.TypeScriptResource)}, notifications, appSettings, $q, errorService{CurrentEntity.RequiredRelationshipEntities.Select(e => ", " + e.ResourceName + (CurrentEntity.Project.ExcludeTypes ? string.Empty : ": " + e.TypeScriptResource)).DefaultIfEmpty(string.Empty).Aggregate((current, next) => current + next)}) {{");
+
+            var entityResources = new Dictionary<string, string>();
+            // add the current entity
+            entityResources.Add(CurrentEntity.ResourceName, CurrentEntity.ResourceName + (CurrentEntity.Project.ExcludeTypes ? string.Empty : ": " + CurrentEntity.TypeScriptResource));
+            // add the other required entities
+            foreach (var entity in CurrentEntity.RequiredRelationshipEntities.Distinct().Where(o => !entityResources.ContainsKey(o.ResourceName)).Select(o => new { o.ResourceName, o.TypeScriptResource }))
+            {
+                entityResources.Add(entity.ResourceName, entity.ResourceName + (CurrentEntity.Project.ExcludeTypes ? string.Empty : ": " + entity.TypeScriptResource));
+            }
+
+            s.Add($"    {CurrentEntity.CamelCaseName}.$inject = [\"$scope\", \"$state\", \"$stateParams\", \"notifications\", \"appSettings\", \"$q\", \"errorService\"{entityResources.Select(e => ", \"" + e.Key + "\"").Aggregate((current, next) => current + next)}];");
+            s.Add($"    function {CurrentEntity.CamelCaseName}($scope, $state, $stateParams, notifications, appSettings, $q, errorService{entityResources.Select(e => ", " + e.Value).Aggregate((current, next) => current + next)}) {{");
             s.Add($"");
             s.Add($"        var vm = this;");
             if (!CurrentEntity.Project.ExcludeTypes)
@@ -1762,7 +1755,7 @@ namespace WEB.Models
             s.Add($"");
             s.Add($"            var promises = [];");
             s.Add($"");
-            foreach (var entity in CurrentEntity.RelationshipsAsChild.Where(r => !r.Hierarchy && !r.UseSelectorDirective).Select(r => r.ParentEntity).Distinct())
+            foreach (var entity in CurrentEntity.RelationshipsAsChild.Where(r => !r.Hierarchy && !r.UseSelectorDirective).OrderBy(r => r.SortOrder).Select(r => r.ParentEntity).Distinct())
             {
                 s.Add($"            promises.push(");
                 s.Add($"                { entity.ResourceName}.query(");
@@ -1945,6 +1938,8 @@ namespace WEB.Models
                 }
                 else
                 {
+                    if (rel.ChildEntity.GetSearchResultsFields(CurrentEntity).Any(f => f.IsOnAnotherEntity))
+                        s.Add($"                    includeEntities: true,");
                     s.Add($"                    pageIndex: pageIndex");
                 }
                 s.Add($"                }},");
@@ -2039,9 +2034,13 @@ namespace WEB.Models
             return code;
         }
 
-        private string GetKeyFieldLinq(string entityName, string otherEntityName = null, string comparison = "==", string joiner = "&&")
+        private string GetKeyFieldLinq(string entityName, string otherEntityName = null, string comparison = "==", string joiner = "&&", bool addParenthesisIfMultiple = false)
         {
-            return CurrentEntity.KeyFields.Select(o => $"{entityName}.{o.Name} {comparison} " + (otherEntityName == null ? o.Name.ToCamelCase() : $"{otherEntityName}.{o.Name}")).Aggregate((current, next) => $"{current} {joiner} {next}");
+            return (addParenthesisIfMultiple && CurrentEntity.KeyFields.Count() > 1 ? "(" : "") +
+                CurrentEntity.KeyFields
+                    .Select(o => $"{entityName}.{o.Name} {comparison} " + (otherEntityName == null ? o.Name.ToCamelCase() : $"{otherEntityName}.{o.Name}")).Aggregate((current, next) => $"{current} {joiner} {next}")
+                    + (addParenthesisIfMultiple && CurrentEntity.KeyFields.Count() > 1 ? ")" : "")
+                    ;
         }
 
         public List<string> GetTopAncestors(List<string> list, string prefix, Relationship relationship, RelationshipAncestorLimits ancestorLimit, int level = 0, bool includeIfHierarchy = false)

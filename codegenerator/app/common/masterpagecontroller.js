@@ -22,6 +22,8 @@
                 vm.hideLeftMenu = $rootScope.hideLeftMenu;
                 vm.isAdmin = $rootScope.isAdmin;
                 vm.isReports = $rootScope.isReports;
+                vm.isDemo = $window.location.href.indexOf("698ee10f-835d-4d0d-bbc8-74680b46c88b") >= 0;
+                vm.ShowInfo = appSettings.rootUrl == "http://codegenerator.sitedemo.co.za/";
             });
         }
         function logout() {

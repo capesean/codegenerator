@@ -12,7 +12,7 @@
         var vm = this;
         vm.loading = true;
         vm.appSettings = appSettings;
-        vm.search = { };
+        vm.search = { pageSize: 0 };
         vm.runSearch = runSearch;
         vm.goToProject = (projectId) => $state.go("app.project", { projectId: projectId });
         vm.moment = moment;
