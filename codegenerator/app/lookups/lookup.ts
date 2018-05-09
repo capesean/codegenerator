@@ -156,7 +156,8 @@
             var promise = lookupOptionResource.query(
                 {
                     lookupId: $stateParams.lookupId,
-                    pageIndex: pageIndex,
+                    pageIndex: 0,
+                    pageSize: 0,
                     includeEntities: true
                 },
                 (data, headers) => {

@@ -43,6 +43,9 @@
                 }
                 notifications.error(errs.join("<br/>"), message);
             }
+            else if (err.data && err.data.exceptionMessage) {
+                notifications.error(err.data.exceptionMessage, message, err);
+            }
             else if (err.data && err.data.innerException) {
                 var errText = unwrapException(err.data.innerException);
                 notifications.error(errText, message, err);

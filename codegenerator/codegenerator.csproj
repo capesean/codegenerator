@@ -161,6 +161,7 @@
   <ItemGroup>
     <Content Include="app\codereplacements\codereplacement.html" />
     <Content Include="app\codereplacements\codereplacements.html" />
+    <Content Include="app\directives\pager.html" />
     <Content Include="app\entities\entities.html" />
     <Content Include="app\entities\entity.html" />
     <Content Include="app\entities\entitycode.html" />
@@ -610,6 +611,8 @@
     <TypeScriptCompile Include="app\common\masterpagecontroller.ts" />
     <TypeScriptCompile Include="app\common\routes-entity.ts" />
     <TypeScriptCompile Include="app\common\routes.ts" />
+    <TypeScriptCompile Include="app\directives\pager.ts" />
+    <TypeScriptCompile Include="app\directives\pagerinfo.ts" />
     <TypeScriptCompile Include="app\entities\entities.ts" />
     <TypeScriptCompile Include="app\entities\entity.ts" />
     <TypeScriptCompile Include="app\entities\entitycode.ts" />

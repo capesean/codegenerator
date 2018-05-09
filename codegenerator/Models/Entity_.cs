@@ -78,7 +78,8 @@ namespace WEB.Models
             get
             {
                 // exclude UseSelectorDirectives to remove them from the edit typescript controller defn
-                var entities = RelationshipsAsChild.Where(r => r.ParentEntityId != EntityId && !r.UseSelectorDirective).Select(r => r.ParentEntity).ToList();
+                // 20180417: if hierarchy, include relationship, so breadcrumb can be set for isnew
+                var entities = RelationshipsAsChild.Where(r => r.ParentEntityId != EntityId && (r.Hierarchy || !r.UseSelectorDirective)).Select(r => r.ParentEntity).ToList();
                 entities.AddRange(RelationshipsAsParent.Where(r => r.DisplayListOnParent).Select(r => r.ChildEntity).ToList());
                 return entities.Distinct().ToList();
             }

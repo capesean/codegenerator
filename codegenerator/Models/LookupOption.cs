@@ -18,7 +18,7 @@ namespace WEB.Models
         public string Name { get; set; }
 
         [Required(AllowEmptyStrings = true)]
-        [MaxLength(50)]
+        [MaxLength(100)]
         public string FriendlyName { get; set; }
 
         public int? Value { get; set; }

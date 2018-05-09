@@ -124,6 +124,10 @@
                 sort: {
                     method: "POST",
                     url: appSettings.apiServiceBaseUri + appSettings.apiPrefix + "relationships/sort"
+                },
+                sortChild: {
+                    method: "POST",
+                    url: appSettings.apiServiceBaseUri + appSettings.apiPrefix + "relationships/sortchild"
                 }
             }
         );
@@ -141,4 +145,4 @@
     }
     //#endregion
 
-} ());
+}());

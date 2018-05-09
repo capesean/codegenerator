@@ -1,0 +1,29 @@
+﻿<div>
+    <nav ng-if="headers && headers.pageSize > 0">
+        <ul class="pagination">
+            <li class="page-item" ng-click="runSearch(0)" ng-class="{ 'disabled': headers.pageIndex === 0 }">
+                <a class="page-link" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+
+            <li class="page-item hidden-sm" ng-if="headers.pageIndex - 3 > 0"><a ng-click="runSearch(headers.pageIndex - 4)" class="page-link">{{headers.pageIndex - 3}}</a></li>
+            <li class="page-item hidden-sm" ng-if="headers.pageIndex - 2 > 0"><a ng-click="runSearch(headers.pageIndex - 3)" class="page-link">{{headers.pageIndex - 2}}</a></li>
+            <li class="page-item" ng-if="headers.pageIndex - 1 > 0"><a ng-click="runSearch(headers.pageIndex - 2)" class="page-link">{{headers.pageIndex - 1}}</a></li>
+            <li class="page-item" ng-if="headers.pageIndex > 0"><a ng-click="runSearch(headers.pageIndex - 1)" class="page-link">{{headers.pageIndex}}</a></li>
+
+            <li class="page-item active"><a class="page-link">{{headers.pageIndex + 1}}</a></li>
+
+            <li class="page-item" ng-if="headers.pageIndex + 1 < headers.totalPages"><a ng-click="runSearch(headers.pageIndex + 1)" class="page-link">{{headers.pageIndex + 2}}</a></li>
+            <li class="page-item" ng-if="headers.pageIndex + 2 < headers.totalPages"><a ng-click="runSearch(headers.pageIndex + 2)" class="page-link">{{headers.pageIndex + 3}}</a></li>
+            <li class="page-item hidden-sm" ng-if="headers.pageIndex + 3 < headers.totalPages"><a ng-click="runSearch(headers.pageIndex + 3)" class="page-link">{{headers.pageIndex + 4}}</a></li>
+            <li class="page-item hidden-sm" ng-if="headers.pageIndex + 4 < headers.totalPages"><a ng-click="runSearch(headers.pageIndex + 4)" class="page-link">{{headers.pageIndex + 5}}</a></li>
+
+            <li class="page-item" ng-click="runSearch(headers.totalPages - 1)" ng-class="{ 'disabled': headers.pageIndex >= headers.totalPages - 1 }">
+                <a class="page-link" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>

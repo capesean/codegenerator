@@ -102,7 +102,8 @@
                 vm.loading = true;
             var promise = lookupOptionResource.query({
                 lookupId: $stateParams.lookupId,
-                pageIndex: pageIndex,
+                pageIndex: 0,
+                pageSize: 0,
                 includeEntities: true
             }, function (data, headers) {
                 vm.lookupOptionsHeaders = JSON.parse(headers("X-Pagination"));

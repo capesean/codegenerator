@@ -13,6 +13,7 @@
         vm.loading = true;
         vm.appSettings = appSettings;
         vm.search = { };
+        vm.searchObjects = { };
         vm.runSearch = runSearch;
         vm.goToLookupOption = (projectId, lookupId, lookupOptionId) => $state.go("app.lookupOption", { projectId: projectId, lookupId: lookupId, lookupOptionId: lookupOptionId });
         vm.moment = moment;
@@ -23,23 +24,22 @@
 
             var promises = [];
 
-            $q.all(promises).finally(() => runSearch(0))
+            promises.push(runSearch(0, true));
+
+            $q.all(promises).finally(() => vm.loading = false);
 
         }
 
-        function runSearch(pageIndex) {
+        function runSearch(pageIndex, dontSetLoading) {
 
-            vm.loading = true;
+            if (!dontSetLoading) vm.loading = true;
 
-            var promises = [];
+            vm.search.includeEntities = true;
+            vm.search.pageIndex = pageIndex;
 
-            promises.push(
+            var promise =
                 lookupOptionResource.query(
-                    {
-                        friendlyName: vm.search.friendlyName,
-                        name: vm.search.name,
-                        pageIndex: pageIndex
-                    },
+                    vm.search,
                     (data, headers) => {
 
                         vm.lookupOptions = data;
@@ -49,14 +49,15 @@
                     err => {
 
                         notifications.error("Failed to load the lookup options.", "Error", err);
-                        $state.go("app.home"); 
+                        $state.go("app.home");
 
-                    }).$promise
-            );
+                    }).$promise;
 
-            $q.all(promises).finally(() => vm.loading = false)
+            if (!dontSetLoading) promise.then(() => vm.loading = false);
+
+            return promise;
 
         };
 
     };
-} ());
+}());

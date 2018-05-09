@@ -16,7 +16,7 @@ namespace WEB.Models
         public string Name { get; set; }
 
         [DisplayFormat(ConvertEmptyStringToNull = false)]
-        [MaxLength(50)]
+        [MaxLength(100)]
         public string FriendlyName { get; set; }
 
         public int? Value { get; set; }

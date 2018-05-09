@@ -22,6 +22,7 @@
         vm.goToCodeReplacement = (projectId, entityId, codeReplacementId) => $state.go("app.codeReplacement", { projectId: projectId, entityId: entityId, codeReplacementId: codeReplacementId });
         vm.fieldsSortOptions = { stop: sortFields, handle: "i.sortable-handle" };
         vm.relationshipsAsParentSortOptions = { stop: sortParentRelationships, handle: "i.sortable-handle" };
+        vm.relationshipsAsChildSortOptions = { stop: sortChildRelationships, handle: "i.sortable-handle" };
         vm.codeReplacementsSortOptions = { stop: sortCodeReplacements, handle: "i.sortable-handle", axis: "y" };
         vm.CodeType = (type) => {
             var types = [{ id: 0, name: "Model" }, { id: 1, name: "DTO" }, { id: 2, name: "DbContext" }, { id: 3, name: "Controller" }, { id: 4, name: "BundleConfig" }, { id: 5, name: "AppRouter" }, { id: 6, name: "ApiResource" }, { id: 7, name: "ListHtml" }, { id: 8, name: "ListTypeScript" }, { id: 9, name: "EditHtml" }, { id: 10, name: "EditTypeScript" }];
@@ -272,6 +273,32 @@
                 err => {
 
                     notifications.error("Failed to sort the parent relationships. " + (err.data && err.data.message ? err.data.message : ""), "Error", err);
+
+                })
+                .$promise.finally(() => vm.loading = false);
+
+        }
+
+        function sortChildRelationships(e, ui) {
+
+            var ids = [];
+            angular.forEach(vm.relationshipsAsChild, function (item, index) {
+                ids.push(item.relationshipId);
+            });
+
+            vm.loading = true;
+            relationshipResource.sortChild(
+                {
+                    ids: ids
+                },
+                data => {
+
+                    notifications.success("The sort order has been updated", "Child Relationship Ordering");
+
+                },
+                err => {
+
+                    notifications.error("Failed to sort the child relationships. " + (err.data && err.data.message ? err.data.message : ""), "Error", err);
 
                 })
                 .$promise.finally(() => vm.loading = false);

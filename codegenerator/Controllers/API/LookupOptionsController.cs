@@ -14,7 +14,10 @@ namespace WEB.Controllers
         public async Task<IHttpActionResult> Search([FromUri]PagingOptions pagingOptions, [FromUri]Guid? lookupId = null, [FromUri]string name = null, [FromUri]string friendlyName = null)
         {
             IQueryable<LookupOption> results = DbContext.LookupOptions;
-            results = results.Include(o => o.Lookup.Project);
+            if (pagingOptions.IncludeEntities)
+            {
+                results = results.Include(o => o.Lookup.Project);
+            }
 
             if (lookupId.HasValue) results = results.Where(o => o.LookupId == lookupId);
             if (name != null) results = results.Where(o => o.Name == name);
@@ -28,14 +31,14 @@ namespace WEB.Controllers
         [HttpGet, Route("{lookupOptionId:Guid}")]
         public async Task<IHttpActionResult> Get(Guid lookupOptionId)
         {
-            var lookupoption = await DbContext.LookupOptions
+            var lookupOption = await DbContext.LookupOptions
                 .Include(o => o.Lookup.Project)
                 .SingleOrDefaultAsync(o => o.LookupOptionId == lookupOptionId);
 
-            if (lookupoption == null)
+            if (lookupOption == null)
                 return NotFound();
 
-            return Ok(ModelFactory.Create(lookupoption));
+            return Ok(ModelFactory.Create(lookupOption));
         }
 
         [HttpPost, Route("")]
@@ -65,6 +68,7 @@ namespace WEB.Controllers
             if (isNew)
             {
                 lookupOption = new LookupOption();
+
                 DbContext.Entry(lookupOption).State = EntityState.Added;
                 lookupOptionDTO.SortOrder = (DbContext.LookupOptions.Where(o => o.LookupId == lookupOptionDTO.LookupId).Max(o => (byte?)(o.SortOrder + 1)) ?? 0);
             }
@@ -88,12 +92,12 @@ namespace WEB.Controllers
         [HttpDelete, Route("{lookupOptionId:Guid}")]
         public async Task<IHttpActionResult> Delete(Guid lookupOptionId)
         {
-            var lookupoption = await DbContext.LookupOptions.SingleOrDefaultAsync(o => o.LookupOptionId == lookupOptionId);
+            var lookupOption = await DbContext.LookupOptions.SingleOrDefaultAsync(o => o.LookupOptionId == lookupOptionId);
 
-            if (lookupoption == null)
+            if (lookupOption == null)
                 return NotFound();
 
-            DbContext.Entry(lookupoption).State = EntityState.Deleted;
+            DbContext.Entry(lookupOption).State = EntityState.Deleted;
 
             await DbContext.SaveChangesAsync();
 

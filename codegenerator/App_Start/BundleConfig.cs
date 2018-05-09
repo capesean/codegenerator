@@ -41,7 +41,7 @@ namespace WEB
                 "~/scripts/Highlight/highlight.pack.js",
                 // ----- COMMON
                 "~/app/common/routes.js",
-                "~/app/common/routes-entity.js", 
+                "~/app/common/routes-entity.js",
                 "~/app/common/app.js",
                 "~/app/common/api.js",
                 "~/app/common/api-entity.js",
@@ -49,8 +49,9 @@ namespace WEB
                 "~/app/common/masterpagecontroller.js",
                 "~/app/common/authservice.js",
                 "~/app/common/errorservice.js",
-                //"~/app/common/datepicker-popup.js",
-                //"~/app/common/checklist-model.js",
+                // ----- DIRECTIVES
+                "~/app/directives/pager.js",
+                "~/app/directives/pagerinfo.js",
                 // ----- LOGIN
                 "~/app/login/login.js",
                 "~/app/login/resetpassword.js",

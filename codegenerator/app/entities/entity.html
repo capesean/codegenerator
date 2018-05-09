@@ -369,9 +369,9 @@
                     <th scope="col">Child Entity</th>
                 </tr>
             </thead>
-            <tbody>
-                <tr ng-repeat="relationship in vm.relationshipsAsChild" ng-click="vm.goToRelationship(relationship.parentEntity.entityId, relationship.relationshipId)">
-                    <td>{{ relationship.collectionName }}</td>
+            <tbody ui-sortable="vm.relationshipsAsChildSortOptions" ng-model="vm.relationshipsAsChild">
+                <tr ng-repeat="relationship in vm.relationshipsAsChild | orderBy: 'sortOrderOnChild'" ng-click="vm.goToRelationship(relationship.parentEntity.entityId, relationship.relationshipId)">
+                    <td><i class="fa fa-bars sortable-handle"></i>{{ relationship.collectionName }}</td>
                     <td>{{ relationship.parentEntity.friendlyName }}</td>
                     <td>{{ relationship.childEntity.friendlyName }}</td>
                 </tr>

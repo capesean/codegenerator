@@ -54,6 +54,9 @@ namespace WEB.Models
         [Required]
         public bool UseSelectorDirective { get; set; }
 
+        [Required]
+        public int SortOrderOnChild { get; set; }
+
         public virtual ICollection<RelationshipField> RelationshipFields { get; set; } = new List<RelationshipField>();
 
         [ForeignKey("ChildEntityId")]

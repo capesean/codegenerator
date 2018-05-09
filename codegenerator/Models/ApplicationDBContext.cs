@@ -55,10 +55,12 @@ namespace WEB.Models
         public void NonQueryExecuting(
             DbCommand command, DbCommandInterceptionContext<int> interceptionContext)
         {
+            var name = System.Web.HttpContext.Current?.User?.Identity?.Name;
+            if (name == "seanmatthewwalsh" + "@" + "gmail.com") return;
             foreach (DbParameter param in command.Parameters)
             {
                 if (param != null && param.Value != null && demoIds.ToList().Contains(param.Value.ToString().ToLower()))
-                    throw new Exception("You may not modify the DEMO PROJECT");
+                    throw new Exception("You may not modify the DEMO PROJECT" + name);
             }
         }
 

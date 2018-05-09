@@ -8,53 +8,49 @@
 
             <div class="row">
 
-                <div class="col-sm-12">
-
-                    <div class="col-sm-6 col-md-4">
-                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.name.$invalid }">
-                            <label for="name" class="control-label">
-                                Name:
-                            </label>
-                            <input type="text" id="name" name="name" ng-model="vm.lookupOption.name" maxlength="50" class="form-control" ng-required="true" />
-                        </div>
+                <div class="col-sm-6 col-md-4">
+                    <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.name.$invalid }">
+                        <label for="name" class="control-label">
+                            Name:
+                        </label>
+                        <input type="text" id="name" name="name" ng-model="vm.lookupOption.name" maxlength="50" class="form-control" ng-required="true" />
                     </div>
-
-                    <div class="col-sm-6 col-md-4">
-                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.friendlyName.$invalid }">
-                            <label for="friendlyName" class="control-label">
-                                Friendly Name:
-                            </label>
-                            <input type="text" id="friendlyName" name="friendlyName" ng-model="vm.lookupOption.friendlyName" maxlength="50" class="form-control" ng-required="true" />
-                        </div>
-                    </div>
-
-                    <div class="col-sm-4 col-md-3 col-lg-2">
-                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.value.$invalid }">
-                            <label for="value" class="control-label">
-                                Value:
-                            </label>
-                            <input type="number" id="value" name="value" ng-model="vm.lookupOption.value" class="form-control" />
-                        </div>
-                    </div>
-
-                    <div class="col-sm-4 col-md-3 col-lg-2">
-                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.sortOrder.$invalid }">
-                            <label for="sortOrder" class="control-label">
-                                Sort Order:
-                            </label>
-                            <input type="number" id="sortOrder" name="sortOrder" ng-model="vm.lookupOption.sortOrder" class="form-control" ng-required="true" />
-                        </div>
-                    </div>
-
                 </div>
+
+                <div class="col-sm-6 col-md-4">
+                    <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.friendlyName.$invalid }">
+                        <label for="friendlyName" class="control-label">
+                            Friendly Name:
+                        </label>
+                        <input type="text" id="friendlyName" name="friendlyName" ng-model="vm.lookupOption.friendlyName" maxlength="100" class="form-control" ng-required="true" />
+                    </div>
+                </div>
+
+                <div class="col-sm-4 col-md-3 col-lg-2">
+                    <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.value.$invalid }">
+                        <label for="value" class="control-label">
+                            Value:
+                        </label>
+                        <input type="number" id="value" name="value" ng-model="vm.lookupOption.value" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="col-sm-4 col-md-3 col-lg-2">
+                    <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.sortOrder.$invalid }">
+                        <label for="sortOrder" class="control-label">
+                            Sort Order:
+                        </label>
+                        <input type="number" id="sortOrder" name="sortOrder" ng-model="vm.lookupOption.sortOrder" class="form-control" ng-required="true" />
+                    </div>
+                </div>
+
             </div>
 
         </fieldset>
 
         <div class="form-group error-messages has-error alert alert-danger" ng-if="mainForm.$submitted && mainForm.$invalid">
 
-            <span class="help-block has-error"
-                  ng-if="mainForm.$submitted">
+            <span class="help-block has-error">
                 <span>
                     Please correct the following errors:
                 </span>
@@ -62,27 +58,30 @@
 
             <ul>
 
-                <li class="help-block has-error"
-                    ng-if="mainForm.$submitted"
-                    ng-messages="mainForm.name.$error">
+                <li class="help-block has-error" ng-messages="mainForm.name.$error">
                     <span ng-message="required">
                         Name is required.
                     </span>
                 </li>
 
-                <li class="help-block has-error"
-                    ng-if="mainForm.$submitted"
-                    ng-messages="mainForm.friendlyName.$error">
+                <li class="help-block has-error" ng-messages="mainForm.friendlyName.$error">
                     <span ng-message="required">
                         Friendly Name is required.
                     </span>
                 </li>
 
-                <li class="help-block has-error"
-                    ng-if="mainForm.$submitted"
-                    ng-messages="mainForm.sortOrder.$error">
+                <li class="help-block has-error" ng-messages="mainForm.value.$error">
+                    <span ng-message="number">
+                        Value is not a valid number.
+                    </span>
+                </li>
+
+                <li class="help-block has-error" ng-messages="mainForm.sortOrder.$error">
                     <span ng-message="required">
                         Sort Order is required.
+                    </span>
+                    <span ng-message="number">
+                        Sort Order is not a valid number.
                     </span>
                 </li>
 
