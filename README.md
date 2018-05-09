@@ -4,7 +4,25 @@ Generate code for an Entity Framework 6 / WebApi, with an AngularJS font-end, us
 ## Online demo!
 A demo of this system is available online at: http://codegenerator.sitedemo.co.za/
 
-You can log into the demo, create your own projects, with entities, fields, relationships, lookups, etc. Then you can view the code that gets generated. (If it's running on your own machine, you can just deploy the code at the click of a button!)
+You can log into the demo, create your own projects, with entities, fields, relationships, lookups, etc. Then you can view the code that gets generated. It can generate:
+
+* Model: tied into the EF6 DbContext, so EF will generate & update your tables automatically!
+* DTO: The WebApi will use the DTO to safely export & import data.
+* Controller: A fully fledged WebApi controller with methods like Search/Query, Get, Insert, Update, Delete, Sort, etc.
+* DbContext: codegenerator will link your entities into the DbContext, as well as use the Fluent API for field definitions where attributes are not enough (e.g. decimal precision)
+* SettingsDTO: your enums and general application settings get sent to the AngularJs client on login using a Settings DTO.
+* BundleConfig: codegenerator will automatically add the necessary files to the bundles, so you just have to rebuild after adding an entity, and your project will include the relevant javascript files!
+* Enums: Create enums via codegenerator, which can be used as fields in your tables/entities.
+* AppRouter: Your entities will get added to the AngularJs router, using $stateProvider. 
+* ApiResource: each entity gets added as an $resource factory in your app, so you can easily access the API by just injecting the appropriate resource.
+* List Html: codegenerator will produce a search page for the records in your table.
+* List TypeScript: you'll also get the TypeScript file that has the controller for the List Html page.
+* Edit Html: codegenerator will produce an edit page for adding/editing/deleting a record in your database.
+* Edit TypeScript: you'll also get the TypeScript file with the controller for the Edit page.
+
+That just begins to scratch the surface! You can also have lookups, relationships, hierarchies, sort orders, Min/Max lengths on fields, define unique constraints, primary keys, search fields, field behavious (read only/edit-when-new/etc), Code Replacements (which can modify the generated code, so your customised changes are retained), and much more! 
+
+If it's running on your own machine, you can deploy the code to your project at the click of a button!
 
 ## Blog post
 There's a (slightly) old blogpost here, that describes the system in a bit more detail:
