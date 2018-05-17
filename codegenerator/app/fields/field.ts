@@ -6,8 +6,8 @@
         .module("app")
         .controller("field", field);
 
-    field.$inject = ["$scope", "$state", "$stateParams", "fieldResource", "notifications", "appSettings", "$q", "errorService", "entityResource", "lookupResource"];
-    function field($scope, $state, $stateParams, fieldResource, notifications, appSettings, $q, errorService, entityResource, lookupResource) {
+    field.$inject = ["$scope", "$state", "$stateParams", "notifications", "appSettings", "$q", "errorService", "fieldResource", "entityResource", "lookupResource"];
+    function field($scope, $state, $stateParams, notifications, appSettings, $q, errorService, fieldResource, entityResource, lookupResource) {
 
         var vm = this;
         vm.loading = true;
@@ -51,66 +51,57 @@
                     }).$promise
             );
 
-            $q.all(promises)
-                .then(() => {
+            if (vm.isNew) {
 
-                    if (vm.isNew) {
+                vm.field = new fieldResource();
+                vm.field.fieldId = appSettings.newGuid;
+                vm.field.scale = 0;
+                vm.field.searchType = 0;
+                vm.field.precision = 0;
+                vm.field.length = 0;
+                vm.field.editPageType = 0;
+                vm.field.entityId = $stateParams.entityId;
 
-                        vm.field = new fieldResource();
-                        vm.field.fieldId = appSettings.newGuid;
-                        vm.field.scale = 0;
-                        vm.field.searchType = 0;
-                        vm.field.precision = 0;
-                        vm.field.length = 0;
-                        vm.field.editPageType = 0;
-                        vm.field.entityId = $stateParams.entityId;
+                promises.push(
+                    entityResource.get(
+                        {
+                            entityId: $stateParams.entityId
+                        },
+                        data => {
+                            vm.entity = data;
+                            vm.project = vm.entity.project;
+                        },
+                        err => {
 
-                        promises = [];
+                            errorService.handleApiError(err, "entity", "load");
+                            $state.go("app.entity", { projectId: $stateParams.projectId, entityId: $stateParams.entityId });
 
-                        promises.push(
-                            entityResource.get(
-                                {
-                                    entityId: $stateParams.entityId
-                                },
-                                data => {
-                                    vm.entity = data;
-                                    vm.project = vm.entity.project;
-                                },
-                                err => {
+                        }).$promise
+                );
 
-                                    errorService.handleApiError(err, "entity", "load");
-                                    $state.go("app.entity", { projectId: $stateParams.projectId, entityId: $stateParams.entityId });
+            } else {
 
-                                }).$promise
-                        );
+                promises.push(
+                    fieldResource.get(
+                        {
+                            fieldId: $stateParams.fieldId
+                        },
+                        data => {
+                            vm.field = data;
+                            vm.entity = vm.field.entity;
+                            vm.project = vm.entity.project;
+                        },
+                        err => {
 
-                        $q.all(promises).finally(() => vm.loading = false);
+                            errorService.handleApiError(err, "field", "load");
+                            $state.go("app.entity", { projectId: $stateParams.projectId, entityId: $stateParams.entityId });
 
-                    } else {
+                        }).$promise
+                );
 
-                        promises = [];
+            }
 
-                        promises.push(
-                            fieldResource.get(
-                                {
-                                    fieldId: $stateParams.fieldId
-                                },
-                                data => {
-                                    vm.field = data;
-                                    vm.entity = vm.field.entity;
-                                    vm.project = vm.entity.project;
-                                },
-                                err => {
-
-                                    errorService.handleApiError(err, "field", "load");
-                                    $state.go("app.entity", { projectId: $stateParams.projectId, entityId: $stateParams.entityId });
-
-                                }).$promise
-                        );
-
-                        $q.all(promises).finally(() => vm.loading = false);
-                    }
-                });
+            $q.all(promises).finally(() => vm.loading = false);
         }
 
         function save() {
@@ -131,13 +122,13 @@
                     $state.go("app.entity", { projectId: $stateParams.projectId, entityId: $stateParams.entityId });
 
                 },
-                err=> {
+                err => {
 
                     errorService.handleApiError(err, "field");
 
                 }).finally(() => vm.loading = false);
 
-        };
+        }
 
         function del() {
 
@@ -154,7 +145,8 @@
                     notifications.success("The field has been deleted.", "Deleted");
                     $state.go("app.entity", { projectId: $stateParams.projectId, entityId: $stateParams.entityId });
 
-                }, err => {
+                },
+                err => {
 
                     errorService.handleApiError(err, "field", "delete");
 
@@ -164,4 +156,4 @@
         }
     };
 
-} ());
+}());

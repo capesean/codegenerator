@@ -16,8 +16,8 @@ namespace WEB.Controllers
             IQueryable<Field> results = DbContext.Fields;
             if (pagingOptions.IncludeEntities)
             {
-                results = results.Include(o => o.Lookup.Project);
                 results = results.Include(o => o.Entity.Project);
+                results = results.Include(o => o.Lookup.Project);
             }
 
             if (!string.IsNullOrWhiteSpace(q))
@@ -111,6 +111,9 @@ namespace WEB.Controllers
 
             if (await DbContext.Relationships.AnyAsync(o => o.ParentFieldId == field.FieldId))
                 return BadRequest("Unable to delete the field as it has related relationships");
+
+            if (await DbContext.Entities.AnyAsync(o => o.PrimaryFieldId == field.FieldId))
+                return BadRequest("Unable to delete the field as it has related entities");
 
             DbContext.Entry(field).State = EntityState.Deleted;
 

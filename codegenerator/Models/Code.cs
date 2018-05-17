@@ -203,6 +203,16 @@ namespace WEB.Models
                 s.Add($"        }}");
             }
 
+            // tostring override
+            if (CurrentEntity.PrimaryFieldId.HasValue)
+            {
+                s.Add($"");
+                s.Add($"        public override string ToString()");
+                s.Add($"        {{");
+                s.Add($"            return {CurrentEntity.PrimaryField.Name};");
+                s.Add($"        }}");
+            }
+
             s.Add($"    }}");
             s.Add($"}}");
 
@@ -854,12 +864,14 @@ namespace WEB.Models
                 //s.Add($"                }},");
                 s.Add($"                ncyBreadcrumb: {{");
                 s.Add($"                    parent: \"app.{(e.RelationshipsAsChild.Any(r => r.Hierarchy) ? e.RelationshipsAsChild.First(r => r.Hierarchy).ParentEntity.Name : e.PluralName).ToCamelCase()}\",");
-                var defaultField = e.Fields.Where(f => f.ShowInSearchResults && !RelationshipFields.Any(rf => rf.ChildFieldId == f.FieldId)).OrderBy(f => f.FieldOrder).FirstOrDefault();
-                if (defaultField == null && string.IsNullOrWhiteSpace(e.Breadcrumb))
-                    s.Add($"                    label: \"{e.FriendlyName}\"");
-                //throw new Exception(e.Name + " does not have a breadcrumb or default field (search result field that is not in a relationship as child)");
+                var labelField = e.PrimaryField;
+                if (labelField == null) labelField = e.Fields.Where(f => f.ShowInSearchResults && !RelationshipFields.Any(rf => rf.ChildFieldId == f.FieldId)).OrderBy(f => f.FieldOrder).FirstOrDefault();
+                if (!string.IsNullOrWhiteSpace(e.Breadcrumb))
+                    s.Add($"                    label: \"{{{{{e.Breadcrumb}}}}}\"");
+                else if(labelField != null)
+                    s.Add($"                    label: \"{{{{vm.{e.Name.ToCamelCase()}.{labelField.Name.ToCamelCase()}}}}}\"");
                 else
-                    s.Add($"                    label: \"{{{{{(!string.IsNullOrWhiteSpace(e.Breadcrumb) ? e.Breadcrumb : $"vm.{e.Name.ToCamelCase()}.{defaultField.Name.ToCamelCase()}")}}}}}\"");
+                    s.Add($"                    label: \"{e.FriendlyName}\"");
                 s.Add($"                }}");
                 s.Add($"            }}).state(\"app.{e.PluralName.ToCamelCase()}\", {{");
                 // todo: search fields
@@ -2020,6 +2032,19 @@ namespace WEB.Models
 
         private string RunCodeReplacements(string code, CodeType type)
         {
+
+            if (!String.IsNullOrWhiteSpace(CurrentEntity.PreventApiResourceDeployment) && type == CodeType.ApiResource) return code;
+            if (!String.IsNullOrWhiteSpace(CurrentEntity.PreventAppRouterDeployment) && type == CodeType.AppRouter) return code;
+            if (!String.IsNullOrWhiteSpace(CurrentEntity.PreventBundleConfigDeployment) && type == CodeType.BundleConfig) return code;
+            if (!String.IsNullOrWhiteSpace(CurrentEntity.PreventControllerDeployment) && type == CodeType.Controller) return code;
+            if (!String.IsNullOrWhiteSpace(CurrentEntity.PreventDbContextDeployment) && type == CodeType.DbContext) return code;
+            if (!String.IsNullOrWhiteSpace(CurrentEntity.PreventDTODeployment) && type == CodeType.DTO) return code;
+            if (!String.IsNullOrWhiteSpace(CurrentEntity.PreventEditHtmlDeployment) && type == CodeType.EditHtml) return code;
+            if (!String.IsNullOrWhiteSpace(CurrentEntity.PreventEditTypeScriptDeployment) && type == CodeType.EditTypeScript) return code;
+            if (!String.IsNullOrWhiteSpace(CurrentEntity.PreventListHtmlDeployment) && type == CodeType.ListHtml) return code;
+            if (!String.IsNullOrWhiteSpace(CurrentEntity.PreventListTypeScriptDeployment) && type == CodeType.ListTypeScript) return code;
+            if (!String.IsNullOrWhiteSpace(CurrentEntity.PreventModelDeployment) && type == CodeType.Model) return code;
+
             // todo: needs a sort order
 
             var replacements = CurrentEntity.CodeReplacements.Where(cr => !cr.Disabled && cr.CodeType == type).ToList();

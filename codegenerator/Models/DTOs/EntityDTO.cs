@@ -78,6 +78,10 @@ namespace WEB.Models
         [Required]
         public bool Exclude { get; set; }
 
+        public Guid? PrimaryFieldId { get; set; }
+
+        public FieldDTO PrimaryField { get; set; }
+
         public ProjectDTO Project { get; set; }
 
     }
@@ -113,6 +117,8 @@ namespace WEB.Models
             entityDTO.PreventEditTypeScriptDeployment = entity.PreventEditTypeScriptDeployment;
             entityDTO.AuthorizationType = entity.AuthorizationType;
             entityDTO.Exclude = entity.Exclude;
+            entityDTO.PrimaryFieldId = entity.PrimaryFieldId;
+            entityDTO.PrimaryField = null;
             entityDTO.Project = Create(entity.Project);
 
             return entityDTO;
@@ -142,6 +148,7 @@ namespace WEB.Models
             entity.PreventEditTypeScriptDeployment = entityDTO.PreventEditTypeScriptDeployment;
             entity.AuthorizationType = entityDTO.AuthorizationType;
             entity.Exclude = entityDTO.Exclude;
+            entity.PrimaryFieldId = entityDTO.PrimaryFieldId;
         }
     }
 }

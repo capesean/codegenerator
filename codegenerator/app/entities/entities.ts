@@ -13,6 +13,7 @@
         vm.loading = true;
         vm.appSettings = appSettings;
         vm.search = { };
+        vm.searchObjects = { };
         vm.runSearch = runSearch;
         vm.goToEntity = (projectId, entityId) => $state.go("app.entity", { projectId: projectId, entityId: entityId });
         vm.moment = moment;
@@ -23,22 +24,22 @@
 
             var promises = [];
 
-            $q.all(promises).finally(() => runSearch(0))
+            promises.push(runSearch(0, true));
+
+            $q.all(promises).finally(() => vm.loading = false);
 
         }
 
-        function runSearch(pageIndex) {
+        function runSearch(pageIndex, dontSetLoading) {
 
-            vm.loading = true;
+            if (!dontSetLoading) vm.loading = true;
 
-            var promises = [];
+            vm.search.includeEntities = true;
+            vm.search.pageIndex = pageIndex;
 
-            promises.push(
+            var promise =
                 entityResource.query(
-                    {
-                        q: vm.search.q,
-                        pageIndex: pageIndex
-                    },
+                    vm.search,
                     (data, headers) => {
 
                         vm.entities = data;
@@ -50,12 +51,13 @@
                         notifications.error("Failed to load the entities.", "Error", err);
                         $state.go("app.home");
 
-                    }).$promise
-            );
+                    }).$promise;
 
-            $q.all(promises).finally(() => vm.loading = false);
+            if (!dontSetLoading) promise.then(() => vm.loading = false);
+
+            return promise;
 
         };
 
     };
-} ());
+}());

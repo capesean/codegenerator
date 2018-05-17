@@ -11,18 +11,20 @@ namespace WEB.Controllers
     public partial class EntitiesController : BaseApiController
     {
         [HttpGet, Route("")]
-        public async Task<IHttpActionResult> Search([FromUri]PagingOptions pagingOptions, [FromUri]string q = null, [FromUri]Guid? projectId = null)
+        public async Task<IHttpActionResult> Search([FromUri]PagingOptions pagingOptions, [FromUri]string q = null, [FromUri]Guid? projectId = null, [FromUri]Guid? primaryFieldId = null)
         {
             IQueryable<Entity> results = DbContext.Entities;
             if (pagingOptions.IncludeEntities)
             {
                 results = results.Include(o => o.Project);
+                results = results.Include(o => o.PrimaryField);
             }
 
             if (!string.IsNullOrWhiteSpace(q))
                 results = results.Where(o => o.Name.Contains(q));
 
             if (projectId.HasValue) results = results.Where(o => o.ProjectId == projectId);
+            if (primaryFieldId.HasValue) results = results.Where(o => o.PrimaryFieldId == primaryFieldId);
 
             results = results.OrderBy(o => o.Name);
 
@@ -33,6 +35,7 @@ namespace WEB.Controllers
         public async Task<IHttpActionResult> Get(Guid entityId)
         {
             var entity = await DbContext.Entities
+                .Include(o => o.PrimaryField)
                 .Include(o => o.Project)
                 .SingleOrDefaultAsync(o => o.EntityId == entityId);
 
@@ -97,16 +100,16 @@ namespace WEB.Controllers
             if (entity == null)
                 return NotFound();
 
-            if (DbContext.Relationships.Any(o => o.ParentEntityId == entity.EntityId))
+            if (await DbContext.Relationships.AnyAsync(o => o.ParentEntityId == entity.EntityId))
                 return BadRequest("Unable to delete the entity as it has related relationships");
 
-            if (DbContext.Fields.Any(o => o.EntityId == entity.EntityId))
+            if (await DbContext.Fields.AnyAsync(o => o.EntityId == entity.EntityId))
                 return BadRequest("Unable to delete the entity as it has related fields");
 
-            if (DbContext.Relationships.Any(o => o.ChildEntityId == entity.EntityId))
+            if (await DbContext.Relationships.AnyAsync(o => o.ChildEntityId == entity.EntityId))
                 return BadRequest("Unable to delete the entity as it has related relationships");
 
-            if (DbContext.CodeReplacements.Any(o => o.EntityId == entity.EntityId))
+            if (await DbContext.CodeReplacements.AnyAsync(o => o.EntityId == entity.EntityId))
                 return BadRequest("Unable to delete the entity as it has related code replacements");
 
             DbContext.Entry(entity).State = EntityState.Deleted;

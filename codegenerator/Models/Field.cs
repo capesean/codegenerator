@@ -85,6 +85,8 @@ namespace WEB.Models
 
         public virtual ICollection<Relationship> RelationshipsAsParentField { get; set; } = new List<Relationship>();
 
+        public virtual ICollection<Entity> PrimaryFieldEntities { get; set; } = new List<Entity>();
+
         [ForeignKey("EntityId")]
         public virtual Entity Entity { get; set; }
 

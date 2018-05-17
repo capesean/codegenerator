@@ -32,9 +32,9 @@
                 <th scope="col">Search Type</th>
             </tr>
         </thead>
-        <tbody ui-sortable="vm.sortOptions" ng-model="vm.fields">
+        <tbody>
             <tr ng-repeat="field in vm.fields" ng-click="vm.goToField(field.entity.project.projectId, field.entity.entityId, field.fieldId)">
-                <td><i class="fa fa-sort sortable-handle mt-1" ng-if="vm.fields.length > 1" ng-click="$event.stopPropagation();"></i><div class="sortColumnText">{{ field.entity.name }}</div></td>
+                <td>{{ field.entity.name }}</td>
                 <td>{{ field.name }}</td>
                 <td>{{ field.keyField ? "Yes" : "No" }}</td>
                 <td>{{ field.showInSearchResults ? "Yes" : "No" }}</td>
@@ -42,5 +42,14 @@
             </tr>
         </tbody>
     </table>
+
+    <div class="row" ng-class="{ 'disabled': vm.loading }">
+        <div class="col-sm-7">
+            <app-pager headers="vm.headers" callback="vm.runSearch"></app-pager>
+        </div>
+        <div class="col-sm-5 text-right resultsInfo">
+            <app-pager-info headers="vm.headers"></app-pager-info>
+        </div>
+    </div>
 
 </div>

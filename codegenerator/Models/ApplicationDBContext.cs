@@ -122,6 +122,8 @@ namespace WEB.Models
             modelBuilder.Conventions.Remove<ManyToManyCascadeDeleteConvention>();
             modelBuilder.Conventions.Remove<OneToManyCascadeDeleteConvention>();
 
+            modelBuilder.Entity<Entity>().HasOptional(c => c.PrimaryField);
+            modelBuilder.Entity<Field>().HasMany(a => a.PrimaryFieldEntities).WithOptional(c => c.PrimaryField);
         }
     }
 }

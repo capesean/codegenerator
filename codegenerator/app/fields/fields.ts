@@ -16,7 +16,6 @@
         vm.searchObjects = { };
         vm.runSearch = runSearch;
         vm.goToField = (projectId, entityId, fieldId) => $state.go("app.field", { projectId: projectId, entityId: entityId, fieldId: fieldId });
-        vm.sortOptions = { stop: sortItems, handle: "i.sortable-handle", axis: "y" };
         vm.moment = moment;
 
         initPage();
@@ -25,25 +24,26 @@
 
             var promises = [];
 
-            $q.all(promises).finally(() => runSearch(0));
+            promises.push(runSearch(0, true));
+
+            $q.all(promises).finally(() => vm.loading = false);
 
         }
 
-        function runSearch(pageIndex) {
+        function runSearch(pageIndex, dontSetLoading) {
 
-            vm.loading = true;
+            if (!dontSetLoading) vm.loading = true;
 
             vm.search.includeEntities = true;
-            vm.search.pageSize = 0;
+            vm.search.pageIndex = pageIndex;
 
-            var promises = [];
-
-            promises.push(
+            var promise =
                 fieldResource.query(
                     vm.search,
                     (data, headers) => {
 
                         vm.fields = data;
+                        vm.headers = JSON.parse(headers("X-Pagination"))
 
                     },
                     err => {
@@ -51,39 +51,13 @@
                         notifications.error("Failed to load the fields.", "Error", err);
                         $state.go("app.home");
 
-                    }).$promise
-            );
+                    }).$promise;
 
-            $q.all(promises).finally(() => vm.loading = false);
+            if (!dontSetLoading) promise.then(() => vm.loading = false);
+
+            return promise;
 
         };
 
-        function sortItems() {
-
-            vm.loading = true;
-
-            var ids = [];
-            angular.forEach(vm.fields, function (item, index) {
-                ids.push(item.fieldId);
-            });
-
-            fieldResource.sort(
-                {
-                    ids: ids
-                },
-                data => {
-
-                    notifications.success("The sort order has been updated", "Field Ordering");
-
-                },
-                err => {
-
-                    notifications.error("Failed to sort the fields. " + (err.data && err.data.message ? err.data.message : ""), "Error", err);
-
-                })
-                .$promise.finally(() => vm.loading = false);
-
-        }
-
     };
-} ());
+}());

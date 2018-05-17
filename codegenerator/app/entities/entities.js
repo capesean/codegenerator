@@ -10,28 +10,31 @@
         vm.loading = true;
         vm.appSettings = appSettings;
         vm.search = {};
+        vm.searchObjects = {};
         vm.runSearch = runSearch;
         vm.goToEntity = function (projectId, entityId) { return $state.go("app.entity", { projectId: projectId, entityId: entityId }); };
         vm.moment = moment;
         initPage();
         function initPage() {
             var promises = [];
-            $q.all(promises).finally(function () { return runSearch(0); });
+            promises.push(runSearch(0, true));
+            $q.all(promises).finally(function () { return vm.loading = false; });
         }
-        function runSearch(pageIndex) {
-            vm.loading = true;
-            var promises = [];
-            promises.push(entityResource.query({
-                q: vm.search.q,
-                pageIndex: pageIndex
-            }, function (data, headers) {
+        function runSearch(pageIndex, dontSetLoading) {
+            if (!dontSetLoading)
+                vm.loading = true;
+            vm.search.includeEntities = true;
+            vm.search.pageIndex = pageIndex;
+            var promise = entityResource.query(vm.search, function (data, headers) {
                 vm.entities = data;
                 vm.headers = JSON.parse(headers("X-Pagination"));
             }, function (err) {
                 notifications.error("Failed to load the entities.", "Error", err);
                 $state.go("app.home");
-            }).$promise);
-            $q.all(promises).finally(function () { return vm.loading = false; });
+            }).$promise;
+            if (!dontSetLoading)
+                promise.then(function () { return vm.loading = false; });
+            return promise;
         }
         ;
     }

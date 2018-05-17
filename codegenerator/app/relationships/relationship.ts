@@ -106,6 +106,7 @@
                                     vm.project = vm.entity.project;
                                     vm.relationship.parentName = data.name;
                                     vm.relationship.parentFriendlyName = data.friendlyName;
+                                    if (data.primaryFieldId) vm.relationship.parentFieldId = data.primaryFieldId;
                                 },
                                 err => {
 

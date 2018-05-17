@@ -74,6 +74,8 @@
                         vm.project = vm.entity.project;
                         vm.relationship.parentName = data.name;
                         vm.relationship.parentFriendlyName = data.friendlyName;
+                        if (data.primaryFieldId)
+                            vm.relationship.parentFieldId = data.primaryFieldId;
                     }, function (err) {
                         if (err.status === 404) {
                             notifications.error("The requested entity does not exist.", "Error");

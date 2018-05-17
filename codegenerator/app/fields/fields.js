@@ -13,42 +13,30 @@
         vm.searchObjects = {};
         vm.runSearch = runSearch;
         vm.goToField = function (projectId, entityId, fieldId) { return $state.go("app.field", { projectId: projectId, entityId: entityId, fieldId: fieldId }); };
-        vm.sortOptions = { stop: sortItems, handle: "i.sortable-handle", axis: "y" };
         vm.moment = moment;
         initPage();
         function initPage() {
             var promises = [];
-            $q.all(promises).finally(function () { return runSearch(0); });
+            promises.push(runSearch(0, true));
+            $q.all(promises).finally(function () { return vm.loading = false; });
         }
-        function runSearch(pageIndex) {
-            vm.loading = true;
+        function runSearch(pageIndex, dontSetLoading) {
+            if (!dontSetLoading)
+                vm.loading = true;
             vm.search.includeEntities = true;
-            vm.search.pageSize = 0;
-            var promises = [];
-            promises.push(fieldResource.query(vm.search, function (data, headers) {
+            vm.search.pageIndex = pageIndex;
+            var promise = fieldResource.query(vm.search, function (data, headers) {
                 vm.fields = data;
+                vm.headers = JSON.parse(headers("X-Pagination"));
             }, function (err) {
                 notifications.error("Failed to load the fields.", "Error", err);
                 $state.go("app.home");
-            }).$promise);
-            $q.all(promises).finally(function () { return vm.loading = false; });
+            }).$promise;
+            if (!dontSetLoading)
+                promise.then(function () { return vm.loading = false; });
+            return promise;
         }
         ;
-        function sortItems() {
-            vm.loading = true;
-            var ids = [];
-            angular.forEach(vm.fields, function (item, index) {
-                ids.push(item.fieldId);
-            });
-            fieldResource.sort({
-                ids: ids
-            }, function (data) {
-                notifications.success("The sort order has been updated", "Field Ordering");
-            }, function (err) {
-                notifications.error("Failed to sort the fields. " + (err.data && err.data.message ? err.data.message : ""), "Error", err);
-            })
-                .$promise.finally(function () { return vm.loading = false; });
-        }
     }
     ;
 }());

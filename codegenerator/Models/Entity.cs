@@ -81,6 +81,8 @@ namespace WEB.Models
         [Required]
         public bool Exclude { get; set; }
 
+        public Guid? PrimaryFieldId { get; set; }
+
         public virtual ICollection<Relationship> RelationshipsAsParent { get; set; } = new List<Relationship>();
 
         public virtual ICollection<Field> Fields { get; set; } = new List<Field>();
@@ -88,6 +90,9 @@ namespace WEB.Models
         public virtual ICollection<Relationship> RelationshipsAsChild { get; set; } = new List<Relationship>();
 
         public virtual ICollection<CodeReplacement> CodeReplacements { get; set; } = new List<CodeReplacement>();
+
+        [ForeignKey("PrimaryFieldId")]
+        public virtual Field PrimaryField { get; set; }
 
         [ForeignKey("ProjectId")]
         public virtual Project Project { get; set; }
