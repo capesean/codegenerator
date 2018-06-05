@@ -21,7 +21,6 @@
         vm.relationshipsAsParentSortOptions = { stop: sortParentRelationships, handle: "i.sortable-handle" };
         vm.relationshipsAsChildSortOptions = { stop: sortChildRelationships, handle: "i.sortable-handle" };
         vm.codeReplacementsSortOptions = { stop: sortCodeReplacements, handle: "i.sortable-handle", axis: "y" };
-        vm.entityFields = [];
         vm.CodeType = function (type) {
             var types = [{ id: 0, name: "Model" }, { id: 1, name: "DTO" }, { id: 2, name: "DbContext" }, { id: 3, name: "Controller" }, { id: 4, name: "BundleConfig" }, { id: 5, name: "AppRouter" }, { id: 6, name: "ApiResource" }, { id: 7, name: "ListHtml" }, { id: 8, name: "ListTypeScript" }, { id: 9, name: "EditHtml" }, { id: 10, name: "EditTypeScript" }];
             for (var i = 0; i < types.length; i++) {
@@ -59,15 +58,6 @@
                 }
                 else {
                     promises = [];
-                    promises.push(fieldResource.query({
-                        pageSize: 0,
-                        entityId: $stateParams.entityId
-                    }, function (data) {
-                        vm.entityFields = data;
-                    }, function (err) {
-                        notifications.error("Failed to load the entity fields list.", "Error", err);
-                        $state.go("app.project", { projectId: $stateParams.projectId });
-                    }).$promise);
                     promises.push(entityResource.get({
                         entityId: $stateParams.entityId
                     }, function (data) {

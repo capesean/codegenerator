@@ -44,7 +44,7 @@ namespace WEB.Controllers
         {
             var entity = DbContext.Entities
                 .Include(o => o.Project)
-                .Include(o => o.Fields)
+                .Include(o => o.Fields.Select(f => f.Lookup))
                 .Include(o => o.CodeReplacements)
                 .Include(o => o.RelationshipsAsChild.Select(p => p.RelationshipFields))
                 .Include(o => o.RelationshipsAsChild.Select(p => p.ParentEntity))

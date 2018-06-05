@@ -510,8 +510,10 @@ namespace WEB.Models
             {
                 s.Add($"            if (pagingOptions.IncludeEntities)");
                 s.Add($"            {{");
-                foreach (var relationship in CurrentEntity.RelationshipsAsChild.Where(r => r.RelationshipAncestorLimit != RelationshipAncestorLimits.Exclude).OrderBy(r => r.SortOrderOnChild))
+                foreach (var relationship in CurrentEntity.RelationshipsAsChild.OrderBy(r => r.SortOrderOnChild).ThenBy(o => o.ParentName))
                 {
+                    if (relationship.RelationshipAncestorLimit == RelationshipAncestorLimits.Exclude) continue;
+
                     foreach (var result in GetTopAncestors(new List<string>(), "o", relationship, relationship.RelationshipAncestorLimit, includeIfHierarchy: true))
                         s.Add($"                results = results.Include(o => {result});");
                 }
@@ -565,10 +567,12 @@ namespace WEB.Models
             s.Add($"        public async Task<IHttpActionResult> Get({CurrentEntity.ControllerParameters})");
             s.Add($"        {{");
             s.Add($"            var {CurrentEntity.CamelCaseName} = await {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName}");
-            foreach (var relationship in CurrentEntity.RelationshipsAsChild.Where(r => r.RelationshipAncestorLimit != RelationshipAncestorLimits.Exclude).OrderBy(r => r.SortOrder))
+            foreach (var relationship in CurrentEntity.RelationshipsAsChild.OrderBy(r => r.SortOrder))
             {
+                if (relationship.RelationshipAncestorLimit == RelationshipAncestorLimits.Exclude) continue;
+
                 //if (relationship.Hierarchy) -- these are needed e.g. when using select-directives, then it needs to have the related entities to show the label (not just the id, which nya-bs-select could make do with)
-                foreach (var result in GetTopAncestors(new List<string>(), "o", relationship, relationship.RelationshipAncestorLimit, includeIfHierarchy: relationship.Hierarchy))
+                foreach (var result in GetTopAncestors(new List<string>(), "o", relationship, relationship.RelationshipAncestorLimit, includeIfHierarchy: true))
                     s.Add($"                .Include(o => {result})");
             }
             s.Add($"                .SingleOrDefaultAsync(o => {GetKeyFieldLinq("o")});");
@@ -868,7 +872,7 @@ namespace WEB.Models
                 if (labelField == null) labelField = e.Fields.Where(f => f.ShowInSearchResults && !RelationshipFields.Any(rf => rf.ChildFieldId == f.FieldId)).OrderBy(f => f.FieldOrder).FirstOrDefault();
                 if (!string.IsNullOrWhiteSpace(e.Breadcrumb))
                     s.Add($"                    label: \"{{{{{e.Breadcrumb}}}}}\"");
-                else if(labelField != null)
+                else if (labelField != null)
                     s.Add($"                    label: \"{{{{vm.{e.Name.ToCamelCase()}.{labelField.Name.ToCamelCase()}}}}}\"");
                 else
                     s.Add($"                    label: \"{e.FriendlyName}\"");
@@ -1000,7 +1004,7 @@ namespace WEB.Models
                         {
                             s.Add($"            <div class=\"col-sm-6 col-md-4 col-lg-3\">");
                             s.Add($"                <div class=\"form-group\">");
-                            s.Add($"                    <{CurrentEntity.Project.AngularDirectivePrefix}-select-{parentEntity.FriendlyName.ToLower().Replace(" ", "-")} id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"vm.search.{field.Name.ToCamelCase()}\" placeholder=\"Select {relationship.ParentFriendlyName.ToLower()}\" singular=\"{relationship.ParentFriendlyName}\" plural=\"{relationship.ParentEntity.PluralFriendlyName}\" {parentEntity.FriendlyName.ToLower().Replace(" ", "-")}=\"vm.searchObjects.{parentEntity.Name.ToLower()}\"></{CurrentEntity.Project.AngularDirectivePrefix}-select-{parentEntity.FriendlyName.ToLower().Replace(" ", "-")}>");
+                            s.Add($"                    <{CurrentEntity.Project.AngularDirectivePrefix}-select-{parentEntity.FriendlyName.ToLower().Replace(" ", "-")} id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"vm.search.{field.Name.ToCamelCase()}\" placeholder=\"Select {relationship.ParentFriendlyName.ToLower()}\" singular=\"{relationship.ParentFriendlyName}\" plural=\"{relationship.ParentEntity.PluralFriendlyName}\" {parentEntity.FriendlyName.ToLower().Replace(" ", "-")}=\"vm.searchObjects.{parentEntity.Name.ToCamelCase()}\"></{CurrentEntity.Project.AngularDirectivePrefix}-select-{parentEntity.FriendlyName.ToLower().Replace(" ", "-")}>");
                             s.Add($"                </div>");
                             s.Add($"            </div>");
                             s.Add($"");
@@ -1169,7 +1173,7 @@ namespace WEB.Models
             s.Add($"            var promises = [];");
             s.Add($"");
             var processedEntities = new List<Guid>();
-            foreach (var field in CurrentEntity.Fields.Where(f => f.SearchType == SearchType.Exact))
+            foreach (var field in CurrentEntity.Fields.Where(f => f.SearchType == SearchType.Exact).OrderBy(o => o.FieldOrder))
             {
                 if (CurrentEntity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(f => f.ChildFieldId == field.FieldId)))
                 {
@@ -1367,7 +1371,7 @@ namespace WEB.Models
                         s.Add(t + $"                        <label class=\"control-label\">");
                         s.Add(t + $"                            {field.Label}:");
                         s.Add(t + $"                        </label>");
-                        s.Add(t + $"                        <{CurrentEntity.Project.AngularDirectivePrefix}-select-{relationship.ParentEntity.FriendlyName.ToLower().Replace(" ", "-")} id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} placeholder=\"Select {field.Label.ToLower()}\" singular=\"{relationship.ParentFriendlyName}\" plural=\"{relationship.ParentEntity.PluralFriendlyName}\" {relationship.ParentEntity.Name.ToLower()}=\"{CurrentEntity.ViewModelObject}.{relationship.ParentName.ToCamelCase()}\"></{CurrentEntity.Project.AngularDirectivePrefix}-select-{relationship.ParentEntity.FriendlyName.ToLower().Replace(" ", "-")}>");
+                        s.Add(t + $"                        <{CurrentEntity.Project.AngularDirectivePrefix}-select-{relationship.ParentEntity.FriendlyName.ToLower().Replace(" ", "-")} id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} placeholder=\"Select {field.Label.ToLower()}\" singular=\"{relationship.ParentFriendlyName}\" plural=\"{relationship.ParentEntity.PluralFriendlyName}\" {relationship.ParentEntity.FriendlyName.ToLower().Replace(" ", "-")}=\"{CurrentEntity.ViewModelObject}.{relationship.ParentName.ToCamelCase()}\"></{CurrentEntity.Project.AngularDirectivePrefix}-select-{relationship.ParentEntity.FriendlyName.ToLower().Replace(" ", "-")}>");
                         s.Add(t + $"                    </div>");
                         s.Add(t + $"                </div>");
                         s.Add(t + $"");
@@ -1768,7 +1772,7 @@ namespace WEB.Models
             s.Add($"");
             s.Add($"            var promises = [];");
             s.Add($"");
-            foreach (var entity in CurrentEntity.RelationshipsAsChild.Where(r => !r.Hierarchy && !r.UseSelectorDirective).OrderBy(r => r.SortOrderOnChild).Select(r => r.ParentEntity).Distinct())
+            foreach (var entity in CurrentEntity.RelationshipsAsChild.Where(r => !r.Hierarchy && !r.UseSelectorDirective).OrderBy(r => r.SortOrderOnChild).ThenBy(o => o.ParentName).Select(r => r.ParentEntity).Distinct())
             {
                 s.Add($"            promises.push(");
                 s.Add($"                { entity.ResourceName}.query(");
@@ -2077,6 +2081,7 @@ namespace WEB.Models
         public List<string> GetTopAncestors(List<string> list, string prefix, Relationship relationship, RelationshipAncestorLimits ancestorLimit, int level = 0, bool includeIfHierarchy = false)
         {
             // override is for the controller.get, when in a hierarchy. need to return the full hierarchy, so that the breadcrumb will be set correctly
+            // change: commented out ancestorLimit as (eg) KTUPACK Recommendation-Topic had IncludeAllParents but was therefore setting overrideLimit to false
             var overrideLimit = relationship.Hierarchy && includeIfHierarchy && ancestorLimit != RelationshipAncestorLimits.IncludeAllParents;
 
             //if (relationship.RelationshipAncestorLimit == RelationshipAncestorLimits.Exclude) return list;
@@ -2089,14 +2094,30 @@ namespace WEB.Models
             {
                 list.Add(prefix);
             }
+            else if (includeIfHierarchy && relationship.Hierarchy)
+            {
+                var hierarchyRel = relationship.ParentEntity.RelationshipsAsChild.SingleOrDefault(o => o.Hierarchy);
+                if (hierarchyRel != null)
+                {
+                    list = GetTopAncestors(list, prefix, hierarchyRel, ancestorLimit, level + 1, includeIfHierarchy);
+                }
+                else if (includeIfHierarchy)
+                {
+                    list.Add(prefix);
+                }
+            }
             else if (relationship.ParentEntity.RelationshipsAsChild.Any() && relationship.ParentEntityId != relationship.ChildEntityId)
             {
                 foreach (var parentRelationship in relationship.ParentEntity.RelationshipsAsChild.Where(r => r.RelationshipAncestorLimit != RelationshipAncestorLimits.Exclude))
                 {
+                    // if building the hierarchy links, only continue adding if it's still in the hierarchy
+                    if (includeIfHierarchy && !parentRelationship.Hierarchy) continue;
+
                     // if got here because not overrideLimit, otherwise if it IS, then only if the parent relationship is the hierarchy
                     if (overrideLimit || parentRelationship.Hierarchy)
-                        list = GetTopAncestors(list, prefix, parentRelationship, ancestorLimit, level + 1);
+                        list = GetTopAncestors(list, prefix, parentRelationship, ancestorLimit, level + 1, includeIfHierarchy);
                 }
+                //if (list.Count == 0 && includeIfHierarchy) list.Add();
             }
             else
             {

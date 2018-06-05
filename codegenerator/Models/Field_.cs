@@ -109,6 +109,7 @@ namespace WEB.Models
                 case FieldType.Enum:
                     // this is used when using an enum as a search field, needs to get the type as int
                     //if(Lookup == null) return "int" + (IsNullable ? "?" : string.Empty);
+                    if (lookup == null) throw new Exception("Lookup has not been set for an Enum field");
                     return lookup.Name + (isNullable ? "?" : string.Empty);
                 case FieldType.Bit:
                     return "bool" + (isNullable ? "?" : string.Empty);
@@ -132,7 +133,7 @@ namespace WEB.Models
                 case FieldType.Varchar:
                     return "string";
                 case FieldType.VarBinary:
-                    return "byte[]" + (isNullable ? "?" : string.Empty);
+                    return "byte[]";
             }
             throw new NotImplementedException("NetType: " + fieldType.ToString());
         }
