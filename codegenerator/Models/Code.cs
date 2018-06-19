@@ -209,7 +209,10 @@ namespace WEB.Models
                 s.Add($"");
                 s.Add($"        public override string ToString()");
                 s.Add($"        {{");
-                s.Add($"            return {CurrentEntity.PrimaryField.Name};");
+                if(CurrentEntity.PrimaryField.NetType == "string")
+                    s.Add($"            return {CurrentEntity.PrimaryField.Name};");
+                else
+                    s.Add($"            return Convert.ToString({CurrentEntity.PrimaryField.Name});");
                 s.Add($"        }}");
             }
 

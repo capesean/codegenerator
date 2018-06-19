@@ -34,7 +34,7 @@ namespace WEB
                 "~/scripts/angular-ui/ui-bootstrap-tpls.js",
                 "~/scripts/angular-messages.min.js",
                 "~/scripts/angular-breadcrumb.min.js",
-                "~/scripts/nya-bs-select.min.js",
+                "~/scripts/nya-bs-select.js",
                 "~/scripts/metisMenu.js",
                 "~/scripts/angular-clipboard.js",
                 "~/scripts/angular-ui/sortable.js",
@@ -87,7 +87,7 @@ namespace WEB
                 //"~/content/fullcalendar.css",
                 "~/content/toastr.min.css",
                 "~/content/font-awesome.min.css",
-                "~/content/nya-bs-select.min.css",
+                "~/content/nya-bs-select.css",
                 "~/content/Highlight/vs.css",
                 "~/content/metisMenu.min.css"
                 ));

@@ -326,7 +326,6 @@
     <Content Include="Content\metisMenu.css" />
     <Content Include="Content\metisMenu.min.css" />
     <Content Include="Content\nya-bs-select.css" />
-    <Content Include="Content\nya-bs-select.min.css" />
     <Content Include="Content\sb-admin-2.css" />
     <Content Include="Content\site.css" />
     <Content Include="Content\themes\base\accordion.css" />
@@ -480,7 +479,6 @@
     <Content Include="scripts\jquery-2.2.3.min.js" />
     <Content Include="scripts\jquery-2.2.3.min.map" />
     <Content Include="scripts\nya-bs-select.js" />
-    <Content Include="scripts\nya-bs-select.min.js" />
     <Content Include="scripts\sb-admin-2.js" />
     <Content Include="Views\Account\Login.cshtml" />
     <Content Include="Views\Account\Reset.cshtml" />
