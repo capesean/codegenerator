@@ -66,6 +66,8 @@ namespace WEB.Models
                         return CustomType.String;
                     case FieldType.VarBinary:
                         return CustomType.Binary;
+                    case FieldType.Geometry:
+                        return CustomType.Geometry;
                 }
                 throw new NotImplementedException("CustomType: " + FieldType.ToString());
             }
@@ -134,6 +136,8 @@ namespace WEB.Models
                     return "string";
                 case FieldType.VarBinary:
                     return "byte[]";
+                case FieldType.Geometry:
+                    return "System.Data.Entity.Spatial.DbGeometry";
             }
             throw new NotImplementedException("NetType: " + fieldType.ToString());
         }
@@ -169,7 +173,7 @@ namespace WEB.Models
 
     public enum CustomType
     {
-        Enum, Boolean, Date, Guid, Number, String, Binary
+        Enum, Boolean, Date, Guid, Number, String, Binary, Geometry
     }
 
 }
