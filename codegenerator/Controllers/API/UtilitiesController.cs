@@ -33,7 +33,12 @@ namespace WEB.Controllers
                     || option.ListHtml
                     || option.ListTypeScript
                     || option.Model
-                    || option.SettingsDTO)
+                    || option.SettingsDTO
+                    || option.AppSelectHtml
+                    || option.AppSelectTypeScript
+                    || option.SelectModalHtml
+                    || option.SelectModalTypeScript
+                    )
                 {
 
                     var entity = DbContext.Entities
@@ -63,6 +68,10 @@ namespace WEB.Controllers
                     if (option.ListTypeScript) RunDeploy(entity, CodeType.ListTypeScript, results);
                     if (option.EditHtml) RunDeploy(entity, CodeType.EditHtml, results);
                     if (option.EditTypeScript) RunDeploy(entity, CodeType.EditTypeScript, results);
+                    if (option.AppSelectHtml) RunDeploy(entity, CodeType.AppSelectHtml, results);
+                    if (option.AppSelectTypeScript) RunDeploy(entity, CodeType.AppSelectTypeScript, results);
+                    if (option.SelectModalHtml) RunDeploy(entity, CodeType.SelectModalHtml, results);
+                    if (option.SelectModalTypeScript) RunDeploy(entity, CodeType.SelectModalTypeScript, results);
                 }
             }
 
@@ -85,6 +94,10 @@ namespace WEB.Controllers
             options.ListTypeScript = codeType == CodeType.ListTypeScript;
             options.EditHtml = codeType == CodeType.EditHtml;
             options.EditTypeScript = codeType == CodeType.EditTypeScript;
+            options.AppSelectHtml = codeType == CodeType.AppSelectHtml;
+            options.AppSelectTypeScript = codeType == CodeType.AppSelectTypeScript;
+            options.SelectModalHtml = codeType == CodeType.SelectModalHtml;
+            options.SelectModalTypeScript = codeType == CodeType.SelectModalTypeScript;
 
             var result = Code.RunDeployment(DbContext, entity, options);
             results.Add(new DeploymentResult
@@ -121,6 +134,10 @@ namespace WEB.Controllers
         public bool ListTypeScript { get; set; } = false;
         public bool EditHtml { get; set; } = false;
         public bool EditTypeScript { get; set; } = false;
+        public bool AppSelectHtml { get; set; } = false;
+        public bool AppSelectTypeScript { get; set; } = false;
+        public bool SelectModalHtml { get; set; } = false;
+        public bool SelectModalTypeScript { get; set; } = false;
 
     }
 }
