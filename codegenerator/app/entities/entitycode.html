@@ -159,7 +159,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="col-sm-4 col-md-3 col-lg-2" ng-if="!vm.entity.preventEditHtmlDeployment">
                 <div class="form-group">
                     <label for="editHtml" class="control-label">
@@ -183,6 +183,62 @@
                         <label>
                             <input type="checkbox" id="editTypeScript" name="editTypeScript" ng-model="vm.deploymentOptions.editTypeScript" />
                             Edit TypeScript
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-4 col-md-3 col-lg-2" ng-if="!vm.entity.preventAppSelectHtmlDeployment">
+                <div class="form-group">
+                    <label for="appSelectHtml" class="control-label">
+                        App-Select Html:
+                    </label>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="appSelectHtml" name="appSelectHtml" ng-model="vm.deploymentOptions.appSelectHtml" />
+                            App-Select Html
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-4 col-md-3 col-lg-2" ng-if="!vm.entity.preventAppSelectTypeScriptDeployment">
+                <div class="form-group">
+                    <label for="appSelectTypeScript" class="control-label">
+                        App-Select TypeScript:
+                    </label>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="appSelectTypeScript" name="appSelectTypeScript" ng-model="vm.deploymentOptions.appSelectTypeScript" />
+                            App-Select TypeScript
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-4 col-md-3 col-lg-2" ng-if="!vm.entity.preventSelectModalHtmlDeployment">
+                <div class="form-group">
+                    <label for="selectModalHtml" class="control-label">
+                        Select Modal Html:
+                    </label>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="selectModalHtml" name="selectModalHtml" ng-model="vm.deploymentOptions.selectModalHtml" />
+                            Select Modal Html
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-4 col-md-3 col-lg-2" ng-if="!vm.entity.preventSelectModalTypeScriptDeployment">
+                <div class="form-group">
+                    <label for="selectModalTypeScript" class="control-label">
+                        Select Modal TypeScript:
+                    </label>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="selectModalTypeScript" name="selectModalTypeScript" ng-model="vm.deploymentOptions.selectModalTypeScript" />
+                            Select Modal TypeScript
                         </label>
                     </div>
                 </div>
@@ -215,6 +271,10 @@
         <li role="presentation" xng-if="vm.entity.preventListTypeScriptDeployment === ''"><a href="##listTypeScriptTab" aria-controls="listTypeScript" role="tab" data-toggle="tab">List TypeScript</a></li>
         <li role="presentation" xng-if="vm.entity.preventEditHtmlDeployment === ''"><a href="##editHtmlTab" aria-controls="editHtml" role="tab" data-toggle="tab">Edit Html</a></li>
         <li role="presentation" xng-if="vm.entity.preventEditTypeScriptDeployment === ''"><a href="##editTypeScriptTab" aria-controls="editTypeScript" role="tab" data-toggle="tab">Edit TypeScript</a></li>
+        <li role="presentation" xng-if="vm.entity.preventAppSelectHtmlDeployment === ''"><a href="##appSelectHtmlTab" aria-controls="appSelectHtml" role="tab" data-toggle="tab">App-Select Html</a></li>
+        <li role="presentation" xng-if="vm.entity.preventAppSelectTypeScriptDeployment === ''"><a href="##appSelectTypeScriptTab" aria-controls="appSelectTypeScript" role="tab" data-toggle="tab">App-Select TypeScript</a></li>
+        <li role="presentation" xng-if="vm.entity.preventSelectModalHtmlDeployment === ''"><a href="##selectModalHtmlTab" aria-controls="selectModalHtml" role="tab" data-toggle="tab">Select Modal Html</a></li>
+        <li role="presentation" xng-if="vm.entity.preventSelectModalTypeScriptDeployment === ''"><a href="##selectModalTypeScriptTab" aria-controls="selectModalTypeScript" role="tab" data-toggle="tab">Select Modal TypeScript</a></li>
     </ul>
 
     <!-- Tab panes -->
@@ -356,6 +416,50 @@
             <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('editTypeScript')">Copy<i class="fa fa-copy"></i></button></div></div>
 
             <pre><code class="typescript" ng-bind-html="vm.escapedCode.editTypeScript"></code></pre>
+
+        </div>
+        <div role="tabpanel" class="tab-pane" id="appSelectHtmlTab">
+
+            <br />
+
+            <div class="alert alert-info" ng-if="vm.entity.preventAppSelectHtmlDeployment">Deployment disabled</div>
+
+            <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('appSelectHtml')">Copy<i class="fa fa-copy"></i></button></div></div>
+
+            <pre><code class="html" ng-bind-html="vm.escapedCode.appSelectHtml"></code></pre>
+
+        </div>
+        <div role="tabpanel" class="tab-pane" id="appSelectTypeScriptTab">
+
+            <br />
+
+            <div class="alert alert-info" ng-if="vm.entity.preventAppSelectTypeScriptDeployment">Deployment disabled</div>
+
+            <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('appSelectTypeScript')">Copy<i class="fa fa-copy"></i></button></div></div>
+
+            <pre><code class="typescript" ng-bind-html="vm.escapedCode.appSelectTypeScript"></code></pre>
+
+        </div>
+        <div role="tabpanel" class="tab-pane" id="selectModalHtmlTab">
+
+            <br />
+
+            <div class="alert alert-info" ng-if="vm.entity.preventSelectModalHtmlDeployment">Deployment disabled</div>
+
+            <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('selectModalHtml')">Copy<i class="fa fa-copy"></i></button></div></div>
+
+            <pre><code class="html" ng-bind-html="vm.escapedCode.selectModalHtml"></code></pre>
+
+        </div>
+        <div role="tabpanel" class="tab-pane" id="selectModalTypeScriptTab">
+
+            <br />
+
+            <div class="alert alert-info" ng-if="vm.entity.preventSelectModalTypeScriptDeployment">Deployment disabled</div>
+
+            <div class="row"><div class="col-sm-12"><button class="btn btn-default copyButton" ng-click="vm.copy('selectModalTypeScript')">Copy<i class="fa fa-copy"></i></button></div></div>
+
+            <pre><code class="typescript" ng-bind-html="vm.escapedCode.selectModalTypeScript"></code></pre>
 
         </div>
     </div>

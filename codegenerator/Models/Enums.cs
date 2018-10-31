@@ -22,7 +22,11 @@ namespace WEB.Models
         EditTypeScript,
         Enums,
         Global,
-        SettingsDTO
+        SettingsDTO,
+        AppSelectHtml,
+        AppSelectTypeScript,
+        SelectModalHtml,
+        SelectModalTypeScript
     }
 
     public enum EditPageType
@@ -130,6 +134,14 @@ namespace WEB.Models
                     return "Global";
                 case CodeType.SettingsDTO:
                     return "Settings DTO";
+                case CodeType.AppSelectHtml:
+                    return "App-Select Html";
+                case CodeType.AppSelectTypeScript:
+                    return "App-Select TypeScript";
+                case CodeType.SelectModalHtml:
+                    return "Select Model Html";
+                case CodeType.SelectModalTypeScript:
+                    return "Select Modal TypeScript";
                 default:
                     return null;
             }

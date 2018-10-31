@@ -331,6 +331,11 @@ namespace WEB.Models
             }
         }
 
+        internal bool HasAppSelects(ApplicationDbContext dbContext)
+        {
+            return dbContext.Relationships.Any(o => o.ParentEntityId == EntityId && o.UseSelectorDirective);
+        }
+
         internal Field SortField
         {
             get

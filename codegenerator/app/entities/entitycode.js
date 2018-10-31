@@ -21,7 +21,11 @@
             listHtml: false,
             listTypeScript: false,
             editHtml: false,
-            editTypeScript: false
+            editTypeScript: false,
+            appSelectHtml: false,
+            appSelectTypeScript: false,
+            selectModalHtml: false,
+            selectModalTypeScript: false
         };
         vm.loading = true;
         vm.getCode = getCode;

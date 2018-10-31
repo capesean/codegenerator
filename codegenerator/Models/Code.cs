@@ -209,7 +209,7 @@ namespace WEB.Models
                 s.Add($"");
                 s.Add($"        public override string ToString()");
                 s.Add($"        {{");
-                if(CurrentEntity.PrimaryField.NetType == "string")
+                if (CurrentEntity.PrimaryField.NetType == "string")
                     s.Add($"            return {CurrentEntity.PrimaryField.Name};");
                 else
                     s.Add($"            return Convert.ToString({CurrentEntity.PrimaryField.Name});");
@@ -827,8 +827,15 @@ namespace WEB.Models
             s.Add($"            bundle.Include(");
             foreach (var e in NormalEntities)
             {
+                var isLastEntity = NormalEntities.Last();
+                var hasAppSelects = e.HasAppSelects(DbContext);
                 s.Add($"                \"~/app/{e.PluralName.ToLower()}/{e.Name.ToLower()}.js\",");
-                s.Add($"                \"~/app/{e.PluralName.ToLower()}/{e.PluralName.ToLower()}.js\"" + (e == NormalEntities.Last() ? string.Empty : ","));
+                s.Add($"                \"~/app/{e.PluralName.ToLower()}/{e.PluralName.ToLower()}.js\"" + (e == isLastEntity && !hasAppSelects ? string.Empty : ","));
+                if (hasAppSelects)
+                {
+                    s.Add($"                \"~/app/directives/appselect{e.Name.ToLower()}.js\",");
+                    s.Add($"                \"~/app/directives/select{e.Name.ToLower()}modal.js\"" + (e == isLastEntity ? string.Empty : ","));
+                }
             }
             s.Add($"                );");
             s.Add($"        }}");
@@ -2027,6 +2034,65 @@ namespace WEB.Models
 
         }
 
+        public string GenerateAppSelectHtml()
+        {
+            var s = new StringBuilder();
+
+            var file = File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + "templates/appselect.html");
+            s.Add(
+                file
+                    .Replace("NAME_LOWER", CurrentEntity.Name.ToLower())
+                    .Replace("NAME", CurrentEntity.Name)
+                );
+
+            return RunCodeReplacements(s.ToString(), CodeType.AppSelectHtml);
+        }
+
+        public string GenerateAppSelectTypeScript()
+        {
+            var s = new StringBuilder();
+
+            var file = File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + "templates/appselect.ts");
+            s.Add(
+                file
+                    .Replace("NAME_LOWER", CurrentEntity.Name.ToLower())
+                    .Replace("NAME", CurrentEntity.Name)
+                    .Replace("// <reference", "/// <reference")
+                );
+
+            return RunCodeReplacements(s.ToString(), CodeType.AppSelectTypeScript);
+        }
+
+        public string GenerateSelectModalHtml()
+        {
+            var s = new StringBuilder();
+
+            var file = File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + "templates/selectmodal.html");
+            s.Add(
+                file
+                    .Replace("PLURALNAME_LOWER", CurrentEntity.PluralName.ToLower())
+                    .Replace("NAME_LOWER", CurrentEntity.Name.ToLower())
+                    .Replace("NAME", CurrentEntity.Name)
+                    .Replace("// <reference", "/// <reference")
+                );
+
+            return RunCodeReplacements(s.ToString(), CodeType.SelectModalHtml);
+        }
+
+        public string GenerateSelectModalTypeScript()
+        {
+            var s = new StringBuilder();
+
+            var file = File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + "templates/selectmodal.ts");
+            s.Add(
+                file
+                    .Replace("PLURALNAME_LOWER", CurrentEntity.PluralName.ToLower())
+                    .Replace("NAME_LOWER", CurrentEntity.Name.ToLower())
+                    .Replace("NAME", CurrentEntity.Name)
+                );
+
+            return RunCodeReplacements(s.ToString(), CodeType.SelectModalTypeScript);
+        }
         // ---- HELPER METHODS -----------------------------------------------------------------------
 
         private string ClimbHierarchy(Relationship relationship, string result)
@@ -2051,6 +2117,10 @@ namespace WEB.Models
             if (!String.IsNullOrWhiteSpace(CurrentEntity.PreventListHtmlDeployment) && type == CodeType.ListHtml) return code;
             if (!String.IsNullOrWhiteSpace(CurrentEntity.PreventListTypeScriptDeployment) && type == CodeType.ListTypeScript) return code;
             if (!String.IsNullOrWhiteSpace(CurrentEntity.PreventModelDeployment) && type == CodeType.Model) return code;
+            if (!String.IsNullOrWhiteSpace(CurrentEntity.PreventAppSelectHtmlDeployment) && type == CodeType.AppSelectHtml) return code;
+            if (!String.IsNullOrWhiteSpace(CurrentEntity.PreventAppSelectTypeScriptDeployment) && type == CodeType.AppSelectTypeScript) return code;
+            if (!String.IsNullOrWhiteSpace(CurrentEntity.PreventSelectModalHtmlDeployment) && type == CodeType.SelectModalHtml) return code;
+            if (!String.IsNullOrWhiteSpace(CurrentEntity.PreventSelectModalTypeScriptDeployment) && type == CodeType.SelectModalTypeScript) return code;
 
             // todo: needs a sort order
 
@@ -2175,6 +2245,14 @@ namespace WEB.Models
                 return ("EditHtml deployment is not allowed: " + entity.PreventEditHtmlDeployment);
             if (deploymentOptions.EditTypeScript && !string.IsNullOrWhiteSpace(entity.PreventEditTypeScriptDeployment))
                 return ("EditTypeScript deployment is not allowed: " + entity.PreventEditTypeScriptDeployment);
+            if (deploymentOptions.AppSelectHtml && !string.IsNullOrWhiteSpace(entity.PreventAppSelectHtmlDeployment))
+                return ("AppSelectHtml deployment is not allowed: " + entity.PreventAppSelectHtmlDeployment);
+            if (deploymentOptions.AppSelectTypeScript && !string.IsNullOrWhiteSpace(entity.PreventAppSelectTypeScriptDeployment))
+                return ("AppSelectTypeScript deployment is not allowed: " + entity.PreventAppSelectTypeScriptDeployment);
+            if (deploymentOptions.SelectModalHtml && !string.IsNullOrWhiteSpace(entity.PreventSelectModalHtmlDeployment))
+                return ("SelectModalHtml deployment is not allowed: " + entity.PreventSelectModalHtmlDeployment);
+            if (deploymentOptions.SelectModalTypeScript && !string.IsNullOrWhiteSpace(entity.PreventSelectModalTypeScriptDeployment))
+                return ("SelectModalTypeScript deployment is not allowed: " + entity.PreventSelectModalTypeScriptDeployment);
 
             if (deploymentOptions.DbContext)
             {
@@ -2344,7 +2422,7 @@ namespace WEB.Models
             #region list html
             if (deploymentOptions.ListHtml)
             {
-                if (!CreateAppDirectory(entity, codeGenerator.GenerateListHtml(), entity.PluralName.ToLower() + ".html"))
+                if (!CreateAppDirectory(entity.Project, entity.PluralName, codeGenerator.GenerateListHtml(), entity.PluralName.ToLower() + ".html"))
                     return ("App path does not exist");
             }
             #endregion
@@ -2352,7 +2430,7 @@ namespace WEB.Models
             #region list typescript
             if (deploymentOptions.ListTypeScript)
             {
-                if (!CreateAppDirectory(entity, codeGenerator.GenerateListTypeScript(), entity.PluralName.ToLower() + ".ts"))
+                if (!CreateAppDirectory(entity.Project, entity.PluralName, codeGenerator.GenerateListTypeScript(), entity.PluralName.ToLower() + ".ts"))
                     return ("App path does not exist");
             }
             #endregion
@@ -2360,7 +2438,7 @@ namespace WEB.Models
             #region edit html
             if (deploymentOptions.EditHtml)
             {
-                if (!CreateAppDirectory(entity, codeGenerator.GenerateEditHtml(), entity.Name.ToLower() + ".html"))
+                if (!CreateAppDirectory(entity.Project, entity.PluralName, codeGenerator.GenerateEditHtml(), entity.Name.ToLower() + ".html"))
                     return ("App path does not exist");
             }
             #endregion
@@ -2368,7 +2446,51 @@ namespace WEB.Models
             #region edit typescript
             if (deploymentOptions.EditTypeScript)
             {
-                if (!CreateAppDirectory(entity, codeGenerator.GenerateEditTypeScript(), entity.Name.ToLower() + ".ts"))
+                if (!CreateAppDirectory(entity.Project, entity.PluralName, codeGenerator.GenerateEditTypeScript(), entity.Name.ToLower() + ".ts"))
+                    return ("App path does not exist");
+            }
+            #endregion
+
+            #region app-select html
+            if (deploymentOptions.AppSelectHtml)
+            {
+                if (!entity.HasAppSelects(DbContext))
+                    return ("App-Select is not required for this entity");
+
+                if (!CreateAppDirectory(entity.Project, "directives", codeGenerator.GenerateAppSelectHtml(), "appselect" + entity.Name.ToLower() + ".html"))
+                    return ("App path does not exist");
+            }
+            #endregion
+
+            #region app-select typescript
+            if (deploymentOptions.AppSelectTypeScript)
+            {
+                if (!entity.HasAppSelects(DbContext))
+                    return ("App-Select is not required for this entity");
+
+                if (!CreateAppDirectory(entity.Project, "directives", codeGenerator.GenerateAppSelectTypeScript(), "appselect" + entity.Name.ToLower() + ".ts"))
+                    return ("App path does not exist");
+            }
+            #endregion
+
+            #region select modal html
+            if (deploymentOptions.SelectModalHtml)
+            {
+                if (!entity.HasAppSelects(DbContext))
+                    return ("App-Select is not required for this entity");
+
+                if (!CreateAppDirectory(entity.Project, "directives", codeGenerator.GenerateSelectModalHtml(), "select" + entity.Name.ToLower() + "modal.html"))
+                    return ("App path does not exist");
+            }
+            #endregion
+
+            #region select modal typescript
+            if (deploymentOptions.SelectModalTypeScript)
+            {
+                if (!entity.HasAppSelects(DbContext))
+                    return ("App-Select is not required for this entity");
+
+                if (!CreateAppDirectory(entity.Project, "directives", codeGenerator.GenerateSelectModalTypeScript(), "select" + entity.Name.ToLower() + "modal.ts"))
                     return ("App path does not exist");
             }
             #endregion
@@ -2376,14 +2498,14 @@ namespace WEB.Models
             return null;
         }
 
-        private static bool CreateAppDirectory(Entity entity, string code, string fileName)
+        private static bool CreateAppDirectory(Project project, string directoryName, string code, string fileName)
         {
             if (code == string.Empty) return true;
 
-            var path = Path.Combine(entity.Project.RootPath, "app");
+            var path = Path.Combine(project.RootPath, "app");
             if (!Directory.Exists(path))
                 return false;
-            path = Path.Combine(path, entity.PluralName.ToLower());
+            path = Path.Combine(path, directoryName.ToLower());
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
 
@@ -2410,6 +2532,10 @@ namespace WEB.Models
         public bool ListTypeScript { get; set; }
         public bool EditHtml { get; set; }
         public bool EditTypeScript { get; set; }
+        public bool AppSelectHtml { get; set; }
+        public bool AppSelectTypeScript { get; set; }
+        public bool SelectModalHtml { get; set; }
+        public bool SelectModalTypeScript { get; set; }
     }
 
 }

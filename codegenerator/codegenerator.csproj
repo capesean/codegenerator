@@ -480,6 +480,10 @@
     <Content Include="scripts\jquery-2.2.3.min.map" />
     <Content Include="scripts\nya-bs-select.js" />
     <Content Include="scripts\sb-admin-2.js" />
+    <TypeScriptCompile Include="templates\selectmodal.ts" />
+    <Content Include="templates\selectmodal.html" />
+    <TypeScriptCompile Include="templates\appselect.ts" />
+    <Content Include="templates\appselect.html" />
     <Content Include="Views\Account\Login.cshtml" />
     <Content Include="Views\Account\Reset.cshtml" />
     <Content Include="Views\Account\ResetPassword.cshtml" />

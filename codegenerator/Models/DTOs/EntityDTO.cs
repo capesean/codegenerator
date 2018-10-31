@@ -72,6 +72,18 @@ namespace WEB.Models
         [MaxLength(100)]
         public string PreventEditTypeScriptDeployment { get; set; }
 
+        [MaxLength(100)]
+        public string PreventAppSelectHtmlDeployment { get; set; }
+
+        [MaxLength(100)]
+        public string PreventAppSelectTypeScriptDeployment { get; set; }
+
+        [MaxLength(100)]
+        public string PreventSelectModalHtmlDeployment { get; set; }
+
+        [MaxLength(100)]
+        public string PreventSelectModalTypeScriptDeployment { get; set; }
+
         [Required]
         public AuthorizationType AuthorizationType { get; set; }
 
@@ -115,6 +127,10 @@ namespace WEB.Models
             entityDTO.PreventListTypeScriptDeployment = entity.PreventListTypeScriptDeployment;
             entityDTO.PreventEditHtmlDeployment = entity.PreventEditHtmlDeployment;
             entityDTO.PreventEditTypeScriptDeployment = entity.PreventEditTypeScriptDeployment;
+            entityDTO.PreventAppSelectHtmlDeployment = entity.PreventAppSelectHtmlDeployment;
+            entityDTO.PreventAppSelectTypeScriptDeployment = entity.PreventAppSelectTypeScriptDeployment;
+            entityDTO.PreventSelectModalHtmlDeployment = entity.PreventSelectModalHtmlDeployment;
+            entityDTO.PreventSelectModalTypeScriptDeployment = entity.PreventSelectModalTypeScriptDeployment;
             entityDTO.AuthorizationType = entity.AuthorizationType;
             entityDTO.Exclude = entity.Exclude;
             entityDTO.PrimaryFieldId = entity.PrimaryFieldId;
@@ -146,6 +162,10 @@ namespace WEB.Models
             entity.PreventListTypeScriptDeployment = entityDTO.PreventListTypeScriptDeployment;
             entity.PreventEditHtmlDeployment = entityDTO.PreventEditHtmlDeployment;
             entity.PreventEditTypeScriptDeployment = entityDTO.PreventEditTypeScriptDeployment;
+            entity.PreventAppSelectHtmlDeployment = entityDTO.PreventAppSelectHtmlDeployment;
+            entity.PreventAppSelectTypeScriptDeployment = entityDTO.PreventAppSelectTypeScriptDeployment;
+            entity.PreventSelectModalHtmlDeployment = entityDTO.PreventSelectModalHtmlDeployment;
+            entity.PreventSelectModalTypeScriptDeployment = entityDTO.PreventSelectModalTypeScriptDeployment;
             entity.AuthorizationType = entityDTO.AuthorizationType;
             entity.Exclude = entityDTO.Exclude;
             entity.PrimaryFieldId = entityDTO.PrimaryFieldId;

@@ -75,6 +75,18 @@ namespace WEB.Models
         [MaxLength(100)]
         public string PreventEditTypeScriptDeployment { get; set; }
 
+        [MaxLength(100)]
+        public string PreventAppSelectHtmlDeployment { get; set; }
+
+        [MaxLength(100)]
+        public string PreventAppSelectTypeScriptDeployment { get; set; }
+
+        [MaxLength(100)]
+        public string PreventSelectModalHtmlDeployment { get; set; }
+
+        [MaxLength(100)]
+        public string PreventSelectModalTypeScriptDeployment { get; set; }
+
         [Required]
         public AuthorizationType AuthorizationType { get; set; }
 

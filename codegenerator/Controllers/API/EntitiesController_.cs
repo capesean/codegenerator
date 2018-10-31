@@ -86,8 +86,12 @@ namespace WEB.Controllers
             result.ApiResource = code.GenerateApiResource(); 
             result.ListHtml = code.GenerateListHtml(); 
             result.ListTypeScript = code.GenerateListTypeScript(); 
-            result.EditHtml = code.GenerateEditHtml(); 
+            result.EditHtml = code.GenerateEditHtml();
             result.EditTypeScript = code.GenerateEditTypeScript();
+            result.AppSelectHtml = code.GenerateAppSelectHtml();
+            result.AppSelectTypeScript = code.GenerateAppSelectTypeScript();
+            result.SelectModalHtml = code.GenerateSelectModalHtml();
+            result.SelectModalTypeScript = code.GenerateSelectModalTypeScript();
 
             return Ok(result);
         }
@@ -135,6 +139,10 @@ namespace WEB.Controllers
             public string ListTypeScript { get; set; }
             public string EditHtml { get; set; }
             public string EditTypeScript { get; set; }
+            public string AppSelectHtml { get; set; }
+            public string AppSelectTypeScript { get; set; }
+            public string SelectModalHtml { get; set; }
+            public string SelectModalTypeScript { get; set; }
         }
     }
 

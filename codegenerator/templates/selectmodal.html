@@ -1,0 +1,67 @@
+﻿<div class="modal-header">
+    <h3 class="modal-title">Select {{vm.options.singular}}</h3>
+    <i class="fa fa-close mt-1" ng-class="{ 'disabled': vm.loading }" ng-click="vm.cancel()"></i>
+</div>
+<div class="modal-body pb-2">
+
+    <form ng-submit="vm.runNAMESearch(0)" novalidate>
+
+        <fieldset>
+
+            <div class="row">
+
+                <div class="col-md-8 col-lg-9">
+                    <div class="form-group">
+                        <input type="search" id="q" ng-model="vm.search.q" max="100" class="form-control" placeholder="Search {{vm.options.plural.toLowerCase()}}" autofocus />
+                    </div>
+                </div>
+
+                <div class="col-md-4 col-lg-3">
+                    <div class="form-group">
+                        <button type="submit" ng-disabled="vm.loading" class="btn btn-success btn-block">Search<i class="fa fa-search ml-1"></i></button>
+                    </div>
+                </div>
+
+            </div>
+
+        </fieldset>
+
+    </form>
+
+    <table class="table table-striped table-hover table-bordered table-sm row-navigation mt-3" ng-class="{ 'disabled': vm.loading }">
+        <thead>
+            <tr>
+                <!--todo: output fields!-->
+                <th scope="col">Code</th>
+                <th scope="col">Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="NAME_LOWER in vm.PLURALNAME_LOWER" ng-click="vm.select(NAME_LOWER)">
+                <td>{{ NAME_LOWER.code }}</td>
+                <td>
+                    <i ng-class="{ 'invisible': !vm.isSelected(NAME_LOWER) }" class="fa fa-check check-mark pull-right"></i>{{ NAME_LOWER.name }}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="row" ng-class="{ 'disabled': vm.loading }">
+        <div class="col-sm-7">
+            <app-pager headers="vm.NAME_LOWERHeaders" callback="vm.runNAMESearch"></app-pager>
+        </div>
+        <div class="col-sm-5 text-right resultsInfo">
+            <app-pager-info headers="vm.NAME_LOWERHeaders"></app-pager-info>
+        </div>
+    </div>
+
+</div>
+
+<div class="modal-footer">
+    <fieldset ng-disabled="vm.loading" class="w-100">
+        <span class="btn btn-info" ng-if="!!vm.options.multiple">{{vm.selectedItems.length}} <span ng-if="vm.selectedItems.length === 1">{{vm.options.singular}}</span><span ng-if="vm.selectedItems.length !== 1">{{vm.options.plural}}</span> selected</span>
+        <button class="btn btn-secondary pull-right" type="button" ng-click="vm.close()">Close</button>
+        <button class="btn btn-secondary pull-right mr-2" type="button" ng-click="vm.clear()" ng-if="!vm.options.multiple">Clear</button>
+        <button class="btn btn-secondary pull-right mr-2" type="button" ng-click="vm.selectAll()" ng-if="!!vm.options.multiple">Select All</button>
+    </fieldset>
+</div>
