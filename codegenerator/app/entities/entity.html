@@ -210,6 +210,42 @@
                             </div>
                         </div>
 
+                        <div class="col-sm-6 col-md-4">
+                            <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.preventAppSelectHtml.$invalid }">
+                                <label for="preventAppSelectHtml" class="control-label">
+                                    Prevent App-Select Html Deployment:
+                                </label>
+                                <input type="text" id="preventAppSelectHtml" name="preventAppSelectHtml" ng-model="vm.entity.preventAppSelectHtmlDeployment" maxlength="100" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4">
+                            <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.preventAppSelectTypeScript.$invalid }">
+                                <label for="preventAppSelectTypeScript" class="control-label">
+                                    Prevent App-Select TypeScript Deployment:
+                                </label>
+                                <input type="text" id="preventAppSelectTypeScript" name="preventAppSelectTypeScript" ng-model="vm.entity.preventAppSelectTypeScriptDeployment" maxlength="100" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4">
+                            <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.preventSelectModalHtml.$invalid }">
+                                <label for="preventSelectModalHtml" class="control-label">
+                                    Prevent App-Select Html Deployment:
+                                </label>
+                                <input type="text" id="preventSelectModalHtml" name="preventSelectModalHtml" ng-model="vm.entity.preventSelectModalHtmlDeployment" maxlength="100" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4">
+                            <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.preventSelectModalTypeScript.$invalid }">
+                                <label for="preventSelectModalTypeScript" class="control-label">
+                                    Prevent App-Select TypeScript Deployment:
+                                </label>
+                                <input type="text" id="preventSelectModalTypeScript" name="preventSelectModalTypeScript" ng-model="vm.entity.preventSelectModalTypeScriptDeployment" maxlength="100" class="form-control" />
+                            </div>
+                        </div>
+
                         <div class="col-sm-4 col-md-3 col-lg-2">
                             <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.exclude.$invalid }">
                                 <label for="exclude" class="control-label">

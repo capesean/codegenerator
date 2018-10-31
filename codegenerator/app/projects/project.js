@@ -140,7 +140,11 @@
                     listHtml: !!vm.multideploy[entity.entityId].listHtml,
                     listTypeScript: !!vm.multideploy[entity.entityId].listTypeScript,
                     editHtml: !!vm.multideploy[entity.entityId].editHtml,
-                    editTypeScript: !!vm.multideploy[entity.entityId].editTypeScript
+                    editTypeScript: !!vm.multideploy[entity.entityId].editTypeScript,
+                    appSelectHtml: !!vm.multideploy[entity.entityId].appSelectHtml,
+                    appSelectTypeScript: !!vm.multideploy[entity.entityId].appSelectTypeScript,
+                    selectModalHtml: !!vm.multideploy[entity.entityId].selectModalHtml,
+                    selectModalTypeScript: !!vm.multideploy[entity.entityId].selectModalTypeScript
                 };
                 data.push(item);
             });
@@ -191,6 +195,14 @@
                     vm.multideploy[entity.entityId][item] = false;
                 else if (item === "editTypeScript" && entity.preventEditTypeScriptDeployment)
                     vm.multideploy[entity.entityId][item] = false;
+                else if (item === "appSelectHtml" && entity.preventAppSelectHtmlDeployment)
+                    vm.multideploy[entity.entityId][item] = false;
+                else if (item === "appSelectTypeScript" && entity.preventAppSelectTypeScriptDeployment)
+                    vm.multideploy[entity.entityId][item] = false;
+                else if (item === "selectModalHtml" && entity.preventSelectModalHtmlDeployment)
+                    vm.multideploy[entity.entityId][item] = false;
+                else if (item === "selectModalTypeScript" && entity.preventSelectModalTypeScriptDeployment)
+                    vm.multideploy[entity.entityId][item] = false;
                 else
                     vm.multideploy[entity.entityId][item] = checked;
             });
@@ -228,6 +240,14 @@
                 vm.multideploy[entity.entityId]["editHtml"] = checked;
             if (!checked || !entity.preventEditTypeScriptDeployment)
                 vm.multideploy[entity.entityId]["editTypeScript"] = checked;
+            if (!checked || !entity.preventAppSelectHtmlDeployment)
+                vm.multideploy[entity.entityId]["appSelectHtml"] = checked;
+            if (!checked || !entity.preventAppSelectTypeScriptDeployment)
+                vm.multideploy[entity.entityId]["appSelectTypeScript"] = checked;
+            if (!checked || !entity.preventSelectModalHtmlDeployment)
+                vm.multideploy[entity.entityId]["selectModalHtml"] = checked;
+            if (!checked || !entity.preventSelectModalTypeScriptDeployment)
+                vm.multideploy[entity.entityId]["selectModalTypeScript"] = checked;
         }
     }
     ;

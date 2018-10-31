@@ -2073,7 +2073,6 @@ namespace WEB.Models
                     .Replace("PLURALNAME_LOWER", CurrentEntity.PluralName.ToLower())
                     .Replace("NAME_LOWER", CurrentEntity.Name.ToLower())
                     .Replace("NAME", CurrentEntity.Name)
-                    .Replace("// <reference", "/// <reference")
                 );
 
             return RunCodeReplacements(s.ToString(), CodeType.SelectModalHtml);
@@ -2089,6 +2088,7 @@ namespace WEB.Models
                     .Replace("PLURALNAME_LOWER", CurrentEntity.PluralName.ToLower())
                     .Replace("NAME_LOWER", CurrentEntity.Name.ToLower())
                     .Replace("NAME", CurrentEntity.Name)
+                    .Replace("// <reference", "/// <reference")
                 );
 
             return RunCodeReplacements(s.ToString(), CodeType.SelectModalTypeScript);

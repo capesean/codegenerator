@@ -1,170 +1,152 @@
+/// <reference path="../../scripts/typings/highlightjs/highlightjs.d.ts" />
 /// <reference path="../../scripts/typings/angularjs/angular.d.ts" />
 (function () {
     "use strict";
     angular
         .module("app")
         .controller("entity", entity);
-    entity.$inject = ["$scope", "$state", "$stateParams", "notifications", "appSettings", "$q", "errorService", "entityResource", "projectResource", "fieldResource", "relationshipResource", "codeReplacementResource"];
-    function entity($scope, $state, $stateParams, notifications, appSettings, $q, errorService, entityResource, projectResource, fieldResource, relationshipResource, codeReplacementResource) {
+    entity.$inject = ["$scope", "$state", "$stateParams", "entityResource", "notifications", "appSettings", "$q", "errorService", "projectResource", "relationshipResource", "fieldResource", "codeReplacementResource"];
+    function entity($scope, $state, $stateParams, entityResource, notifications, appSettings, $q, errorService, projectResource, relationshipResource, fieldResource, codeReplacementResource) {
         var vm = this;
         vm.loading = true;
-        vm.appSettings = appSettings;
+        vm.user = null;
         vm.save = save;
         vm.delete = del;
+        vm.appSettings = appSettings;
         vm.isNew = $stateParams.entityId === vm.appSettings.newGuid;
-        vm.goToRelationship = function (projectId, entityId, relationshipId) { return $state.go("app.relationship", { projectId: projectId, entityId: entityId, relationshipId: relationshipId }); };
-        vm.loadRelationshipsAsChild = loadRelationshipsAsChild;
         vm.goToField = function (projectId, entityId, fieldId) { return $state.go("app.field", { projectId: projectId, entityId: entityId, fieldId: fieldId }); };
-        vm.loadFields = loadFields;
-        vm.fieldsSortOptions = { stop: sortFields, handle: "i.sortable-handle", axis: "y" };
-        vm.goToRelationship = function (projectId, entityId, relationshipId) { return $state.go("app.relationship", { projectId: projectId, entityId: entityId, relationshipId: relationshipId }); };
-        vm.loadRelationshipsAsParent = loadRelationshipsAsParent;
-        vm.relationshipsSortOptions = { stop: sortRelationships, handle: "i.sortable-handle", axis: "y" };
+        vm.goToRelationship = function (entityId, relationshipId) { return $state.go("app.relationship", { projectId: $stateParams.projectId, entityId: entityId, relationshipId: relationshipId }); };
         vm.goToCodeReplacement = function (projectId, entityId, codeReplacementId) { return $state.go("app.codeReplacement", { projectId: projectId, entityId: entityId, codeReplacementId: codeReplacementId }); };
-        vm.loadCodeReplacements = loadCodeReplacements;
+        vm.fieldsSortOptions = { stop: sortFields, handle: "i.sortable-handle" };
+        vm.relationshipsAsParentSortOptions = { stop: sortParentRelationships, handle: "i.sortable-handle" };
+        vm.relationshipsAsChildSortOptions = { stop: sortChildRelationships, handle: "i.sortable-handle" };
         vm.codeReplacementsSortOptions = { stop: sortCodeReplacements, handle: "i.sortable-handle", axis: "y" };
+        vm.CodeType = function (type) {
+            var types = [{ id: 0, name: "Model" }, { id: 1, name: "DTO" }, { id: 2, name: "DbContext" }, { id: 3, name: "Controller" }, { id: 4, name: "BundleConfig" }, { id: 5, name: "AppRouter" }, { id: 6, name: "ApiResource" }, { id: 7, name: "ListHtml" }, { id: 8, name: "ListTypeScript" }, { id: 9, name: "EditHtml" }, { id: 10, name: "EditTypeScript" }];
+            for (var i = 0; i < types.length; i++) {
+                if (types[i].id === type)
+                    return types[i].name;
+            }
+        };
         initPage();
         function initPage() {
             var promises = [];
-            promises.push(fieldResource.query({
-                pageSize: 0
-            }, function (data) {
-                vm.fields = data;
-            }, function (err) {
-                notifications.error("Failed to load the fields.", "Error", err);
-                $state.go("app.project", { projectId: $stateParams.projectId });
-            }).$promise);
-            if (vm.isNew) {
-                vm.entity = new entityResource();
-                vm.entity.entityId = appSettings.newGuid;
-                vm.entity.entityType = 0;
-                vm.entity.projectId = $stateParams.projectId;
-                promises.push(projectResource.get({
-                    projectId: $stateParams.projectId
-                }, function (data) {
-                    vm.project = data;
-                }, function (err) {
-                    errorService.handleApiError(err, "project", "load");
-                    $state.go("app.project", { projectId: $stateParams.projectId });
-                }).$promise);
-            }
-            else {
-                promises.push(entityResource.get({
-                    entityId: $stateParams.entityId
-                }, function (data) {
-                    vm.entity = data;
-                    vm.project = vm.entity.project;
-                }, function (err) {
-                    errorService.handleApiError(err, "entity", "load");
-                    $state.go("app.project", { projectId: $stateParams.projectId });
-                }).$promise);
-                promises.push(loadRelationshipsAsChild(0, true));
-                promises.push(loadFields(0, true));
-                promises.push(loadRelationshipsAsParent(0, true));
-                promises.push(loadCodeReplacements(0, true));
-            }
-            $q.all(promises).finally(function () { return vm.loading = false; });
+            $q.all(promises)
+                .then(function () {
+                if (vm.isNew) {
+                    vm.entity = new entityResource();
+                    vm.entity.entityId = appSettings.newGuid;
+                    vm.entity.projectId = $stateParams.projectId;
+                    vm.entity.authorizationType = 2;
+                    vm.entity.entityType = 0;
+                    promises = [];
+                    promises.push(projectResource.get({
+                        projectId: $stateParams.projectId
+                    }, function (data) {
+                        vm.project = data;
+                    }, function (err) {
+                        if (err.status === 404) {
+                            notifications.error("The requested project does not exist.", "Error");
+                        }
+                        else {
+                            notifications.error("Failed to load the project.", "Error", err);
+                        }
+                        $state.go("app.project", { projectId: $stateParams.projectId });
+                    })
+                        .$promise);
+                    $q.all(promises).finally(function () { return vm.loading = false; });
+                }
+                else {
+                    promises = [];
+                    promises.push(entityResource.get({
+                        entityId: $stateParams.entityId
+                    }, function (data) {
+                        vm.entity = data;
+                        vm.project = vm.entity.project;
+                    }, function (err) {
+                        if (err.status === 404) {
+                            notifications.error("The requested entity does not exist.", "Error");
+                        }
+                        else {
+                            notifications.error("Failed to load the entity.", "Error", err);
+                        }
+                        $state.go("app.project", { projectId: $stateParams.projectId });
+                    })
+                        .$promise);
+                    promises.push(relationshipResource.query({
+                        pageSize: 0,
+                        childEntityId: $stateParams.entityId
+                    }, function (data) {
+                        vm.relationshipsAsChild = data;
+                    }, function (err) {
+                        notifications.error("Failed to load the relationships.", "Error", err);
+                        $state.go("app.project", { projectId: $stateParams.projectId });
+                    }).$promise);
+                    promises.push(fieldResource.query({
+                        pageSize: 0,
+                        entityId: $stateParams.entityId
+                    }, function (data) {
+                        vm.fields = data;
+                    }, function (err) {
+                        notifications.error("Failed to load the fields.", "Error", err);
+                        $state.go("app.project", { projectId: $stateParams.projectId });
+                    }).$promise);
+                    promises.push(relationshipResource.query({
+                        pageSize: 0,
+                        parentEntityId: $stateParams.entityId
+                    }, function (data) {
+                        vm.relationshipsAsParent = data;
+                    }, function (err) {
+                        notifications.error("Failed to load the relationships.", "Error", err);
+                        $state.go("app.project", { projectId: $stateParams.projectId });
+                    }).$promise);
+                    promises.push(codeReplacementResource.query({
+                        pageSize: 0,
+                        entityId: $stateParams.entityId
+                    }, function (data) {
+                        vm.codeReplacements = data;
+                    }, function (err) {
+                        notifications.error("Failed to load the codeReplacements.", "Error", err);
+                        $state.go("app.project", { projectId: $stateParams.projectId });
+                    }).$promise);
+                    $q.all(promises).finally(function () { return vm.loading = false; });
+                }
+            });
         }
         function save() {
             if ($scope.mainForm.$invalid) {
                 notifications.error("The form has not been completed correctly.", "Error");
-                return;
             }
-            vm.loading = true;
-            vm.entity.$save(function (data) {
-                notifications.success("The entity has been saved.", "Saved");
-                if (vm.isNew)
+            else {
+                vm.loading = true;
+                vm.entity.$save(function (data) {
+                    vm.entity = data;
+                    notifications.success("The entity has been saved.", "Saved");
                     $state.go("app.entity", {
                         entityId: vm.entity.entityId
                     });
-            }, function (err) {
-                errorService.handleApiError(err, "entity");
-            }).finally(function () { return vm.loading = false; });
+                }, function (err) {
+                    errorService.handleApiError(err, "entity");
+                }).finally(function () { return vm.loading = false; });
+            }
         }
+        ;
         function del() {
-            if (!confirm("Confirm delete?"))
-                return;
-            vm.loading = true;
-            entityResource.delete({
-                entityId: $stateParams.entityId
-            }, function () {
-                notifications.success("The entity has been deleted.", "Deleted");
-                $state.go("app.project", { projectId: $stateParams.projectId });
-            }, function (err) {
-                errorService.handleApiError(err, "entity", "delete");
-            })
-                .$promise.finally(function () { return vm.loading = false; });
-        }
-        function loadRelationshipsAsChild(pageIndex, dontSetLoading) {
-            if (!dontSetLoading)
+            if (confirm("Confirm delete?")) {
                 vm.loading = true;
-            var promise = relationshipResource.query({
-                childEntityId: $stateParams.entityId,
-                pageSize: 0,
-                pageIndex: pageIndex
-            }, function (data, headers) {
-                vm.relationshipsAsChild = data;
-            }, function (err) {
-                notifications.error("Failed to load the relationships.", "Error", err);
-                $state.go("app.entities");
-            }).$promise;
-            promise.finally(function () { if (!dontSetLoading)
-                vm.loading = false; });
-            return promise;
+                entityResource.delete({
+                    entityId: $stateParams.entityId
+                }, function () {
+                    notifications.success("The entity has been deleted.", "Deleted");
+                    $state.go("app.project", { projectId: $stateParams.projectId });
+                }, function (err) {
+                    errorService.handleApiError(err, "entity", "delete");
+                })
+                    .$promise.finally(function () { return vm.loading = false; });
+            }
         }
-        function loadFields(pageIndex, dontSetLoading) {
-            if (!dontSetLoading)
-                vm.loading = true;
-            var promise = fieldResource.query({
-                entityId: $stateParams.entityId,
-                pageSize: 0,
-                pageIndex: pageIndex,
-                includeEntities: true
-            }, function (data, headers) {
-                vm.fields = data;
-            }, function (err) {
-                notifications.error("Failed to load the fields.", "Error", err);
-                $state.go("app.entities");
-            }).$promise;
-            promise.finally(function () { if (!dontSetLoading)
-                vm.loading = false; });
-            return promise;
-        }
-        function loadRelationshipsAsParent(pageIndex, dontSetLoading) {
-            if (!dontSetLoading)
-                vm.loading = true;
-            var promise = relationshipResource.query({
-                parentEntityId: $stateParams.entityId,
-                pageSize: 0,
-                pageIndex: pageIndex,
-                includeEntities: true
-            }, function (data, headers) {
-                vm.relationshipsAsParent = data;
-            }, function (err) {
-                notifications.error("Failed to load the relationships.", "Error", err);
-                $state.go("app.entities");
-            }).$promise;
-            promise.finally(function () { if (!dontSetLoading)
-                vm.loading = false; });
-            return promise;
-        }
-        function loadCodeReplacements(pageIndex, dontSetLoading) {
-            if (!dontSetLoading)
-                vm.loading = true;
-            var promise = codeReplacementResource.query({
-                entityId: $stateParams.entityId,
-                pageSize: 0,
-                pageIndex: pageIndex,
-                includeEntities: true
-            }, function (data, headers) {
-                vm.codeReplacements = data;
-            }, function (err) {
-                notifications.error("Failed to load the code Replacements.", "Error", err);
-                $state.go("app.entities");
-            }).$promise;
-            promise.finally(function () { if (!dontSetLoading)
-                vm.loading = false; });
-            return promise;
+        function getSearchType(id) {
+            return appSettings.searchType.filter(function (item) { return item.id === id; })[0].name;
         }
         function sortFields(e, ui) {
             var ids = [];
@@ -173,6 +155,8 @@
             });
             vm.loading = true;
             fieldResource.sort({
+                entityId: $stateParams.entityId
+            }, {
                 ids: ids
             }, function (data) {
                 notifications.success("The sort order has been updated", "Field Ordering");
@@ -181,18 +165,33 @@
             })
                 .$promise.finally(function () { return vm.loading = false; });
         }
-        function sortRelationships(e, ui) {
+        function sortParentRelationships(e, ui) {
             var ids = [];
-            angular.forEach(vm.relationships, function (item, index) {
+            angular.forEach(vm.relationshipsAsParent, function (item, index) {
                 ids.push(item.relationshipId);
             });
             vm.loading = true;
             relationshipResource.sort({
                 ids: ids
             }, function (data) {
-                notifications.success("The sort order has been updated", "Relationship Ordering");
+                notifications.success("The sort order has been updated", "Parent Relationship Ordering");
             }, function (err) {
-                notifications.error("Failed to sort the relationships. " + (err.data && err.data.message ? err.data.message : ""), "Error", err);
+                notifications.error("Failed to sort the parent relationships. " + (err.data && err.data.message ? err.data.message : ""), "Error", err);
+            })
+                .$promise.finally(function () { return vm.loading = false; });
+        }
+        function sortChildRelationships(e, ui) {
+            var ids = [];
+            angular.forEach(vm.relationshipsAsChild, function (item, index) {
+                ids.push(item.relationshipId);
+            });
+            vm.loading = true;
+            relationshipResource.sortChild({
+                ids: ids
+            }, function (data) {
+                notifications.success("The sort order has been updated", "Child Relationship Ordering");
+            }, function (err) {
+                notifications.error("Failed to sort the child relationships. " + (err.data && err.data.message ? err.data.message : ""), "Error", err);
             })
                 .$promise.finally(function () { return vm.loading = false; });
         }

@@ -229,7 +229,11 @@
                     <th class="text-center rotate-90" scope="col"><div ng-click="vm.setCheckBoxes('listHtml')" class="clickable">ListHtml</div></th>
                     <th class="text-center rotate-90" scope="col"><div ng-click="vm.setCheckBoxes('listTypeScript')" class="clickable">ListTypeScript</div></th>
                     <th class="text-center rotate-90" scope="col"><div ng-click="vm.setCheckBoxes('editHtml')" class="clickable">EditHtml</div></th>
-                    <th class="text-center rotate-90" scope="col"><div ng-click="vm.setCheckBoxes('editTypeScript')" class="clickable">EditTypeScrips</div></th>
+                    <th class="text-center rotate-90" scope="col"><div ng-click="vm.setCheckBoxes('editTypeScript')" class="clickable">EditTypeScript</div></th>
+                    <th class="text-center rotate-90" scope="col"><div ng-click="vm.setCheckBoxes('appSelectHtml')" class="clickable">AppSelectHtml</div></th>
+                    <th class="text-center rotate-90" scope="col"><div ng-click="vm.setCheckBoxes('appSelectTypeScript')" class="clickable">AppSelectTS</div></th>
+                    <th class="text-center rotate-90" scope="col"><div ng-click="vm.setCheckBoxes('selectModalHtml')" class="clickable">SelectModalHtml</div></th>
+                    <th class="text-center rotate-90" scope="col"><div ng-click="vm.setCheckBoxes('selectModalTypeScript')" class="clickable">SelectModalTs</div></th>
                 </tr>
             </thead>
             <tbody>
@@ -248,6 +252,10 @@
                     <td class="text-center" ng-click="$event.stopPropagation()" uib-tooltip="{{entity.preventListTypeScriptDeployment}}"><input type="checkbox" ng-disabled="!!entity.preventListTypeScriptDeployment" ng-model="vm.multideploy[entity.entityId].listTypeScript" /></td>
                     <td class="text-center" ng-click="$event.stopPropagation()" uib-tooltip="{{entity.preventEditHtmlDeployment}}"><input type="checkbox" ng-disabled="!!entity.preventEditHtmlDeployment" ng-model="vm.multideploy[entity.entityId].editHtml" /></td>
                     <td class="text-center" ng-click="$event.stopPropagation()" uib-tooltip="{{entity.preventEditTypeScriptDeployment}}"><input type="checkbox" ng-disabled="!!entity.preventEditTypeScriptDeployment" ng-model="vm.multideploy[entity.entityId].editTypeScript" /></td>
+                    <td class="text-center" ng-click="$event.stopPropagation()" uib-tooltip="{{entity.preventAppSelectHtmlDeployment}}"><input type="checkbox" ng-disabled="!!entity.preventAppSelectHtmlDeployment" ng-model="vm.multideploy[entity.entityId].appSelectHtml" /></td>
+                    <td class="text-center" ng-click="$event.stopPropagation()" uib-tooltip="{{entity.preventAppSelectTypeScriptDeployment}}"><input type="checkbox" ng-disabled="!!entity.preventAppSelectHtmlDeployment" ng-model="vm.multideploy[entity.entityId].appSelectTypeScript" /></td>
+                    <td class="text-center" ng-click="$event.stopPropagation()" uib-tooltip="{{entity.preventSelectModalHtmlDeployment}}"><input type="checkbox" ng-disabled="!!entity.preventSelectModalHtmlDeployment" ng-model="vm.multideploy[entity.entityId].selectModalHtml" /></td>
+                    <td class="text-center" ng-click="$event.stopPropagation()" uib-tooltip="{{entity.preventSelectModalTypeScriptDeployment}}"><input type="checkbox" ng-disabled="!!entity.preventSelectModalHtmlDeployment" ng-model="vm.multideploy[entity.entityId].selectModalTypeScript" /></td>
                 </tr>
             </tbody>
         </table>

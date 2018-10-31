@@ -29,6 +29,7 @@
                 templateUrl: "/app/directives/selectNAME_LOWERmodal.html",
                 controller: "selectNAMEModal",
                 controllerAs: "vm",
+                size: "lg",
                 resolve: {
                     options: function () {
                         return {
