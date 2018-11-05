@@ -290,20 +290,7 @@ namespace WEB.Models
         {
             get
             {
-                var sortCount = Fields.Count(f => f.EditPageType == EditPageType.SortField);
-
-                if (sortCount > 1)
-                    throw new InvalidOperationException("Only 1 sort field is allowed per entity");
-
-
-                if (sortCount == 1)
-                {
-                    if (SortField.FieldType != FieldType.Int) throw new InvalidOperationException("Sortable fields must be of type Int");
-                    //if (KeyFields.Count() > 1) throw new InvalidOperationException("Sortable is only allowed on single-keyed entities");
-                    if (KeyFields[0].FieldType != FieldType.Guid) throw new InvalidOperationException("Sortable is only allowed on Guid-keyed entities");
-                }
-
-                return sortCount == 1;
+                return SortField != null;
             }
         }
 
@@ -340,7 +327,23 @@ namespace WEB.Models
         {
             get
             {
-                return Fields.SingleOrDefault(f => f.EditPageType == EditPageType.SortField);
+                var sortFields = Fields.Where(f => f.EditPageType == EditPageType.SortField).ToList();
+
+                if (sortFields.Count == 0) return null;
+
+                if (sortFields.Count > 1)
+                    throw new InvalidOperationException("Only 1 sort field is allowed per entity");
+
+                if (sortFields.Count == 1)
+                {
+                    if (sortFields[0].FieldType != FieldType.Int) throw new InvalidOperationException("Sortable fields must be of type Int");
+                    //if (KeyFields.Count() > 1) throw new InvalidOperationException("Sortable is only allowed on single-keyed entities");
+                    if (KeyFields[0].FieldType != FieldType.Guid) throw new InvalidOperationException("Sortable is only allowed on Guid-keyed entities");
+                }
+
+                return sortFields.Single();
+
+                //return Fields.SingleOrDefault(f => f.EditPageType == EditPageType.SortField);
             }
         }
 

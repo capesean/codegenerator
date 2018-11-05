@@ -790,12 +790,12 @@ namespace WEB.Models
                     s.Add($"            var {CurrentEntity.PluralName.ToCamelCase()} = await {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName}.ToListAsync();");
                 s.Add($"            if ({CurrentEntity.PluralName.ToCamelCase()}.Count != sortedIds.ids.Length) return BadRequest(\"Some of the {CurrentEntity.PluralFriendlyName.ToLower()} could not be found\");");
                 s.Add($"");
-                s.Add($"            var sortOrder = 0;");
+                //s.Add($"            var sortOrder = 0;");
                 s.Add($"            foreach (var {CurrentEntity.Name.ToCamelCase()} in {CurrentEntity.PluralName.ToCamelCase()})");
                 s.Add($"            {{");
                 s.Add($"                {CurrentEntity.Project.DbContextVariable}.Entry({CurrentEntity.Name.ToCamelCase()}).State = EntityState.Modified;");
-                s.Add($"                {CurrentEntity.Name.ToCamelCase()}.{CurrentEntity.SortField.Name} = Array.IndexOf(sortedIds.ids, {CurrentEntity.Name.ToCamelCase()}.{CurrentEntity.KeyFields[0].Name});");
-                s.Add($"                sortOrder++;");
+                s.Add($"                {CurrentEntity.Name.ToCamelCase()}.{CurrentEntity.SortField.Name} = {(CurrentEntity.SortField.SortDescending ? "sortedIds.ids.Length - " : "")}Array.IndexOf(sortedIds.ids, {CurrentEntity.Name.ToCamelCase()}.{CurrentEntity.KeyFields[0].Name});");
+                //s.Add($"                sortOrder++;");
                 s.Add($"            }}");
                 s.Add($"");
                 s.Add($"            await {CurrentEntity.Project.DbContextVariable}.SaveChangesAsync();");
@@ -825,9 +825,10 @@ namespace WEB.Models
             s.Add($"        public static void AddGeneratedBundles(Bundle bundle)");
             s.Add($"        {{");
             s.Add($"            bundle.Include(");
-            foreach (var e in NormalEntities)
+            var entitiesToBundle = AllEntities.Where(e => !e.Exclude);
+            foreach (var e in entitiesToBundle)
             {
-                var isLastEntity = NormalEntities.Last();
+                var isLastEntity = entitiesToBundle.Last();
                 var hasAppSelects = e.HasAppSelects(DbContext);
                 s.Add($"                \"~/app/{e.PluralName.ToLower()}/{e.Name.ToLower()}.js\",");
                 s.Add($"                \"~/app/{e.PluralName.ToLower()}/{e.PluralName.ToLower()}.js\"" + (e == isLastEntity && !hasAppSelects ? string.Empty : ","));
@@ -2085,7 +2086,9 @@ namespace WEB.Models
             var file = File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + "templates/selectmodal.ts");
             s.Add(
                 file
+                    .Replace("NAME_CAMEL", CurrentEntity.CamelCaseName)
                     .Replace("PLURALNAME_LOWER", CurrentEntity.PluralName.ToLower())
+                    .Replace("PLURALNAME", CurrentEntity.PluralName)
                     .Replace("NAME_LOWER", CurrentEntity.Name.ToLower())
                     .Replace("NAME", CurrentEntity.Name)
                     .Replace("// <reference", "/// <reference")
@@ -2093,6 +2096,7 @@ namespace WEB.Models
 
             return RunCodeReplacements(s.ToString(), CodeType.SelectModalTypeScript);
         }
+        
         // ---- HELPER METHODS -----------------------------------------------------------------------
 
         private string ClimbHierarchy(Relationship relationship, string result)

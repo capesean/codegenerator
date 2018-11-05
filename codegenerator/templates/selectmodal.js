@@ -4,8 +4,8 @@
     angular
         .module("app")
         .controller("selectNAMEModal", selectNAMEModal);
-    selectNAMEModal.$inject = ["$scope", "appSettings", "$uibModalInstance", "notifications", "$q", "NAME_LOWERResource", "options"];
-    function selectNAMEModal($scope, appSettings, $uibModalInstance, notifications, $q, NAME_LOWERResource, options) {
+    selectNAMEModal.$inject = ["$scope", "appSettings", "$uibModalInstance", "notifications", "$q", "NAME_CAMELResource", "options"];
+    function selectNAMEModal($scope, appSettings, $uibModalInstance, notifications, $q, NAME_CAMELResource, options) {
         var vm = this;
         vm.loading = true;
         vm.appSettings = appSettings;
@@ -23,7 +23,7 @@
         init();
         function init() {
             options.singular = options.singular || "NAME";
-            options.plural = options.plural || "[pluralname]";
+            options.plural = options.plural || "PLURALNAME";
             vm.search = {
                 includeEntities: true
             };
@@ -33,7 +33,7 @@
             if (!dontSetLoading)
                 vm.loading = true;
             vm.search.pageIndex = pageIndex;
-            var promise = NAME_LOWERResource.query(vm.search, function (data, headers) {
+            var promise = NAME_CAMELResource.query(vm.search, function (data, headers) {
                 vm.PLURALNAME_LOWER = data;
                 vm.NAME_LOWERHeaders = JSON.parse(headers("X-Pagination"));
             }, function (err) {
@@ -80,7 +80,7 @@
         }
         function selectAll() {
             vm.loading = true;
-            NAME_LOWERResource.query({
+            NAME_CAMELResource.query({
                 pageSize: 0
             }, function (data) {
                 $uibModalInstance.close(data);

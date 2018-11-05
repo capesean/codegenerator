@@ -6,8 +6,8 @@
         .module("app")
         .controller("selectNAMEModal", selectNAMEModal);
 
-    selectNAMEModal.$inject = ["$scope", "appSettings", "$uibModalInstance", "notifications", "$q", "NAME_LOWERResource", "options"];
-    function selectNAMEModal($scope, appSettings, $uibModalInstance, notifications, $q, NAME_LOWERResource, options) {
+    selectNAMEModal.$inject = ["$scope", "appSettings", "$uibModalInstance", "notifications", "$q", "NAME_CAMELResource", "options"];
+    function selectNAMEModal($scope, appSettings, $uibModalInstance, notifications, $q, NAME_CAMELResource, options) {
 
         var vm = this;
         vm.loading = true;
@@ -29,7 +29,7 @@
         function init() {
 
             options.singular = options.singular || "NAME";
-            options.plural = options.plural || "[pluralname]";
+            options.plural = options.plural || "PLURALNAME";
 
             vm.search = {
                 includeEntities: true
@@ -45,7 +45,7 @@
             vm.search.pageIndex = pageIndex;
 
             var promise =
-                NAME_LOWERResource.query(
+                NAME_CAMELResource.query(
                     vm.search,
                     (data, headers) => {
 
@@ -104,7 +104,7 @@
 
             vm.loading = true;
 
-            NAME_LOWERResource.query(
+            NAME_CAMELResource.query(
                 {
                     pageSize: 0
                 },
