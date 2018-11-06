@@ -1088,29 +1088,8 @@ namespace WEB.Models
                 var handleStart = firstCol && CurrentEntity.HasASortField && !CurrentEntity.RelationshipsAsChild.Any(r => r.Hierarchy) ? $"<i class=\"fa fa-sort sortable-handle mt-1\" ng-if=\"vm.{CurrentEntity.PluralName.ToCamelCase()}.length > 1\" ng-click=\"$event.stopPropagation();\"></i><div class=\"sortColumnText\">" : string.Empty;
                 var handleEnd = firstCol && CurrentEntity.HasASortField && !CurrentEntity.RelationshipsAsChild.Any(r => r.Hierarchy) ? $"</div>" : string.Empty;
 
-                if (CurrentEntity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(f => f.ChildFieldId == field.FieldId)))
-                {
-                    var relationship = CurrentEntity.GetParentSearchRelationship(field);
-                    s.Add($"                <td>{handleStart}{{{{ { CurrentEntity.CamelCaseName}.{ relationship.ParentName.ToCamelCase()}.{relationship.ParentField.Name.ToCamelCase()} }}}}{handleEnd}</td>");
-                }
-                else
-                {
-                    if (field.CustomType == CustomType.Date)
-                    {
-                        if (field.IsNullable)
-                            s.Add($"                <td>{handleStart}{{{{ { CurrentEntity.CamelCaseName}.{ field.Name.ToCamelCase()} === null ? \"\" : vm.moment({ CurrentEntity.CamelCaseName}.{ field.Name.ToCamelCase()}).format('DD MMM YYYY{(field.FieldType == FieldType.Date ? string.Empty : " HH:mm" + (field.FieldType == FieldType.SmallDateTime ? "" : ":ss"))}') }}}}{handleEnd}</td>");
-                        else
-                            s.Add($"                <td>{handleStart}{{{{ vm.moment({ CurrentEntity.CamelCaseName}.{ field.Name.ToCamelCase()}).format('DD MMM YYYY{(field.FieldType == FieldType.Date ? string.Empty : " HH:mm" + (field.FieldType == FieldType.SmallDateTime ? "" : ":ss"))}') }}}}{handleEnd}</td>");
-                    }
-                    else if (field.CustomType == CustomType.Enum)
-                        s.Add($"                <td>{handleStart}{{{{ vm.appSettings.find(vm.appSettings.{field.Lookup.Name.ToCamelCase()}, {CurrentEntity.CamelCaseName}.{field.Name.ToCamelCase()}).label }}}}{handleEnd}</td>");
-                    else if (field.FieldType == FieldType.Date)
-                        s.Add($"                <td>{handleStart}{{{{ { field.Entity.Name.ToCamelCase()}.{ field.Name.ToCamelCase() } | toLocaleDateString }}}}{handleEnd}</td>");
-                    else if (field.FieldType == FieldType.Bit)
-                        s.Add($"                <td>{handleStart}{{{{ { field.Entity.Name.ToCamelCase()}.{ field.Name.ToCamelCase() } ? \"Yes\" : \"No\" }}}}{handleEnd}</td>");
-                    else
-                        s.Add($"                <td>{handleStart}{{{{ { CurrentEntity.CamelCaseName}.{ field.Name.ToCamelCase()} }}}}{handleEnd}</td>");
-                }
+                s.Add($"                <td>{handleStart}{field.ListFieldHtml}{handleEnd}</td>");
+
                 firstCol = false;
             }
             s.Add($"            </tr>");
@@ -2040,11 +2019,7 @@ namespace WEB.Models
             var s = new StringBuilder();
 
             var file = File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + "templates/appselect.html");
-            s.Add(
-                file
-                    .Replace("NAME_LOWER", CurrentEntity.Name.ToLower())
-                    .Replace("NAME", CurrentEntity.Name)
-                );
+            s.Add(RunTemplateReplacements(file));
 
             return RunCodeReplacements(s.ToString(), CodeType.AppSelectHtml);
         }
@@ -2054,12 +2029,7 @@ namespace WEB.Models
             var s = new StringBuilder();
 
             var file = File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + "templates/appselect.ts");
-            s.Add(
-                file
-                    .Replace("NAME_LOWER", CurrentEntity.Name.ToLower())
-                    .Replace("NAME", CurrentEntity.Name)
-                    .Replace("// <reference", "/// <reference")
-                );
+            s.Add(RunTemplateReplacements(file));
 
             return RunCodeReplacements(s.ToString(), CodeType.AppSelectTypeScript);
         }
@@ -2069,12 +2039,29 @@ namespace WEB.Models
             var s = new StringBuilder();
 
             var file = File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + "templates/selectmodal.html");
-            s.Add(
-                file
-                    .Replace("PLURALNAME_LOWER", CurrentEntity.PluralName.ToLower())
-                    .Replace("NAME_LOWER", CurrentEntity.Name.ToLower())
-                    .Replace("NAME", CurrentEntity.Name)
-                );
+
+            var fieldHeaders = string.Empty;
+            var fieldList = string.Empty;
+            foreach (var field in CurrentEntity.Fields.Where(f => f.ShowInSearchResults).OrderBy(f => f.FieldOrder))
+            {
+                fieldHeaders += (fieldHeaders == string.Empty ? string.Empty : Environment.NewLine) + $"                <th scope=\"col\">{field.Label}</th>";
+                fieldList += (fieldList == string.Empty ? string.Empty : Environment.NewLine);
+
+                var handleStart = string.Empty;
+                var handleEnd = string.Empty;
+                if (field == CurrentEntity.Fields.Where(f => f.ShowInSearchResults).OrderBy(f => f.FieldOrder).Last())
+                {
+                    handleStart = $"<i ng-class=\"{{ 'invisible': !vm.isSelected({CurrentEntity.Name.ToLower()}) }}\" class=\"fa fa-check check-mark pull-right\" ></i>";
+                }
+
+                fieldList += $"                <td>{handleStart}{field.ListFieldHtml}{handleEnd}</td>";
+            }
+
+            file = RunTemplateReplacements(file)
+                .Replace("FIELD_HEADERS", fieldHeaders)
+                .Replace("FIELD_LIST", fieldList);
+
+            s.Add(file);
 
             return RunCodeReplacements(s.ToString(), CodeType.SelectModalHtml);
         }
@@ -2084,19 +2071,23 @@ namespace WEB.Models
             var s = new StringBuilder();
 
             var file = File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + "templates/selectmodal.ts");
-            s.Add(
-                file
-                    .Replace("NAME_CAMEL", CurrentEntity.CamelCaseName)
-                    .Replace("PLURALNAME_LOWER", CurrentEntity.PluralName.ToLower())
-                    .Replace("PLURALNAME", CurrentEntity.PluralName)
-                    .Replace("NAME_LOWER", CurrentEntity.Name.ToLower())
-                    .Replace("NAME", CurrentEntity.Name)
-                    .Replace("// <reference", "/// <reference")
-                );
+            s.Add(RunTemplateReplacements(file));
 
             return RunCodeReplacements(s.ToString(), CodeType.SelectModalTypeScript);
         }
-        
+
+        private string RunTemplateReplacements(string input)
+        {
+            return input
+                .Replace("PLURALNAME_TOCAMELCASE", CurrentEntity.PluralName.ToCamelCase())
+                .Replace("CAMELCASENAME", CurrentEntity.CamelCaseName)
+                .Replace("PLURALFRIENDLYNAME_TOLOWER", CurrentEntity.PluralFriendlyName.ToLower())
+                .Replace("PLURALNAME", CurrentEntity.PluralName)
+                .Replace("NAME_TOLOWER", CurrentEntity.Name.ToLower())
+                .Replace("NAME", CurrentEntity.Name)
+                .Replace("// <reference", "/// <reference");
+        }
+
         // ---- HELPER METHODS -----------------------------------------------------------------------
 
         private string ClimbHierarchy(Relationship relationship, string result)

@@ -9,13 +9,13 @@
     function appSelectNAME() {
 
         return {
-            templateUrl: "/app/directives/appselectNAME_LOWER.html",
+            templateUrl: "/app/directives/appselectNAME_TOLOWER.html",
             restrict: "E",
             controller: appSelectNAMEController,
             replace: true,
             scope: {
                 multiple: "<",
-                NAME_LOWER: "=",
+                CAMELCASENAME: "=",
                 ngModel: "=",
                 placeholder: "@",
                 singular: "@",
@@ -32,15 +32,15 @@
 
         function selectNAME() {
             var modalInstance = $uibModal.open({
-                templateUrl: "/app/directives/selectNAME_LOWERmodal.html",
+                templateUrl: "/app/directives/selectNAME_TOLOWERmodal.html",
                 controller: "selectNAMEModal",
                 controllerAs: "vm",
-                size: "lg",
+                size: "xl",
                 resolve: {
                     options: () => {
                         return {
                             multiple: $scope.multiple,
-                            NAME_LOWER: $scope.NAME_LOWER,
+                            CAMELCASENAME: $scope.CAMELCASENAME,
                             singular: $scope.singular,
                             plural: $scope.plural
                         }
@@ -49,9 +49,9 @@
             });
 
             modalInstance.result.then(
-                function (NAME_LOWER) {
-                    $scope.NAME_LOWER = NAME_LOWER;
-                    $scope.ngModel = NAME_LOWER ? NAME_LOWER.NAME_LOWERId : undefined;
+                function (CAMELCASENAME) {
+                    $scope.CAMELCASENAME = CAMELCASENAME;
+                    $scope.ngModel = CAMELCASENAME ? CAMELCASENAME.CAMELCASENAMEId : undefined;
                 },
                 function (reason) {
                     // cancelled/closed

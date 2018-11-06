@@ -31,27 +31,22 @@
     <table class="table table-striped table-hover table-bordered table-sm row-navigation mt-3" ng-class="{ 'disabled': vm.loading }">
         <thead>
             <tr>
-                <!--todo: output fields!-->
-                <th scope="col">Code</th>
-                <th scope="col">Name</th>
+FIELD_HEADERS
             </tr>
         </thead>
         <tbody>
-            <tr ng-repeat="NAME_LOWER in vm.PLURALNAME_LOWER" ng-click="vm.select(NAME_LOWER)">
-                <td>{{ NAME_LOWER.code }}</td>
-                <td>
-                    <i ng-class="{ 'invisible': !vm.isSelected(NAME_LOWER) }" class="fa fa-check check-mark pull-right"></i>{{ NAME_LOWER.name }}
-                </td>
+            <tr ng-repeat="CAMELCASENAME in vm.PLURALNAME_TOCAMELCASE" ng-click="vm.select(CAMELCASENAME)">
+FIELD_LIST
             </tr>
         </tbody>
     </table>
 
     <div class="row" ng-class="{ 'disabled': vm.loading }">
         <div class="col-sm-7">
-            <app-pager headers="vm.NAME_LOWERHeaders" callback="vm.runNAMESearch"></app-pager>
+            <app-pager headers="vm.CAMELCASENAMEHeaders" callback="vm.runNAMESearch"></app-pager>
         </div>
         <div class="col-sm-5 text-right resultsInfo">
-            <app-pager-info headers="vm.NAME_LOWERHeaders"></app-pager-info>
+            <app-pager-info headers="vm.CAMELCASENAMEHeaders"></app-pager-info>
         </div>
     </div>
 

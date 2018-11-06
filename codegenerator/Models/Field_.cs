@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 
 namespace WEB.Models
 {
@@ -164,6 +165,36 @@ namespace WEB.Models
             }
         }
 
+        [NotMapped]
+        public string ListFieldHtml
+        {
+            get
+            {
+                if (Entity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(f => f.ChildFieldId == FieldId)))
+                {
+                    var relationship = Entity.GetParentSearchRelationship(this);
+                    return $"{{{{ { Entity.CamelCaseName}.{ relationship.ParentName.ToCamelCase()}.{relationship.ParentField.Name.ToCamelCase()} }}}}";
+                }
+                else
+                {
+                    if (CustomType == CustomType.Date)
+                    {
+                        if (IsNullable)
+                            return $"{{{{ { Entity.CamelCaseName}.{ Name.ToCamelCase()} === null ? \"\" : vm.moment({ Entity.CamelCaseName}.{ Name.ToCamelCase()}).format('DD MMM YYYY{(FieldType == FieldType.Date ? string.Empty : " HH:mm" + (FieldType == FieldType.SmallDateTime ? "" : ":ss"))}') }}}}";
+                        else
+                            return $"{{{{ vm.moment({ Entity.CamelCaseName}.{ Name.ToCamelCase()}).format('DD MMM YYYY{(FieldType == FieldType.Date ? string.Empty : " HH:mm" + (FieldType == FieldType.SmallDateTime ? "" : ":ss"))}') }}}}";
+                    }
+                    else if (CustomType == CustomType.Enum)
+                        return $"{{{{ vm.appSettings.find(vm.appSettings.{Lookup.Name.ToCamelCase()}, {Entity.CamelCaseName}.{Name.ToCamelCase()}).label }}}}";
+                    else if (FieldType == FieldType.Date)
+                        return $"{{{{ { Entity.Name.ToCamelCase()}.{ Name.ToCamelCase() } | toLocaleDateString }}}}";
+                    else if (FieldType == FieldType.Bit)
+                        return $"{{{{ { Entity.Name.ToCamelCase()}.{ Name.ToCamelCase() } ? \"Yes\" : \"No\" }}}}";
+                    else
+                        return $"{{{{ { Entity.CamelCaseName}.{ Name.ToCamelCase()} }}}}";
+                }
+            }
+        } 
 
         public override string ToString()
         {
