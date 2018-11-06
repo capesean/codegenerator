@@ -7,16 +7,17 @@
     <form ng-submit="vm.runNAMESearch(0)" novalidate>
 
         <fieldset>
-
+FILTER_ALERTS
             <div class="row">
 
-                <div class="col-md-8 col-lg-9">
+                <div class="col-sm-6 col-md-4 col-lg-3">
                     <div class="form-group">
                         <input type="search" id="q" ng-model="vm.search.q" max="100" class="form-control" placeholder="Search {{vm.options.plural.toLowerCase()}}" autofocus />
                     </div>
                 </div>
-
-                <div class="col-md-4 col-lg-3">
+                
+APP_SELECT_FILTERS
+                <div class="col-sm-4 col-md-4 col-lg-3">
                     <div class="form-group">
                         <button type="submit" ng-disabled="vm.loading" class="btn btn-success btn-block">Search<i class="fa fa-search ml-1"></i></button>
                     </div>

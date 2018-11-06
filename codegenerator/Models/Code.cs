@@ -1015,7 +1015,7 @@ namespace WEB.Models
                         {
                             s.Add($"            <div class=\"col-sm-6 col-md-4 col-lg-3\">");
                             s.Add($"                <div class=\"form-group\">");
-                            s.Add($"                    <{CurrentEntity.Project.AngularDirectivePrefix}-select-{parentEntity.FriendlyName.ToLower().Replace(" ", "-")} id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"vm.search.{field.Name.ToCamelCase()}\" placeholder=\"Select {relationship.ParentFriendlyName.ToLower()}\" singular=\"{relationship.ParentFriendlyName}\" plural=\"{relationship.ParentEntity.PluralFriendlyName}\" {parentEntity.FriendlyName.ToLower().Replace(" ", "-")}=\"vm.searchObjects.{parentEntity.Name.ToCamelCase()}\"></{CurrentEntity.Project.AngularDirectivePrefix}-select-{parentEntity.FriendlyName.ToLower().Replace(" ", "-")}>");
+                            s.Add($"                    {relationship.AppSelector}");
                             s.Add($"                </div>");
                             s.Add($"            </div>");
                             s.Add($"");
@@ -2029,7 +2029,32 @@ namespace WEB.Models
             var s = new StringBuilder();
 
             var file = File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + "templates/appselect.ts");
-            s.Add(RunTemplateReplacements(file));
+
+            var filterAttributes = string.Empty;
+            var filterWatches = string.Empty;
+            var filterOptions = string.Empty;
+
+            foreach (var field in CurrentEntity.Fields.Where(o => o.SearchType == SearchType.Exact && o.FieldType == FieldType.Enum))
+            {
+                filterAttributes += $",{Environment.NewLine}                {field.Name.ToCamelCase()}: \"<\"";
+
+                filterWatches += (filterWatches == string.Empty ? Environment.NewLine : string.Empty);
+                filterWatches += $"        $scope.$watch(\"{field.Name.ToCamelCase()}\", (newValue, oldValue) => {{" + Environment.NewLine;
+                filterWatches += $"            if (newValue !== oldValue) {{" + Environment.NewLine;
+                filterWatches += $"                $scope.ngModel = undefined;" + Environment.NewLine;
+                filterWatches += $"                $scope.{CurrentEntity.CamelCaseName} = undefined;" + Environment.NewLine;
+                filterWatches += $"            }}" + Environment.NewLine;
+                filterWatches += $"        }});" + Environment.NewLine;
+
+                filterOptions += $",{Environment.NewLine}                            {field.Name.ToCamelCase()}: $scope.{field.Name.ToCamelCase()}";
+            }
+
+            file = RunTemplateReplacements(file)
+                .Replace("/*FILTER_ATTRIBUTES*/", filterAttributes)
+                .Replace("/*FILTER_WATCHES*/", filterWatches)
+                .Replace("/*FILTER_OPTIONS*/", filterOptions);
+
+            s.Add(file);
 
             return RunCodeReplacements(s.ToString(), CodeType.AppSelectTypeScript);
         }
@@ -2042,6 +2067,9 @@ namespace WEB.Models
 
             var fieldHeaders = string.Empty;
             var fieldList = string.Empty;
+            var appSelectFilters = string.Empty;
+            var filterAlerts = string.Empty;
+
             foreach (var field in CurrentEntity.Fields.Where(f => f.ShowInSearchResults).OrderBy(f => f.FieldOrder))
             {
                 fieldHeaders += (fieldHeaders == string.Empty ? string.Empty : Environment.NewLine) + $"                <th scope=\"col\">{field.Label}</th>";
@@ -2057,9 +2085,30 @@ namespace WEB.Models
                 fieldList += $"                <td>{handleStart}{field.ListFieldHtml}{handleEnd}</td>";
             }
 
+            foreach (var field in CurrentEntity.Fields.Where(f => f.SearchType == SearchType.Exact).OrderBy(f => f.FieldOrder))
+            {
+                if (CurrentEntity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(rf => rf.ChildFieldId == field.FieldId) && r.UseSelectorDirective))
+                {
+                    appSelectFilters += $"              <div class=\"col-sm-6 col-md-4 col-lg-3\">" + Environment.NewLine;
+                    appSelectFilters += $"                  <div class=\"form-group\">" + Environment.NewLine;
+                    appSelectFilters += $"                      {CurrentEntity.GetParentSearchRelationship(field).AppSelector}" + Environment.NewLine;
+                    appSelectFilters += $"                  </div>" + Environment.NewLine;
+                    appSelectFilters += $"              </div>" + Environment.NewLine;
+                    appSelectFilters += $"" + Environment.NewLine;
+                }
+
+                if (field.FieldType == FieldType.Enum)
+                {
+                    if (filterAlerts == string.Empty) filterAlerts = Environment.NewLine;
+                    filterAlerts += $"            <div class=\"alert alert-info alert-dismissible\" ng-if=\"vm.options.{field.Name.ToCamelCase()}\" ><button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\" ><span aria-hidden=\"true\" >&times;</span></button>Filtered by {field.Label.ToLower()}: {{{{vm.options.{field.Name.ToCamelCase()}.label}}}}</div>" + Environment.NewLine;
+                }
+            }
+
             file = RunTemplateReplacements(file)
                 .Replace("FIELD_HEADERS", fieldHeaders)
-                .Replace("FIELD_LIST", fieldList);
+                .Replace("FIELD_LIST", fieldList)
+                .Replace("APP_SELECT_FILTERS", appSelectFilters)
+                .Replace("FILTER_ALERTS", filterAlerts);
 
             s.Add(file);
 
@@ -2071,7 +2120,18 @@ namespace WEB.Models
             var s = new StringBuilder();
 
             var file = File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + "templates/selectmodal.ts");
-            s.Add(RunTemplateReplacements(file));
+
+            var filterParams = string.Empty;
+
+            foreach (var field in CurrentEntity.Fields.Where(o => o.SearchType == SearchType.Exact && o.FieldType == FieldType.Enum))
+            {
+                filterParams += $"{Environment.NewLine}                {field.Name.ToCamelCase()}: (options.{field.Name.ToCamelCase()} ? options.{field.Name.ToCamelCase()}.id : undefined),";
+            }
+
+            file = RunTemplateReplacements(file)
+                .Replace("/*FILTER_PARAMS*/", filterParams);
+
+            s.Add(file);
 
             return RunCodeReplacements(s.ToString(), CodeType.SelectModalTypeScript);
         }
@@ -2509,7 +2569,6 @@ namespace WEB.Models
             File.WriteAllText(Path.Combine(path, fileName), code);
             return true;
         }
-
     }
 
     public class DeploymentOptions

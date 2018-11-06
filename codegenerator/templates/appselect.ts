@@ -19,7 +19,7 @@
                 ngModel: "=",
                 placeholder: "@",
                 singular: "@",
-                plural: "@"
+                plural: "@"/*FILTER_ATTRIBUTES*/
             }
         }
     }
@@ -29,7 +29,7 @@
 
         $scope.selectNAME = selectNAME;
         $scope.placeholder = $scope.placeholder || ("Select " + $scope.singular.toLowerCase());
-
+        /*FILTER_WATCHES*/
         function selectNAME() {
             var modalInstance = $uibModal.open({
                 templateUrl: "/app/directives/selectNAME_TOLOWERmodal.html",
@@ -42,7 +42,7 @@
                             multiple: $scope.multiple,
                             CAMELCASENAME: $scope.CAMELCASENAME,
                             singular: $scope.singular,
-                            plural: $scope.plural
+                            plural: $scope.plural/*FILTER_OPTIONS*/
                         }
                     },
                 }

@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace WEB.Models
 {
-    public class Relationship
+    public partial class Relationship
     {
         [Key]
         [Required]

@@ -31,7 +31,7 @@
             options.singular = options.singular || "NAME";
             options.plural = options.plural || "PLURALNAME";
 
-            vm.search = {
+            vm.search = {/*FILTER_PARAMS*/
                 includeEntities: true
             };
 
