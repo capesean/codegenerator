@@ -34,7 +34,7 @@
             vm.search = {/*FILTER_PARAMS*/
                 includeEntities: true
             };
-
+            /*FILTER_TRIGGERS*/
             runNAMESearch(0, false);
 
         }

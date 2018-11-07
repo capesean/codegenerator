@@ -2089,12 +2089,15 @@ namespace WEB.Models
             {
                 if (CurrentEntity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(rf => rf.ChildFieldId == field.FieldId) && r.UseSelectorDirective))
                 {
+                    var relationship = CurrentEntity.GetParentSearchRelationship(field);
+
                     appSelectFilters += $"              <div class=\"col-sm-6 col-md-4 col-lg-3\">" + Environment.NewLine;
                     appSelectFilters += $"                  <div class=\"form-group\">" + Environment.NewLine;
-                    appSelectFilters += $"                      {CurrentEntity.GetParentSearchRelationship(field).AppSelector}" + Environment.NewLine;
+                    appSelectFilters += $"                      {relationship.AppSelector}" + Environment.NewLine;
                     appSelectFilters += $"                  </div>" + Environment.NewLine;
                     appSelectFilters += $"              </div>" + Environment.NewLine;
                     appSelectFilters += $"" + Environment.NewLine;
+
                 }
 
                 if (field.FieldType == FieldType.Enum)
@@ -2122,14 +2125,27 @@ namespace WEB.Models
             var file = File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + "templates/selectmodal.ts");
 
             var filterParams = string.Empty;
+            var filterTriggers = string.Empty;
 
-            foreach (var field in CurrentEntity.Fields.Where(o => o.SearchType == SearchType.Exact && o.FieldType == FieldType.Enum))
+            foreach (var field in CurrentEntity.Fields.Where(o => o.SearchType == SearchType.Exact))
             {
-                filterParams += $"{Environment.NewLine}                {field.Name.ToCamelCase()}: (options.{field.Name.ToCamelCase()} ? options.{field.Name.ToCamelCase()}.id : undefined),";
+                if (field.FieldType == FieldType.Enum)
+                    filterParams += $"{Environment.NewLine}                {field.Name.ToCamelCase()}: (options.{field.Name.ToCamelCase()} ? options.{field.Name.ToCamelCase()}.id : undefined),";
+
+                if (CurrentEntity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(rf => rf.ChildFieldId == field.FieldId) && r.UseSelectorDirective))
+                {
+                    var relationship = CurrentEntity.GetParentSearchRelationship(field);
+
+                    filterTriggers += Environment.NewLine;
+                    filterTriggers += $"            $scope.$watch(\"vm.search.{relationship.RelationshipFields.Single().ChildField.Name.ToCamelCase()}\", (newValue, oldValue) => {{" + Environment.NewLine;
+                    filterTriggers += $"                if (newValue !== oldValue) run{CurrentEntity.Name}Search(0, false);" + Environment.NewLine;
+                    filterTriggers += $"            }});" + Environment.NewLine;
+                }
             }
 
             file = RunTemplateReplacements(file)
-                .Replace("/*FILTER_PARAMS*/", filterParams);
+                .Replace("/*FILTER_PARAMS*/", filterParams)
+                .Replace("/*FILTER_TRIGGERS*/", filterTriggers);
 
             s.Add(file);
 

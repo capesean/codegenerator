@@ -27,6 +27,7 @@
             vm.search = {
                 includeEntities: true
             };
+            /*FILTER_TRIGGERS*/
             runNAMESearch(0, false);
         }
         function runNAMESearch(pageIndex, dontSetLoading) {
