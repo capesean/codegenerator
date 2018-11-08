@@ -2036,17 +2036,25 @@ namespace WEB.Models
 
             foreach (var field in CurrentEntity.Fields.Where(o => o.SearchType == SearchType.Exact && (o.FieldType == FieldType.Enum || CurrentEntity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(f => f.ChildFieldId == o.FieldId)))))
             {
-                filterAttributes += $",{Environment.NewLine}                {field.Name.ToCamelCase()}: \"<\"";
+                var name = field.Name.ToCamelCase();
+
+                if (CurrentEntity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(f => f.ChildFieldId == field.FieldId)))
+                {
+                    var relationship = CurrentEntity.GetParentSearchRelationship(field);
+                    name = relationship.ParentName.ToCamelCase();
+                }
+
+                filterAttributes += $",{Environment.NewLine}                {name}: \"<\"";
 
                 filterWatches += Environment.NewLine;
-                filterWatches += $"        $scope.$watch(\"{field.Name.ToCamelCase()}\", (newValue, oldValue) => {{" + Environment.NewLine;
+                filterWatches += $"        $scope.$watch(\"{name}\", (newValue, oldValue) => {{" + Environment.NewLine;
                 filterWatches += $"            if (newValue !== oldValue) {{" + Environment.NewLine;
                 filterWatches += $"                $scope.ngModel = undefined;" + Environment.NewLine;
                 filterWatches += $"                $scope.{CurrentEntity.CamelCaseName} = undefined;" + Environment.NewLine;
                 filterWatches += $"            }}" + Environment.NewLine;
                 filterWatches += $"        }});" + Environment.NewLine;
 
-                filterOptions += $",{Environment.NewLine}                            {field.Name.ToCamelCase()}: $scope.{field.Name.ToCamelCase()}";
+                filterOptions += $",{Environment.NewLine}                            {name}: $scope.{name}";
             }
 
             file = RunTemplateReplacements(file)
@@ -2091,10 +2099,12 @@ namespace WEB.Models
 
             foreach (var field in CurrentEntity.Fields.Where(f => f.SearchType == SearchType.Exact).OrderBy(f => f.FieldOrder))
             {
-                if (CurrentEntity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(rf => rf.ChildFieldId == field.FieldId) && r.UseSelectorDirective))
-                {
-                    var relationship = CurrentEntity.GetParentSearchRelationship(field);
+                Relationship relationship = null;
+                if(CurrentEntity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(rf => rf.ChildFieldId == field.FieldId) && r.UseSelectorDirective))
+                    relationship = CurrentEntity.GetParentSearchRelationship(field);
 
+                if (relationship != null)
+                {
                     appSelectFilters += Environment.NewLine;
                     appSelectFilters += $"                <div class=\"col-sm-6 col-md-4 col-lg-3\" ng-if=\"!vm.options.{relationship.ParentEntity.Name.ToCamelCase()}\">" + Environment.NewLine;
                     appSelectFilters += $"                    <div class=\"form-group\">" + Environment.NewLine;
@@ -2104,10 +2114,14 @@ namespace WEB.Models
 
                 }
 
-                if (field.FieldType == FieldType.Enum || CurrentEntity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(f => f.ChildFieldId == field.FieldId)))
+                if (field.FieldType == FieldType.Enum || relationship != null)
                 {
                     if (filterAlerts == string.Empty) filterAlerts = Environment.NewLine;
-                    filterAlerts += $"            <div class=\"alert alert-info alert-dismissible\" ng-if=\"vm.options.{field.Name.ToCamelCase()}\" ><button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\" ><span aria-hidden=\"true\" >&times;</span></button>Filtered by {field.Label.ToLower()}: {{{{vm.options.{field.Name.ToCamelCase()}.label}}}}</div>" + Environment.NewLine;
+
+                    if (field.FieldType == FieldType.Enum)
+                        filterAlerts += $"            <div class=\"alert alert-info alert-dismissible\" ng-if=\"vm.options.{field.Name.ToCamelCase()}\" ><button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\" ><span aria-hidden=\"true\" >&times;</span></button>Filtered by {field.Label.ToLower()}: {{{{vm.options.{field.Name.ToCamelCase()}.label}}}}</div>" + Environment.NewLine;
+                    else
+                        filterAlerts += $"            <div class=\"alert alert-info alert-dismissible\" ng-if=\"vm.options.{relationship.ParentName.ToCamelCase()}\" ><button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\" ><span aria-hidden=\"true\" >&times;</span></button>Filtered by {field.Label.ToLower()}: {{{{vm.options.{relationship.ParentName.ToCamelCase()}.{relationship.ParentField.Name.ToCamelCase()}}}}}</div>" + Environment.NewLine;
                 }
             }
 
@@ -2133,13 +2147,17 @@ namespace WEB.Models
 
             foreach (var field in CurrentEntity.Fields.Where(o => o.SearchType == SearchType.Exact))
             {
-                if (field.FieldType == FieldType.Enum || CurrentEntity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(f => f.ChildFieldId == field.FieldId)))
+                Relationship relationship = null;
+                if (CurrentEntity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(f => f.ChildFieldId == field.FieldId)))
+                    relationship = CurrentEntity.GetParentSearchRelationship(field);
+
+                if (field.FieldType == FieldType.Enum)
                     filterParams += $"{Environment.NewLine}                {field.Name.ToCamelCase()}: (options.{field.Name.ToCamelCase()} ? options.{field.Name.ToCamelCase()}.id : undefined),";
+                else if (relationship != null)
+                    filterParams += $"{Environment.NewLine}                {field.Name.ToCamelCase()}: (options.{relationship.ParentName.ToCamelCase()} ? options.{relationship.ParentName.ToCamelCase()}.{relationship.RelationshipFields.Single().ParentField.Name.ToCamelCase()} : undefined),";
 
-                if (CurrentEntity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(rf => rf.ChildFieldId == field.FieldId) && r.UseSelectorDirective))
+                if (relationship != null && relationship.UseSelectorDirective)
                 {
-                    var relationship = CurrentEntity.GetParentSearchRelationship(field);
-
                     filterTriggers += Environment.NewLine;
                     filterTriggers += $"            $scope.$watch(\"vm.search.{relationship.RelationshipFields.Single().ChildField.Name.ToCamelCase()}\", (newValue, oldValue) => {{" + Environment.NewLine;
                     filterTriggers += $"                if (newValue !== oldValue) run{CurrentEntity.Name}Search(0, false);" + Environment.NewLine;
