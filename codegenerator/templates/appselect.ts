@@ -17,6 +17,7 @@
                 multiple: "<",
                 CAMELCASENAME: "=",
                 ngModel: "=",
+                disabled: "<",
                 placeholder: "@",
                 singular: "@",
                 plural: "@"/*FILTER_ATTRIBUTES*/
@@ -44,7 +45,7 @@
                             singular: $scope.singular,
                             plural: $scope.plural/*FILTER_OPTIONS*/
                         }
-                    },
+                    }
                 }
             });
 

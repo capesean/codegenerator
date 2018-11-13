@@ -1,9 +1,9 @@
 ﻿<div class="input-group">
     <input type="hidden" name="ngModel" id="ngModel" ng-model="ngModel" />
     <input name="CAMELCASENAME" id="CAMELCASENAME" placeholder="{{placeholder}}" ng-click="selectNAME()" type="text"
-           class="form-control clickable app-select" readonly="readonly" value="{{CAMELCASENAME.name}}" />
+           class="form-control clickable app-select" readonly="readonly" value="{{CAMELCASENAME.name}}" ng-disabled="disabled" />
     <span class="input-group-btn">
-        <button type="button" class="btn btn-secondary" ng-click="selectNAME()">
+        <button type="button" class="btn btn-secondary" ng-click="selectNAME()" ng-disabled="disabled">
             <i class="fa fa-search"></i>
         </button>
     </span>

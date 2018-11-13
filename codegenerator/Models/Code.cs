@@ -2082,7 +2082,7 @@ namespace WEB.Models
             {
                 var ngIf = string.Empty;
                 if (CurrentEntity.Fields.Any(o => o.FieldId == field.FieldId && o.SearchType == SearchType.Exact && (o.FieldType == FieldType.Enum || CurrentEntity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(f => f.ChildFieldId == o.FieldId)))))
-                    ngIf = " ng-if=\"!vm.options." + field.Label.ToCamelCase() + $"\"";
+                    ngIf = " ng-if=\"!vm.options." + field.Name.ToCamelCase() + $"\"";
 
                 fieldHeaders += (fieldHeaders == string.Empty ? string.Empty : Environment.NewLine) + $"                <th scope=\"col\"{ngIf}>{field.Label}</th>";
                 fieldList += (fieldList == string.Empty ? string.Empty : Environment.NewLine);
