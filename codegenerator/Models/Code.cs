@@ -2100,22 +2100,31 @@ namespace WEB.Models
             foreach (var field in CurrentEntity.Fields.Where(f => f.SearchType == SearchType.Exact).OrderBy(f => f.FieldOrder))
             {
                 Relationship relationship = null;
-                if(CurrentEntity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(rf => rf.ChildFieldId == field.FieldId) && r.UseSelectorDirective))
+                if (CurrentEntity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(rf => rf.ChildFieldId == field.FieldId) && r.UseSelectorDirective))
                     relationship = CurrentEntity.GetParentSearchRelationship(field);
-
-                if (relationship != null)
-                {
-                    appSelectFilters += Environment.NewLine;
-                    appSelectFilters += $"                <div class=\"col-sm-6 col-md-4 col-lg-3\" ng-if=\"!vm.options.{relationship.ParentEntity.Name.ToCamelCase()}\">" + Environment.NewLine;
-                    appSelectFilters += $"                    <div class=\"form-group\">" + Environment.NewLine;
-                    appSelectFilters += $"                        {relationship.AppSelector}" + Environment.NewLine;
-                    appSelectFilters += $"                    </div>" + Environment.NewLine;
-                    appSelectFilters += $"                </div>" + Environment.NewLine;
-
-                }
 
                 if (field.FieldType == FieldType.Enum || relationship != null)
                 {
+                    appSelectFilters += Environment.NewLine;
+                    if (field.FieldType == FieldType.Enum)
+                    {
+                        appSelectFilters += $"                <div class=\"col-sm-6 col-md-4 col-lg-3\" ng-if=\"!vm.options.{field.Name.ToCamelCase()}\">" + Environment.NewLine;
+                        appSelectFilters += $"                    <ol id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" title=\"{field.Label}\" class=\"nya-bs-select form-control\" ng-model=\"vm.search.{field.Name.ToCamelCase()}\" data-live-search=\"true\" data-size=\"10\">" + Environment.NewLine;
+                        appSelectFilters += $"                        <li nya-bs-option=\"item in vm.appSettings.{field.Lookup.Name.ToCamelCase()}\" class=\"nya-bs-option{(CurrentEntity.Project.Bootstrap3 ? "" : " dropdown-item")}\" data-value=\"item.id\">" + Environment.NewLine;
+                        appSelectFilters += $"                            <a>{{{{item.label}}}}<span class=\"fa fa-check check-mark\"></span></a>" + Environment.NewLine;
+                        appSelectFilters += $"                        </li>" + Environment.NewLine;
+                        appSelectFilters += $"                    </ol>" + Environment.NewLine;
+                        appSelectFilters += $"                </div>" + Environment.NewLine;
+                    }
+                    else
+                    {
+                        appSelectFilters += $"                <div class=\"col-sm-6 col-md-4 col-lg-3\" ng-if=\"!vm.options.{relationship.ParentName.ToCamelCase()}\">" + Environment.NewLine;
+                        appSelectFilters += $"                    <div class=\"form-group\">" + Environment.NewLine;
+                        appSelectFilters += $"                        {relationship.AppSelector}" + Environment.NewLine;
+                        appSelectFilters += $"                    </div>" + Environment.NewLine;
+                        appSelectFilters += $"                </div>" + Environment.NewLine;
+                    }
+
                     if (filterAlerts == string.Empty) filterAlerts = Environment.NewLine;
 
                     if (field.FieldType == FieldType.Enum)
