@@ -871,9 +871,22 @@ namespace WEB.Models
             {
                 s.Add($"            {(e == NormalEntities.First() ? string.Empty : "})")}.state(\"app.{e.Name.ToCamelCase()}\", {{");
                 s.Add($"                url: \"{CurrentEntity.Project.UrlPrefix}{e.GetNavigationUrl()}\",");
-                s.Add($"                templateUrl: \"/app/{e.PluralName.ToLower()}/{e.Name.ToLower()}.html\" + version,");
-                s.Add($"                controller: \"{e.Name.ToCamelCase()}\",");
-                s.Add($"                controllerAs: \"vm\",");
+                if (String.IsNullOrWhiteSpace(CurrentEntity.Project.RouteViewName))
+                {
+                    s.Add($"                templateUrl: \"/app/{e.PluralName.ToLower()}/{e.Name.ToLower()}.html\" + version,");
+                    s.Add($"                controller: \"{e.Name.ToCamelCase()}\",");
+                    s.Add($"                controllerAs: \"vm\",");
+                }
+                else
+                {
+                    s.Add($"                views: {{");
+                    s.Add($"                    \"{CurrentEntity.Project.RouteViewName}\": {{");
+                    s.Add($"                        templateUrl: \"/app/{e.PluralName.ToLower()}/{e.Name.ToLower()}.html\" + version,");
+                    s.Add($"                        controller: \"{e.Name.ToCamelCase()}\",");
+                    s.Add($"                        controllerAs: \"vm\"");
+                    s.Add($"                    }}");
+                    s.Add($"                }},");
+                }
                 //s.Add($"                data: {{");
                 //s.Add($"                    roles: [\"Administrator\"]");
                 //s.Add($"                }},");
@@ -891,9 +904,22 @@ namespace WEB.Models
                 s.Add($"            }}).state(\"app.{e.PluralName.ToCamelCase()}\", {{");
                 // todo: search fields
                 s.Add($"                url: \"{CurrentEntity.Project.UrlPrefix}/{e.PluralName.ToLower()}\",");
-                s.Add($"                templateUrl: \"/app/{e.PluralName.ToLower()}/{e.PluralName.ToLower()}.html\" + version,");
-                s.Add($"                controller: \"{e.PluralName.ToCamelCase()}\",");
-                s.Add($"                controllerAs: \"vm\",");
+                if (String.IsNullOrWhiteSpace(CurrentEntity.Project.RouteViewName))
+                {
+                    s.Add($"                templateUrl: \"/app/{e.PluralName.ToLower()}/{e.PluralName.ToLower()}.html\" + version,");
+                    s.Add($"                controller: \"{e.PluralName.ToCamelCase()}\",");
+                    s.Add($"                controllerAs: \"vm\",");
+                }
+                else
+                {
+                    s.Add($"                views: {{");
+                    s.Add($"                    \"{CurrentEntity.Project.RouteViewName}\": {{");
+                    s.Add($"                        templateUrl: \"/app/{e.PluralName.ToLower()}/{e.PluralName.ToLower()}.html\" + version,");
+                    s.Add($"                        controller: \"{e.PluralName.ToCamelCase()}\",");
+                    s.Add($"                        controllerAs: \"vm\"");
+                    s.Add($"                    }}");
+                    s.Add($"                }},");
+                }
                 //s.Add($"                data: {{");
                 //s.Add($"                    roles: [\"Administrator\"]");
                 //s.Add($"                }},");
@@ -1073,24 +1099,24 @@ namespace WEB.Models
             s.Add($"    <hr />");
             s.Add($"");
             // removed (not needed?): id=\"resultsList\" 
+            var useSortColumn = CurrentEntity.HasASortField && !CurrentEntity.RelationshipsAsChild.Any(r => r.Hierarchy);
+
             s.Add($"    <table class=\"table table-striped table-hover table-bordered row-navigation{(CurrentEntity.Project.Bootstrap3 ? string.Empty : " table-sm")}\" ng-class=\"{{ 'disabled': vm.loading }}\">");
             s.Add($"        <thead>");
             s.Add($"            <tr>");
+            if (useSortColumn)
+                s.Add($"                <th scope=\"col\" ng-if=\"vm.{CurrentEntity.PluralName.ToCamelCase()}.length > 1\" class=\"text-center fa-col-width\"><i class=\"fa fa-sort mt-1\"></i></th>");
             foreach (var field in CurrentEntity.Fields.Where(f => f.ShowInSearchResults).OrderBy(f => f.FieldOrder))
                 s.Add($"                <th scope=\"col\">{field.Label}</th>");
             s.Add($"            </tr>");
             s.Add($"        </thead>");
             s.Add($"        <tbody{(CurrentEntity.HasASortField && !CurrentEntity.RelationshipsAsChild.Any(r => r.Hierarchy) ? " ui-sortable=\"vm.sortOptions\" ng-model=\"vm." + CurrentEntity.PluralName.ToCamelCase() + "\"" : "")}>");
             s.Add($"            <tr ng-repeat=\"{CurrentEntity.CamelCaseName} in vm.{CurrentEntity.PluralName.ToCamelCase()}\" ng-click=\"vm.goTo{CurrentEntity.Name}({CurrentEntity.GetNavigationString()})\">");
-            var firstCol = true;
+            if (useSortColumn)
+                s.Add($"                <td ng-if=\"vm.{CurrentEntity.PluralName.ToCamelCase()}.length > 1\" class=\"text-center fa-col-width\"><i class=\"fa fa-sort sortable-handle mt-1\" ng-click=\"$event.stopPropagation();\"></i></td>");
             foreach (var field in CurrentEntity.Fields.Where(f => f.ShowInSearchResults).OrderBy(f => f.FieldOrder))
             {
-                var handleStart = firstCol && CurrentEntity.HasASortField && !CurrentEntity.RelationshipsAsChild.Any(r => r.Hierarchy) ? $"<i class=\"fa fa-sort sortable-handle mt-1\" ng-if=\"vm.{CurrentEntity.PluralName.ToCamelCase()}.length > 1\" ng-click=\"$event.stopPropagation();\"></i><div class=\"sortColumnText\">" : string.Empty;
-                var handleEnd = firstCol && CurrentEntity.HasASortField && !CurrentEntity.RelationshipsAsChild.Any(r => r.Hierarchy) ? $"</div>" : string.Empty;
-
-                s.Add($"                <td>{handleStart}{field.ListFieldHtml}{handleEnd}</td>");
-
-                firstCol = false;
+                s.Add($"                <td>{field.ListFieldHtml}</td>");
             }
             s.Add($"            </tr>");
             s.Add($"        </tbody>");
@@ -1177,8 +1203,9 @@ namespace WEB.Models
                     s.Add($"                {parentEntity.ResourceName}.query(");
                     s.Add($"                    {{");
                     s.Add($"                        pageSize: 0");
-                    s.Add($"                    }},");
-                    s.Add($"                    (data, headers) => {{");
+                    s.Add($"                    }}");
+                    s.Add($"                ).$promise.then(");
+                    s.Add($"                    data => {{");
                     s.Add($"");
                     s.Add($"                        vm.{parentEntity.PluralName.ToCamelCase()} = data;");
                     s.Add($"");
@@ -1188,7 +1215,8 @@ namespace WEB.Models
                     s.Add($"                        notifications.error(\"Failed to load the {parentEntity.PluralFriendlyName.ToLower()}.\", \"Error\", err);");
                     s.Add($"                        $state.go(\"app.home\");");
                     s.Add($"");
-                    s.Add($"                    }}).$promise");
+                    s.Add($"                    }}");
+                    s.Add($"                )");
                     s.Add($"            );");
                     s.Add($"");
 
@@ -1219,19 +1247,22 @@ namespace WEB.Models
             // composite primary keys can't use the .query method because: http://stackoverflow.com/questions/39405452/ngresource-query-with-composite-key-parameter/40087371#40087371
             s.Add($"                {CurrentEntity.ResourceName}.{(!CurrentEntity.HasCompositePrimaryKey ? "query" : "search")}(");
             s.Add($"                    vm.search,");
+            // can't put this after the .$promise, as the headers need to be in the inital ngResource call ($promise can only return 1 param, see: https://stackoverflow.com/a/31127648/214980)
             s.Add($"                    (data, headers) => {{");
             s.Add($"");
             s.Add($"                        vm.{CurrentEntity.PluralName.ToCamelCase()} = data;");
             if (!(CurrentEntity.HasASortField && !CurrentEntity.RelationshipsAsChild.Any(r => r.Hierarchy)))
-                s.Add($"                        vm.headers = JSON.parse(headers(\"X-Pagination\"))");
+                s.Add($"                        vm.headers = JSON.parse(headers(\"X-Pagination\"));");
             s.Add($"");
-            s.Add($"                    }},");
+            s.Add($"                    }}");
+            s.Add($"                ).$promise.catch(");
             s.Add($"                    err => {{");
             s.Add($"");
             s.Add($"                        notifications.error(\"Failed to load the {CurrentEntity.PluralFriendlyName.ToLower()}.\", \"Error\", err);");
             s.Add($"                        $state.go(\"app.home\");");
             s.Add($"");
-            s.Add($"                    }}).$promise;");
+            s.Add($"                    }}");
+            s.Add($"                );");
             s.Add($"");
             s.Add($"            if (!dontSetLoading) promise.then(() => vm.loading = false);");
             s.Add($"");
@@ -1253,7 +1284,8 @@ namespace WEB.Models
                 s.Add($"            {CurrentEntity.ResourceName}.sort(");
                 s.Add($"                {{");
                 s.Add($"                    ids: ids");
-                s.Add($"                }},");
+                s.Add($"                }}");
+                s.Add($"            ).$promise.then(");
                 s.Add($"                data => {{");
                 s.Add($"");
                 s.Add($"                    notifications.success(\"The sort order has been updated\", \"{CurrentEntity.FriendlyName} Ordering\");");
@@ -1263,8 +1295,8 @@ namespace WEB.Models
                 s.Add($"");
                 s.Add($"                    notifications.error(\"Failed to sort the {CurrentEntity.PluralFriendlyName.ToLower()}. \" + (err.data && err.data.message ? err.data.message : \"\"), \"Error\", err);");
                 s.Add($"");
-                s.Add($"                }})");
-                s.Add($"                .$promise.finally(() => vm.loading = false);");
+                s.Add($"                }}");
+                s.Add($"            ).finally(() => vm.loading = false);");
                 s.Add($"");
                 s.Add($"        }}");
                 s.Add($"");
@@ -1439,11 +1471,15 @@ namespace WEB.Models
                     s.Add(t + $"                        <label for=\"{field.Name.ToCamelCase()}\" class=\"control-label\">");
                     s.Add(t + $"                            {field.Label}:");
                     s.Add(t + $"                        </label>");
-                    s.Add(t + $"                        <div class=\"checkbox\">");
-                    s.Add(t + $"                            <label>");
-                    s.Add(t + $"                                <input type=\"checkbox\" id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\" />");
-                    s.Add(t + $"                                {field.Label}");
-                    s.Add(t + $"                            </label>");
+                    //s.Add(t + $"                        <div class=\"checkbox\">");
+                    //s.Add(t + $"                            <label>");
+                    //s.Add(t + $"                                <input type=\"checkbox\" id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\" />");
+                    //s.Add(t + $"                                {field.Label}");
+                    //s.Add(t + $"                            </label>");
+                    //s.Add(t + $"                        </div>");
+                    s.Add(t + $"                        <div class=\"custom-control custom-checkbox\">");
+                    s.Add(t + $"                            <input type=\"checkbox\" id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\" class=\"custom-control-input\" />");
+                    s.Add(t + $"                            <label class=\"custom-control-label\" for=\"{field.Name.ToCamelCase()}\">{field.Label}</label>");
                     s.Add(t + $"                        </div>");
                     s.Add(t + $"                    </div>");
                     s.Add(t + $"                </div>");
@@ -1658,18 +1694,24 @@ namespace WEB.Models
                     s.Add($"                <table class=\"table table-striped table-hover table-bordered row-navigation{(CurrentEntity.Project.Bootstrap3 ? string.Empty : " table-sm")}\" ng-class=\"{{ 'disabled': vm.loading }}\">");
                     s.Add($"                    <thead>");
                     s.Add($"                        <tr>");
+                    var firstCol = true;
                     foreach (var column in childEntity.GetSearchResultsFields(CurrentEntity))
                     {
+                        if (relationship.Hierarchy && firstCol && childEntity.HasASortField)
+                            s.Add($"                <th scope=\"col\" ng-if=\"vm.{relationship.CollectionName.ToCamelCase()}.length > 1\" class=\"text-center fa-col-width\"><i class=\"fa fa-sort mt-1\"></i></th>");
                         s.Add($"                            <th scope=\"col\">{column.Header}</th>");
+                        firstCol = false;
                     }
                     s.Add($"                        </tr>");
                     s.Add($"                    </thead>");
                     s.Add($"                    <tbody" + (relationship.Hierarchy && childEntity.HasASortField ? $" ui-sortable=\"vm.{childEntity.PluralName.ToCamelCase()}SortOptions\" ng-model=\"vm.{childEntity.PluralName.ToCamelCase()}\"" : string.Empty) + ">");
                     s.Add($"                        <tr ng-repeat=\"{childEntity.Name.ToCamelCase()} in vm.{relationship.CollectionName.ToCamelCase()}\" ng-click=\"vm.goTo{childEntity.Name}({childEntity.GetNavigationString()})\">");
-                    var firstCol = true;
+                    firstCol = true;
                     foreach (var column in childEntity.GetSearchResultsFields(CurrentEntity))
                     {
-                        s.Add($"                            <td>{(relationship.Hierarchy && firstCol && childEntity.HasASortField ? $"<i class=\"fa fa-sort sortable-handle mt-1\" ng-if=\"vm.{relationship.CollectionName.ToCamelCase()}.length > 1\" ng-click=\"$event.stopPropagation();\"></i>" : string.Empty)}{(firstCol && childEntity.HasASortField ? "<div class=\"sortColumnText\">" + column.Value + "</div>" : column.Value)}</td>");
+                        if (relationship.Hierarchy && firstCol && childEntity.HasASortField)
+                            s.Add($"                            <td ng-if=\"vm.{relationship.CollectionName.ToCamelCase()}.length > 1\" class=\"text-center fa-col-width\"><i class=\"fa fa-sort sortable-handle mt-1\" ng-click=\"$event.stopPropagation();\"></i></td>");
+                        s.Add($"                            <td>{column.Value}</td>");
                         firstCol = false;
                     }
                     s.Add($"                        </tr>");
@@ -1768,14 +1810,16 @@ namespace WEB.Models
                 s.Add($"                { entity.ResourceName}.query(");
                 s.Add($"                    {{");
                 s.Add($"                        pageSize: 0");
-                s.Add($"                    }},");
+                s.Add($"                    }}");
+                s.Add($"                ).$promise.then(");
                 s.Add($"                    data => {{");
                 s.Add($"                        vm.{entity.PluralName.ToCamelCase()} = data;");
                 s.Add($"                    }},");
                 s.Add($"                    err => {{");
                 s.Add($"                        notifications.error(\"Failed to load the {entity.PluralFriendlyName.ToLower()}.\", \"Error\", err);");
                 s.Add($"                        {CurrentEntity.DefaultGo}");
-                s.Add($"                    }}).$promise");
+                s.Add($"                    }}");
+                s.Add($"                )");
                 s.Add($"            );");
                 s.Add($"");
             }
@@ -1802,7 +1846,8 @@ namespace WEB.Models
                     s.Add($"                        {{");
                     foreach (var field in relationship.ParentEntity.KeyFields)
                         s.Add($"                            {field.Name.ToCamelCase()}: $stateParams.{field.Name.ToCamelCase()}" + (field == relationship.ParentEntity.KeyFields.Last() ? string.Empty : ","));
-                    s.Add($"                        }},");
+                    s.Add($"                        }}");
+                    s.Add($"                    ).$promise.then(");
                     s.Add($"                        data => {{");
                     s.Add($"                            vm.{relationship.ParentEntity.Name.ToCamelCase()} = data;");
                     var nextRelationship = relationship.ParentEntity.RelationshipsAsChild.Where(r => r.Hierarchy).FirstOrDefault();
@@ -1817,7 +1862,8 @@ namespace WEB.Models
                     s.Add($"                            errorService.handleApiError(err, \"{relationship.ParentEntity.FriendlyName.ToLower()}\", \"load\");");
                     s.Add($"                            {CurrentEntity.DefaultGo}");
                     s.Add($"");
-                    s.Add($"                        }}).$promise");
+                    s.Add($"                        }}");
+                    s.Add($"                    )");
                     s.Add($"                );");
                 }
             }
@@ -1829,7 +1875,8 @@ namespace WEB.Models
             s.Add($"                        {{");
             foreach (var field in CurrentEntity.KeyFields.OrderBy(f => f.FieldOrder))
                 s.Add($"                            {field.Name.ToCamelCase()}: $stateParams.{field.Name.ToCamelCase()}" + (field == CurrentEntity.KeyFields.OrderBy(f => f.FieldOrder).Last() ? string.Empty : ","));
-            s.Add($"                        }},");
+            s.Add($"                        }}");
+            s.Add($"                    ).$promise.then(");
             s.Add($"                        data => {{");
             if (CurrentEntity.Project.ExcludeTypes)
                 s.Add($"                            {CurrentEntity.ViewModelObject} = data;");
@@ -1848,7 +1895,8 @@ namespace WEB.Models
             s.Add($"                            errorService.handleApiError(err, \"{CurrentEntity.FriendlyName.ToLower()}\", \"load\");");
             s.Add($"                            {CurrentEntity.DefaultGo}");
             s.Add($"");
-            s.Add($"                        }}).$promise");
+            s.Add($"                        }}");
+            s.Add($"                    )");
             s.Add($"                );");
             s.Add($"");
             foreach (var rel in CurrentEntity.RelationshipsAsParent.Where(r => r.DisplayListOnParent))
@@ -1877,7 +1925,7 @@ namespace WEB.Models
             s.Add($"");
             s.Add($"            vm.loading = true;");
             s.Add($"");
-            s.Add($"            {CurrentEntity.ViewModelObject}.$save(");
+            s.Add($"            {CurrentEntity.ViewModelObject}.$save().then(");
             s.Add($"                data => {{");
             s.Add($"");
             // ngResource automatically updates the object
@@ -1894,7 +1942,8 @@ namespace WEB.Models
             s.Add($"");
             s.Add($"                    errorService.handleApiError(err, \"{CurrentEntity.FriendlyName.ToLower()}\");");
             s.Add($"");
-            s.Add($"                }}).finally(() => vm.loading = false);");
+            s.Add($"                }}");
+            s.Add($"            ).finally(() => vm.loading = false);");
             s.Add($"");
             s.Add($"        }}");
             #endregion
@@ -1911,7 +1960,8 @@ namespace WEB.Models
             s.Add($"                {{");
             foreach (var field in CurrentEntity.KeyFields.OrderBy(f => f.FieldOrder))
                 s.Add($"                    {field.Name.ToCamelCase()}: $stateParams.{field.Name.ToCamelCase()}" + (field == CurrentEntity.KeyFields.OrderBy(f => f.FieldOrder).Last() ? string.Empty : ","));
-            s.Add($"                }},");
+            s.Add($"                }}");
+            s.Add($"            ).$promise.then(");
             s.Add($"                () => {{");
             s.Add($"");
             s.Add($"                    notifications.success(\"The {CurrentEntity.FriendlyName.ToLower()} has been deleted.\", \"Deleted\");");
@@ -1922,8 +1972,8 @@ namespace WEB.Models
             s.Add($"");
             s.Add($"                    errorService.handleApiError(err, \"{CurrentEntity.FriendlyName.ToLower()}\", \"delete\");");
             s.Add($"");
-            s.Add($"                }})");
-            s.Add($"                .$promise.finally(() => vm.loading = false);");
+            s.Add($"                }}");
+            s.Add($"            ).finally(() => vm.loading = false);");
             s.Add($"");
             s.Add($"        }}");
             #endregion
@@ -1955,19 +2005,20 @@ namespace WEB.Models
                     s.Add($"                    pageIndex: pageIndex");
                 }
                 s.Add($"                }},");
+                // can't put this after the .$promise, as the headers need to be in the inital ngResource call ($promise can only return 1 param, see: https://stackoverflow.com/a/31127648/214980)
                 s.Add($"                (data, headers) => {{");
                 if (!rel.ChildEntity.HasASortField)
-                    s.Add($"                    vm.{rel.ChildEntity.PluralName.ToCamelCase()}Headers = JSON.parse(headers(\"X-Pagination\"))");
+                    s.Add($"                    vm.{rel.ChildEntity.PluralName.ToCamelCase()}Headers = JSON.parse(headers(\"X-Pagination\"));");
                 s.Add($"                    vm.{rel.CollectionName.ToCamelCase()} = data;");
-                s.Add($"                }},");
+                s.Add($"                }}");
+                s.Add($"            ).$promise.catch(");
                 s.Add($"                err => {{");
                 s.Add($"");
                 s.Add($"                    notifications.error(\"Failed to load the {rel.ChildEntity.PluralFriendlyName.ToCamelCase()}.\", \"Error\", err);");
                 s.Add($"                    $state.go(\"app.{CurrentEntity.PluralName.ToCamelCase()}\");");
                 s.Add($"");
-                s.Add($"                }}).$promise;");
-                s.Add($"");
-                s.Add($"            promise.finally(() => {{ if (!dontSetLoading) vm.loading = false; }});");
+                s.Add($"                }}");
+                s.Add($"            ).finally(() => {{ if (!dontSetLoading) vm.loading = false; }});");
                 s.Add($"");
                 s.Add($"            return promise;");
                 s.Add($"        }}");
@@ -1989,7 +2040,8 @@ namespace WEB.Models
                 s.Add($"            {entity.ResourceName}.sort(");
                 s.Add($"                {{");
                 s.Add($"                    ids: ids");
-                s.Add($"                }},");
+                s.Add($"                }}");
+                s.Add($"            ).$promise.then(");
                 s.Add($"                data => {{");
                 s.Add($"");
                 s.Add($"                    notifications.success(\"The sort order has been updated\", \"{entity.FriendlyName} Ordering\");");
@@ -1999,8 +2051,8 @@ namespace WEB.Models
                 s.Add($"");
                 s.Add($"                    notifications.error(\"Failed to sort the {entity.PluralFriendlyName.ToLower()}. \" + (err.data && err.data.message ? err.data.message : \"\"), \"Error\", err);");
                 s.Add($"");
-                s.Add($"                }})");
-                s.Add($"                .$promise.finally(() => vm.loading = false);");
+                s.Add($"                }}");
+                s.Add($"            ).finally(() => vm.loading = false);");
                 s.Add($"");
                 s.Add($"        }}");
             }
@@ -2057,10 +2109,13 @@ namespace WEB.Models
                 filterOptions += $",{Environment.NewLine}                            {name}: $scope.{name}";
             }
 
+            if (CurrentEntity.PrimaryField == null) throw new Exception("Entity " + CurrentEntity.Name + " does not have a Primary Field defined for AppSelect label");
+
             file = RunTemplateReplacements(file)
                 .Replace("/*FILTER_ATTRIBUTES*/", filterAttributes)
                 .Replace("/*FILTER_WATCHES*/", filterWatches)
-                .Replace("/*FILTER_OPTIONS*/", filterOptions);
+                .Replace("/*FILTER_OPTIONS*/", filterOptions)
+                .Replace("LABELFIELD", CurrentEntity.PrimaryField.Name.ToCamelCase());
 
             s.Add(file);
 
@@ -2081,20 +2136,24 @@ namespace WEB.Models
             foreach (var field in CurrentEntity.Fields.Where(f => f.ShowInSearchResults).OrderBy(f => f.FieldOrder))
             {
                 var ngIf = string.Empty;
-                if (CurrentEntity.Fields.Any(o => o.FieldId == field.FieldId && o.SearchType == SearchType.Exact && (o.FieldType == FieldType.Enum || CurrentEntity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(f => f.ChildFieldId == o.FieldId)))))
-                    ngIf = " ng-if=\"!vm.options." + field.Name.ToCamelCase() + $"\"";
+                if (CurrentEntity.Fields.Any(o => o.FieldId == field.FieldId && o.SearchType == SearchType.Exact))
+                {
+                    if (field.FieldType == FieldType.Enum)
+                        ngIf = " ng-if=\"!vm.options." + field.Name.ToCamelCase() + $"\"";
+                    else
+                    {
+                        if (CurrentEntity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(rf => rf.ChildFieldId == field.FieldId) && r.UseSelectorDirective))
+                        {
+                            var relationship = CurrentEntity.GetParentSearchRelationship(field);
+                            ngIf = " ng-if=\"!vm.options." + relationship.ParentName.ToCamelCase().ToCamelCase() + $"\"";
+                        }
+                    }
+                }
 
                 fieldHeaders += (fieldHeaders == string.Empty ? string.Empty : Environment.NewLine) + $"                <th scope=\"col\"{ngIf}>{field.Label}</th>";
                 fieldList += (fieldList == string.Empty ? string.Empty : Environment.NewLine);
 
-                var handleStart = string.Empty;
-                var handleEnd = string.Empty;
-                if (field == CurrentEntity.Fields.Where(f => f.ShowInSearchResults).OrderBy(f => f.FieldOrder).Last())
-                {
-                    handleStart = $"<i ng-class=\"{{ 'invisible': !vm.isSelected({CurrentEntity.Name.ToLower()}) }}\" class=\"fa fa-check check-mark pull-right\" ></i>";
-                }
-
-                fieldList += $"                <td{ngIf}>{handleStart}{field.ListFieldHtml}{handleEnd}</td>";
+                fieldList += $"                <td{ngIf}>{field.ListFieldHtml}</td>";
             }
 
             foreach (var field in CurrentEntity.Fields.Where(f => f.SearchType == SearchType.Exact).OrderBy(f => f.FieldOrder))

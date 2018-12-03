@@ -54,6 +54,9 @@ namespace WEB.Models
         [Column(TypeName = "Date")]
         public DateTime DateCreated { get; set; }
 
+        [MaxLength(20)]
+        public string RouteViewName { get; set; }
+
         public virtual ICollection<Entity> Entities { get; set; } = new List<Entity>();
 
         public virtual ICollection<Lookup> Lookups { get; set; } = new List<Lookup>();
@@ -61,6 +64,11 @@ namespace WEB.Models
         public Project()
         {
             ProjectId = Guid.NewGuid();
+        }
+
+        public override string ToString()
+        {
+            return Name;
         }
     }
 }

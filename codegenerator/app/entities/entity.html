@@ -19,6 +19,19 @@
                         </div>
                     </div>
 
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.primaryFieldId.$invalid}">
+                            <label class="control-label">
+                                Primary Field:
+                            </label>
+                            <ol id="primaryFieldId" name="primaryFieldId" class="nya-bs-select" ng-model="vm.entity.primaryFieldId" data-live-search="true">
+                                <li nya-bs-option="field in vm.fields" class="nya-bs-option" value="field.fieldId">
+                                    <a>{{field.label}} ({{field.name}})<span class="fa fa-check check-mark"></span></a>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+
                     <div ng-class="{ 'hide':  !vm.isNew && !vm.showMore}">
 
                         <div class="col-sm-6 col-md-4">
@@ -257,19 +270,6 @@
                                         Exclude
                                     </label>
                                 </div>
-                            </div>
-                        </div>
-
-                        <div class="col-sm-6 col-md-4">
-                            <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.primaryFieldId.$invalid}">
-                                <label class="control-label">
-                                    Primary Field:
-                                </label>
-                                <ol id="primaryFieldId" name="primaryFieldId" class="nya-bs-select" ng-model="vm.entity.primaryFieldId" data-live-search="true">
-                                    <li nya-bs-option="field in vm.fields" class="nya-bs-option" value="field.fieldId">
-                                        <a>{{field.label}} ({{field.name}})<span class="fa fa-check check-mark"></span></a>
-                                    </li>
-                                </ol>
                             </div>
                         </div>
 

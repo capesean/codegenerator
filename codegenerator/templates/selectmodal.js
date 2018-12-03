@@ -9,17 +9,17 @@
         var vm = this;
         vm.loading = true;
         vm.appSettings = appSettings;
+        vm.moment = moment;
         vm.select = select;
         vm.cancel = cancel;
         vm.search = {};
         vm.runNAMESearch = runNAMESearch;
         vm.options = options;
-        vm.selectedItems = options.PLURALNAME_TOCAMELCASE ? angular.copy(options.PLURALNAME_TOCAMELCASE) : [];
+        vm.selectedItems = options.CAMELCASENAME ? angular.copy(options.CAMELCASENAME) : [];
         vm.close = close;
         vm.clear = clear;
         vm.isSelected = isSelected;
         vm.selectAll = selectAll;
-        vm.options = options;
         init();
         function init() {
             options.singular = options.singular || "NAME";
@@ -37,12 +37,12 @@
             var promise = CAMELCASENAMEResource.query(vm.search, function (data, headers) {
                 vm.PLURALNAME_TOCAMELCASE = data;
                 vm.CAMELCASENAMEHeaders = JSON.parse(headers("X-Pagination"));
-            }, function (err) {
+            }).$promise.catch(function (err) {
                 notifications.error("Failed to load the PLURALFRIENDLYNAME_TOLOWER.", "Error", err);
                 vm.cancel();
-            }).$promise;
+            });
             if (!dontSetLoading)
-                promise.then(function () { return vm.loading = false; });
+                promise.finally(function () { return vm.loading = false; });
             return promise;
         }
         ;
@@ -56,7 +56,10 @@
                 $uibModalInstance.dismiss();
         }
         function clear() {
-            $uibModalInstance.close(undefined);
+            if (options.multiple)
+                $uibModalInstance.close([]);
+            else
+                $uibModalInstance.close(undefined);
         }
         function select(CAMELCASENAME) {
             if (!!options.multiple) {
@@ -77,17 +80,19 @@
             }
         }
         function isSelected(CAMELCASENAME) {
+            if (!options.multiple)
+                return false;
             return vm.selectedItems.filter(function (item) { return item.CAMELCASENAMEId === CAMELCASENAME.CAMELCASENAMEId; }).length > 0;
         }
         function selectAll() {
             vm.loading = true;
             CAMELCASENAMEResource.query({
                 pageSize: 0
-            }, function (data) {
+            }).$promise.then(function (data) {
                 $uibModalInstance.close(data);
             }, function (err) {
                 notifications.error("Failed to load the PLURALFRIENDLYNAME_TOLOWER.", "Error", err);
-            }).$promise.then(function () { return vm.loading = false; });
+            }).finally(function () { return vm.loading = false; });
         }
     }
 }());

@@ -32,11 +32,13 @@ APP_SELECT_FILTERS
         <thead>
             <tr>
 FIELD_HEADERS
+                <th scope="col" class="text-center" ng-if="vm.options.multiple"><i class="fa fa-fw fa-check-square"></i></th>
             </tr>
         </thead>
         <tbody>
             <tr ng-repeat="CAMELCASENAME in vm.PLURALNAME_TOCAMELCASE" ng-click="vm.select(CAMELCASENAME)">
 FIELD_LIST
+                <td ng-if="vm.options.multiple" class="text-center"><i ng-class="{ 'fa-check-square-o': vm.isSelected(CAMELCASENAME), 'fa-square-o': !vm.isSelected(CAMELCASENAME) }" class="fa fa-fw"></i></td>
             </tr>
         </tbody>
     </table>
@@ -56,7 +58,7 @@ FIELD_LIST
     <fieldset ng-disabled="vm.loading" class="w-100">
         <span class="btn btn-info" ng-if="!!vm.options.multiple">{{vm.selectedItems.length}} <span ng-if="vm.selectedItems.length === 1">{{vm.options.singular}}</span><span ng-if="vm.selectedItems.length !== 1">{{vm.options.plural}}</span> selected</span>
         <button class="btn btn-secondary pull-right" type="button" ng-click="vm.close()">Close</button>
-        <button class="btn btn-secondary pull-right mr-2" type="button" ng-click="vm.clear()" ng-if="!vm.options.multiple">Clear</button>
+        <button class="btn btn-secondary pull-right mr-2" type="button" ng-click="vm.clear()">Clear</button>
         <button class="btn btn-secondary pull-right mr-2" type="button" ng-click="vm.selectAll()" ng-if="!!vm.options.multiple">Select All</button>
     </fieldset>
 </div>

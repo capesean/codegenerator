@@ -25,6 +25,22 @@
     function appSelectNAMEController($scope, $uibModal) {
         $scope.selectNAME = selectNAME;
         $scope.placeholder = $scope.placeholder || ("Select " + $scope.singular.toLowerCase());
+        $scope.getValue = function () {
+            if (!$scope.CAMELCASENAME)
+                return undefined;
+            if ($scope.multiple) {
+                if ($scope.CAMELCASENAME.length == 0)
+                    return undefined;
+                var value = "";
+                angular.forEach($scope.CAMELCASENAME, function (CAMELCASENAME) {
+                    if (value !== "")
+                        value += ", ";
+                    value += CAMELCASENAME.LABELFIELD;
+                });
+                return value;
+            }
+            return $scope.CAMELCASENAME.LABELFIELD;
+        };
         /*FILTER_WATCHES*/
         function selectNAME() {
             var modalInstance = $uibModal.open({

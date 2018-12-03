@@ -115,6 +115,15 @@
                         </div>
                     </div>
 
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.routeViewName.$invalid }">
+                            <label for="routeViewName" class="control-label">
+                                Route View Name:
+                            </label>
+                            <input type="text" id="routeViewName" name="routeViewName" ng-model="vm.project.routeViewName" maxlength="20" class="form-control" />
+                        </div>
+                    </div>
+                    
                     <div class="col-sm-12">
                         <div class="form-group" ng-class="{ 'has-error':  mainForm.$submitted && mainForm.notes.$invalid }">
                             <label for="notes" class="control-label">

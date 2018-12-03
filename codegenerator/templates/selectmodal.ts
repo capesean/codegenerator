@@ -12,17 +12,17 @@
         var vm = this;
         vm.loading = true;
         vm.appSettings = appSettings;
+        vm.moment = moment;
         vm.select = select;
         vm.cancel = cancel;
         vm.search = {};
         vm.runNAMESearch = runNAMESearch;
         vm.options = options;
-        vm.selectedItems = options.PLURALNAME_TOCAMELCASE ? angular.copy(options.PLURALNAME_TOCAMELCASE) : [];
+        vm.selectedItems = options.CAMELCASENAME ? angular.copy(options.CAMELCASENAME) : [];
         vm.close = close;
         vm.clear = clear;
         vm.isSelected = isSelected;
         vm.selectAll = selectAll;
-        vm.options = options;
 
         init();
 
@@ -52,15 +52,17 @@
                         vm.PLURALNAME_TOCAMELCASE = data;
                         vm.CAMELCASENAMEHeaders = JSON.parse(headers("X-Pagination"))
 
-                    },
+                    }
+                ).$promise.catch(
                     err => {
 
                         notifications.error("Failed to load the PLURALFRIENDLYNAME_TOLOWER.", "Error", err);
                         vm.cancel();
 
-                    }).$promise;
+                    }
+                );
 
-            if (!dontSetLoading) promise.then(() => vm.loading = false);
+            if (!dontSetLoading) promise.finally(() => vm.loading = false);
 
             return promise;
 
@@ -76,7 +78,8 @@
         }
 
         function clear() {
-            $uibModalInstance.close(undefined);
+            if (options.multiple) $uibModalInstance.close([]);
+            else $uibModalInstance.close(undefined);
         }
 
         function select(CAMELCASENAME) {
@@ -97,6 +100,7 @@
         }
 
         function isSelected(CAMELCASENAME) {
+            if (!options.multiple) return false;
             return vm.selectedItems.filter(item => item.CAMELCASENAMEId === CAMELCASENAME.CAMELCASENAMEId).length > 0;
         }
 
@@ -107,7 +111,8 @@
             CAMELCASENAMEResource.query(
                 {
                     pageSize: 0
-                },
+                }
+            ).$promise.then(
                 data => {
 
                     $uibModalInstance.close(data);
@@ -117,8 +122,8 @@
 
                     notifications.error("Failed to load the PLURALFRIENDLYNAME_TOLOWER.", "Error", err);
 
-
-                }).$promise.then(() => vm.loading = false);
+                }
+            ).finally(() => vm.loading = false);
         }
     }
 

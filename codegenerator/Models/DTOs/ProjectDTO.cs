@@ -46,6 +46,9 @@ namespace WEB.Models
 
         public string Notes { get; set; }
 
+        [MaxLength(20)]
+        public string RouteViewName { get; set; }
+
     }
 
     public partial class ModelFactory
@@ -68,6 +71,7 @@ namespace WEB.Models
             projectDTO.UseStringAuthorizeAttributes = project.UseStringAuthorizeAttributes;
             projectDTO.DbContextVariable = project.DbContextVariable;
             projectDTO.Notes = project.Notes;
+            projectDTO.RouteViewName = project.RouteViewName;
 
             return projectDTO;
         }
@@ -85,6 +89,7 @@ namespace WEB.Models
             project.UseStringAuthorizeAttributes = projectDTO.UseStringAuthorizeAttributes;
             project.DbContextVariable = projectDTO.DbContextVariable;
             project.Notes = projectDTO.Notes;
+            project.RouteViewName = projectDTO.RouteViewName;
         }
     }
 }
