@@ -333,6 +333,7 @@ namespace WEB.Models
             {
                 // using exclude to avoid circular references. example: KTU-PACK: version => localisation => contentset => version (UpdateFromVersion)
                 if (relationship.RelationshipAncestorLimit == RelationshipAncestorLimits.Exclude) continue;
+                if (relationship.RelationshipFields.Count == 1 && relationship.RelationshipFields.First().ChildField.EditPageType == EditPageType.Exclude) continue;
                 s.Add($"        public {relationship.ParentEntity.Name}DTO {relationship.ParentName} {{ get; set; }}");
                 s.Add($"");
             }
@@ -373,6 +374,7 @@ namespace WEB.Models
             {
                 // using exclude to avoid circular references. example: KTU-PACK: version => localisation => contentset => version (UpdateFromVersion)
                 if (relationship.RelationshipAncestorLimit == RelationshipAncestorLimits.Exclude) continue;
+                if (relationship.RelationshipFields.Count == 1 && relationship.RelationshipFields.First().ChildField.EditPageType == EditPageType.Exclude) continue;
                 s.Add($"            {CurrentEntity.DTOName.ToCamelCase()}.{relationship.ParentName} = Create({CurrentEntity.CamelCaseName}.{relationship.ParentName});");
             }
             s.Add($"");
@@ -1804,7 +1806,7 @@ namespace WEB.Models
             s.Add($"");
             s.Add($"            var promises = [];");
             s.Add($"");
-            foreach (var entity in CurrentEntity.RelationshipsAsChild.Where(r => !r.Hierarchy && !r.UseSelectorDirective).OrderBy(r => r.SortOrderOnChild).ThenBy(o => o.ParentName).Select(r => r.ParentEntity).Distinct())
+            foreach (var entity in CurrentEntity.RelationshipsAsChild.Where(r => !r.Hierarchy && !r.UseSelectorDirective && r.RelationshipFields.Any(f => f.ChildField.EditPageType == EditPageType.EditWhenNew || f.ChildField.EditPageType == EditPageType.Normal)).OrderBy(r => r.SortOrderOnChild).ThenBy(o => o.ParentName).Select(r => r.ParentEntity).Distinct())
             {
                 s.Add($"            promises.push(");
                 s.Add($"                { entity.ResourceName}.query(");

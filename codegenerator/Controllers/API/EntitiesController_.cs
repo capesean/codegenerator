@@ -75,23 +75,23 @@ namespace WEB.Controllers
             //if (string.IsNullOrWhiteSpace(entity.PreventEditHtmlDeployment)) result.EditHtml = code.GenerateEditHtml(); else result.EditHtml = "--prevented--";
             //if (string.IsNullOrWhiteSpace(entity.PreventEditTypeScriptDeployment)) result.EditTypeScript = code.GenerateEditTypeScript(); else result.EditTypeScript = "--prevented--";
 
-            result.Model = code.GenerateModel(); 
+            result.Model = code.GenerateModel();
             result.Enums = code.GenerateEnums();
-            result.DTO = code.GenerateDTO(); 
+            result.DTO = code.GenerateDTO();
             result.SettingsDTO = code.GenerateSettingsDTO();
-            result.DbContext = code.GenerateDbContext(); 
-            result.Controller = code.GenerateController(); 
-            result.BundleConfig = code.GenerateBundleConfig(); 
-            result.AppRouter = code.GenerateAppRouter(); 
-            result.ApiResource = code.GenerateApiResource(); 
-            result.ListHtml = code.GenerateListHtml(); 
-            result.ListTypeScript = code.GenerateListTypeScript(); 
+            result.DbContext = code.GenerateDbContext();
+            result.Controller = code.GenerateController();
+            result.BundleConfig = code.GenerateBundleConfig();
+            result.AppRouter = code.GenerateAppRouter();
+            result.ApiResource = code.GenerateApiResource();
+            result.ListHtml = code.GenerateListHtml();
+            result.ListTypeScript = code.GenerateListTypeScript();
             result.EditHtml = code.GenerateEditHtml();
             result.EditTypeScript = code.GenerateEditTypeScript();
-            result.AppSelectHtml = code.GenerateAppSelectHtml();
-            result.AppSelectTypeScript = code.GenerateAppSelectTypeScript();
-            result.SelectModalHtml = code.GenerateSelectModalHtml();
-            result.SelectModalTypeScript = code.GenerateSelectModalTypeScript();
+            if (string.IsNullOrWhiteSpace(entity.PreventAppSelectHtmlDeployment)) result.AppSelectHtml = code.GenerateAppSelectHtml();
+            if (string.IsNullOrWhiteSpace(entity.PreventAppSelectTypeScriptDeployment)) result.AppSelectTypeScript = code.GenerateAppSelectTypeScript();
+            if (string.IsNullOrWhiteSpace(entity.PreventSelectModalHtmlDeployment)) result.SelectModalHtml = code.GenerateSelectModalHtml();
+            if (string.IsNullOrWhiteSpace(entity.PreventSelectModalTypeScriptDeployment)) result.SelectModalTypeScript = code.GenerateSelectModalTypeScript();
 
             return Ok(result);
         }
