@@ -108,10 +108,11 @@
 
             vm.loading = true;
 
+            vm.search.pageSize = 0;
+            vm.search.pageIndex = 0;
+
             CAMELCASENAMEResource.query(
-                {
-                    pageSize: 0
-                }
+                vm.search
             ).$promise.then(
                 data => {
 

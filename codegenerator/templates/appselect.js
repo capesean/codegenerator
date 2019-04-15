@@ -17,7 +17,9 @@
                 disabled: "<",
                 placeholder: "@",
                 singular: "@",
-                plural: "@" /*FILTER_ATTRIBUTES*/
+                plural: "@",
+                removeFilters: "<",
+                showAddNew: "<" /*FILTER_ATTRIBUTES*/
             }
         };
     }
@@ -54,7 +56,9 @@
                             multiple: $scope.multiple,
                             CAMELCASENAME: $scope.CAMELCASENAME,
                             singular: $scope.singular,
-                            plural: $scope.plural /*FILTER_OPTIONS*/
+                            plural: $scope.plural,
+                            removeFilters: $scope.removeFilters,
+                            showAddNew: $scope.showAddNew /*FILTER_OPTIONS*/
                         };
                     }
                 }

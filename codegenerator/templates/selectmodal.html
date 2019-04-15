@@ -57,6 +57,7 @@ FIELD_LIST
 <div class="modal-footer">
     <fieldset ng-disabled="vm.loading" class="w-100">
         <span class="btn btn-info" ng-if="!!vm.options.multiple">{{vm.selectedItems.length}} <span ng-if="vm.selectedItems.length === 1">{{vm.options.singular}}</span><span ng-if="vm.selectedItems.length !== 1">{{vm.options.plural}}</span> selected</span>
+        <a href="ADDNEWURL" target="_blank" ng-if="vm.options.showAddNew" class="btn btn-info">Add New</a>
         <button class="btn btn-secondary pull-right" type="button" ng-click="vm.close()">Close</button>
         <button class="btn btn-secondary pull-right mr-2" type="button" ng-click="vm.clear()">Clear</button>
         <button class="btn btn-secondary pull-right mr-2" type="button" ng-click="vm.selectAll()" ng-if="!!vm.options.multiple">Select All</button>

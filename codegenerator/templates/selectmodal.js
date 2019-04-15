@@ -86,9 +86,9 @@
         }
         function selectAll() {
             vm.loading = true;
-            CAMELCASENAMEResource.query({
-                pageSize: 0
-            }).$promise.then(function (data) {
+            vm.search.pageSize = 0;
+            vm.search.pageIndex = 0;
+            CAMELCASENAMEResource.query(vm.search).$promise.then(function (data) {
                 $uibModalInstance.close(data);
             }, function (err) {
                 notifications.error("Failed to load the PLURALFRIENDLYNAME_TOLOWER.", "Error", err);

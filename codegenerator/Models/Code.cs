@@ -146,8 +146,10 @@ namespace WEB.Models
                             s.Add($"        [MaxLength({field.Length}){(field.MinLength > 0 ? $", MinLength({field.MinLength})" : "")}]");
                         }
                     }
-                    if (field.IsUnique)
-                        s.Add($"        [Index(\"IX_{CurrentEntity.Name}_{field.Name}\", IsUnique = true, Order = 0)]");
+
+                    if (field.IsUnique && !field.IsNullable)
+                        s.Add($"        [Index(\"IX_{CurrentEntity.PluralName}_{field.Name}\", IsUnique = true, Order = 0)]");
+
                     if (field.FieldType == FieldType.Date)
                         s.Add($"        [Column(TypeName = \"Date\")]");
                     else
@@ -458,17 +460,20 @@ namespace WEB.Models
                 {
                     s.Add($"            CreateComputedColumn(\"{(field.Entity.EntityType == EntityType.User ? "AspNetUsers" : field.Entity.PluralName)}\", \"{field.Name}\", \"{field.CalculatedFieldDefinition.Replace("\"", "'")}\");");
                 }
-                //foreach (var field in calculatedFields)
-                //{
-                //    s.Add($"            Database.ExecuteSqlCommand(\"IF EXISTS(SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{(field.Entity.EntityType == EntityType.User ? "AspNetUsers" : field.Entity.PluralName)}' AND COLUMN_NAME = '{field.Name}') ALTER TABLE {(field.Entity.EntityType == EntityType.User ? "AspNetUsers" : field.Entity.PluralName)} DROP COLUMN {field.Name};\");");
-                //}
-                //s.Add($"");
-                //foreach (var field in calculatedFields)
-                //{
-                //    s.Add($"            Database.ExecuteSqlCommand(\"ALTER TABLE {(field.Entity.EntityType == EntityType.User ? "AspNetUsers" : field.Entity.PluralName)} ADD {field.Name} AS {field.CalculatedFieldDefinition.Replace("\"", "'")};\");");
-                //}
                 s.Add($"        }}");
             }
+            var nullableUniques = DbContext.Fields.Where(o => o.IsUnique && o.IsNullable && o.Entity.ProjectId == CurrentEntity.ProjectId).ToList();
+            if (nullableUniques.Count > 0)
+            {
+                s.Add($"");
+                s.Add($"        public void AddNullableUniqueIndexes()");
+                s.Add($"        {{");
+                foreach (var field in nullableUniques.OrderBy(o => o.Entity.Name).ThenBy(o => o.Name))
+                {
+                    s.Add($"            CreateNullableUniqueIndex(\"{field.Entity.Name}\", \"{field.Name}\");");
+                }
+            }
+            s.Add($"        }}");
             s.Add($"    }}");
             s.Add($"}}");
 
@@ -640,7 +645,7 @@ namespace WEB.Models
                         hierarchyFields += (hierarchyFields == string.Empty ? "" : " && ") + "o." + relField.ChildField.Name + " == " + CurrentEntity.DTOName.ToCamelCase() + "." + relField.ChildField.Name;
                     hierarchyFields += " && ";
                 }
-                s.Add($"            if (await {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName}.AnyAsync(o => {hierarchyFields}o.{field.Name} == {CurrentEntity.DTOName.ToCamelCase()}.{field.Name} && {GetKeyFieldLinq("o", CurrentEntity.DTOName.ToCamelCase(), "!=", "||", true)}))");
+                s.Add($"            if (" + (field.IsNullable ? field.NotNullCheck(CurrentEntity.DTOName.ToCamelCase() + "." + field.Name) + " && " : "") + $"await {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName}.AnyAsync(o => {hierarchyFields}o.{field.Name} == {CurrentEntity.DTOName.ToCamelCase()}.{field.Name} && {GetKeyFieldLinq("o", CurrentEntity.DTOName.ToCamelCase(), " != ", " || ", true)}))");
                 s.Add($"                return BadRequest(\"{field.Label} already exists{(ParentHierarchyRelationship == null ? string.Empty : " on this " + ParentHierarchyRelationship.ParentEntity.FriendlyName)}.\");");
                 s.Add($"");
             }
@@ -783,20 +788,20 @@ namespace WEB.Models
             if (CurrentEntity.HasASortField)
             {
                 s.Add($"        [{(CurrentEntity.AuthorizationType == AuthorizationType.ProtectChanges ? (CurrentEntity.Project.UseStringAuthorizeAttributes ? "Authorize(Roles = \"Administrator\"), " : "AuthorizeRoles(Roles.Administrator), ") : "")}HttpPost, Route(\"sort\")]");
-                s.Add($"        public async Task<IHttpActionResult> Sort([FromBody]SortedGuids sortedIds)");
+                s.Add($"        public async Task<IHttpActionResult> Sort([FromBody]Guid[] sortedIds)");
                 s.Add($"        {{");
                 // if it's a child entity, just sort the id's that were sent
                 if (CurrentEntity.RelationshipsAsChild.Any(r => r.Hierarchy))
-                    s.Add($"            var {CurrentEntity.PluralName.ToCamelCase()} = await {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName}.Where(o => sortedIds.ids.Contains(o.{CurrentEntity.KeyFields[0].Name})).ToListAsync();");
+                    s.Add($"            var {CurrentEntity.PluralName.ToCamelCase()} = await {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName}.Where(o => sortedIds.Contains(o.{CurrentEntity.KeyFields[0].Name})).ToListAsync();");
                 else
                     s.Add($"            var {CurrentEntity.PluralName.ToCamelCase()} = await {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName}.ToListAsync();");
-                s.Add($"            if ({CurrentEntity.PluralName.ToCamelCase()}.Count != sortedIds.ids.Length) return BadRequest(\"Some of the {CurrentEntity.PluralFriendlyName.ToLower()} could not be found\");");
+                s.Add($"            if ({CurrentEntity.PluralName.ToCamelCase()}.Count != sortedIds.Length) return BadRequest(\"Some of the {CurrentEntity.PluralFriendlyName.ToLower()} could not be found\");");
                 s.Add($"");
                 //s.Add($"            var sortOrder = 0;");
                 s.Add($"            foreach (var {CurrentEntity.Name.ToCamelCase()} in {CurrentEntity.PluralName.ToCamelCase()})");
                 s.Add($"            {{");
                 s.Add($"                {CurrentEntity.Project.DbContextVariable}.Entry({CurrentEntity.Name.ToCamelCase()}).State = EntityState.Modified;");
-                s.Add($"                {CurrentEntity.Name.ToCamelCase()}.{CurrentEntity.SortField.Name} = {(CurrentEntity.SortField.SortDescending ? "sortedIds.ids.Length - " : "")}Array.IndexOf(sortedIds.ids, {CurrentEntity.Name.ToCamelCase()}.{CurrentEntity.KeyFields[0].Name});");
+                s.Add($"                {CurrentEntity.Name.ToCamelCase()}.{CurrentEntity.SortField.Name} = {(CurrentEntity.SortField.SortDescending ? "sortedIds.Length - " : "")}Array.IndexOf(sortedIds, {CurrentEntity.Name.ToCamelCase()}.{CurrentEntity.KeyFields[0].Name});");
                 //s.Add($"                sortOrder++;");
                 s.Add($"            }}");
                 s.Add($"");
@@ -899,7 +904,12 @@ namespace WEB.Models
                 if (!string.IsNullOrWhiteSpace(e.Breadcrumb))
                     s.Add($"                    label: \"{{{{{e.Breadcrumb}}}}}\"");
                 else if (labelField != null)
-                    s.Add($"                    label: \"{{{{vm.{e.Name.ToCamelCase()}.{labelField.Name.ToCamelCase()}}}}}\"");
+                {
+                    if (labelField.CustomType == CustomType.Date)
+                        s.Add($"                    label: \"{{{{vm.moment(vm.{e.Name.ToCamelCase()}.{labelField.Name.ToCamelCase()}).format('DD MMMM YYYY')}}}}\"");
+                    else
+                        s.Add($"                    label: \"{{{{vm.{e.Name.ToCamelCase()}.{labelField.Name.ToCamelCase()}}}}}\"");
+                }
                 else
                     s.Add($"                    label: \"{e.FriendlyName}\"");
                 s.Add($"                }}");
@@ -1284,11 +1294,9 @@ namespace WEB.Models
                 s.Add($"            }});");
                 s.Add($"");
                 s.Add($"            {CurrentEntity.ResourceName}.sort(");
-                s.Add($"                {{");
-                s.Add($"                    ids: ids");
-                s.Add($"                }}");
+                s.Add($"                ids: ids");
                 s.Add($"            ).$promise.then(");
-                s.Add($"                data => {{");
+                s.Add($"                () => {{");
                 s.Add($"");
                 s.Add($"                    notifications.success(\"The sort order has been updated\", \"{CurrentEntity.FriendlyName} Ordering\");");
                 s.Add($"");
@@ -1644,9 +1652,9 @@ namespace WEB.Models
             s.Add($"");
 
             #region child lists
-            if (CurrentEntity.RelationshipsAsParent.Any(r => r.DisplayListOnParent))
+            if (CurrentEntity.RelationshipsAsParent.Any(r => !r.ChildEntity.Exclude && r.DisplayListOnParent))
             {
-                var relationships = CurrentEntity.RelationshipsAsParent.Where(r => r.DisplayListOnParent).OrderBy(r => r.SortOrder);
+                var relationships = CurrentEntity.RelationshipsAsParent.Where(r => !r.ChildEntity.Exclude && r.DisplayListOnParent).OrderBy(r => r.SortOrder);
                 var counter = 0;
 
                 s.Add($"    <div ng-show=\"!vm.isNew\">");
@@ -1790,7 +1798,7 @@ namespace WEB.Models
             s.Add($"        vm.save = save;");
             s.Add($"        vm.delete = del;");
             s.Add($"        vm.isNew = {CurrentEntity.KeyFields.Select(f => "$stateParams." + f.Name.ToCamelCase() + " === vm.appSettings." + f.NewVariable).Aggregate((current, next) => current + " && " + next)};");
-            foreach (var rel in CurrentEntity.RelationshipsAsParent.Where(r => r.DisplayListOnParent))
+            foreach (var rel in CurrentEntity.RelationshipsAsParent.Where(r => !r.ChildEntity.Exclude && r.DisplayListOnParent))
             {
                 s.Add($"        {rel.ChildEntity.GetGoToEntityCode()}");
                 s.Add($"        vm.load{rel.CollectionName} = load{rel.CollectionName};");
@@ -1901,7 +1909,7 @@ namespace WEB.Models
             s.Add($"                    )");
             s.Add($"                );");
             s.Add($"");
-            foreach (var rel in CurrentEntity.RelationshipsAsParent.Where(r => r.DisplayListOnParent))
+            foreach (var rel in CurrentEntity.RelationshipsAsParent.Where(r => !r.ChildEntity.Exclude && r.DisplayListOnParent))
             {
                 s.Add($"                promises.push(load{rel.CollectionName}(0, true));");
             }
@@ -1981,7 +1989,7 @@ namespace WEB.Models
             #endregion
 
             #region load child entities
-            foreach (var rel in CurrentEntity.RelationshipsAsParent.Where(r => r.DisplayListOnParent))
+            foreach (var rel in CurrentEntity.RelationshipsAsParent.Where(r => !r.ChildEntity.Exclude && r.DisplayListOnParent))
             {
                 s.Add($"");
                 // changed from rel.ChildEntity.PluralName to rel.CollectionName so DSU.Entities can have 2x child list: EntitiesInProvince and EntitiesInDistrict
@@ -2092,17 +2100,20 @@ namespace WEB.Models
             {
                 var name = field.Name.ToCamelCase();
 
+                Relationship relationship = null;
                 if (CurrentEntity.RelationshipsAsChild.Any(r => r.RelationshipFields.Any(f => f.ChildFieldId == field.FieldId)))
                 {
-                    var relationship = CurrentEntity.GetParentSearchRelationship(field);
+                    relationship = CurrentEntity.GetParentSearchRelationship(field);
                     name = relationship.ParentName.ToCamelCase();
                 }
 
                 filterAttributes += $",{Environment.NewLine}                {name}: \"<\"";
 
+                // this will probably error on enum (non-relationship) searches, as it needs to have the appropriate fields set in the 
+                // second part of the check, i.e. after the 'newValue !== oldValue && ...'
                 filterWatches += Environment.NewLine;
                 filterWatches += $"        $scope.$watch(\"{name}\", (newValue, oldValue) => {{" + Environment.NewLine;
-                filterWatches += $"            if (newValue !== oldValue) {{" + Environment.NewLine;
+                filterWatches += $"            if (newValue !== oldValue && newValue.{relationship.RelationshipFields.Single().ParentField.Name.ToCamelCase()} !== $scope.{CurrentEntity.CamelCaseName}.{field.Name.ToCamelCase()} && !$scope.removeFilters) {{" + Environment.NewLine;
                 filterWatches += $"                $scope.ngModel = undefined;" + Environment.NewLine;
                 filterWatches += $"                $scope.{CurrentEntity.CamelCaseName} = undefined;" + Environment.NewLine;
                 filterWatches += $"            }}" + Environment.NewLine;
@@ -2189,9 +2200,9 @@ namespace WEB.Models
                     if (filterAlerts == string.Empty) filterAlerts = Environment.NewLine;
 
                     if (field.FieldType == FieldType.Enum)
-                        filterAlerts += $"            <div class=\"alert alert-info alert-dismissible\" ng-if=\"vm.options.{field.Name.ToCamelCase()}\" ><button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\" ><span aria-hidden=\"true\" >&times;</span></button>Filtered by {field.Label.ToLower()}: {{{{vm.options.{field.Name.ToCamelCase()}.label}}}}</div>" + Environment.NewLine;
+                        filterAlerts += $"            <div class=\"alert alert-info alert-dismissible\" ng-if=\"vm.options.{field.Name.ToCamelCase()}\"><button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\" ng-click=\"vm.search.{field.Name.ToCamelCase()}=undefined;\"><span aria-hidden=\"true\" ng-if=\"vm.options.removeFilters\">&times;</span></button>Filtered by {field.Label.ToLower()}: {{{{vm.options.{field.Name.ToCamelCase()}.label}}}}</div>" + Environment.NewLine;
                     else
-                        filterAlerts += $"            <div class=\"alert alert-info alert-dismissible\" ng-if=\"vm.options.{relationship.ParentName.ToCamelCase()}\" ><button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\" ><span aria-hidden=\"true\" >&times;</span></button>Filtered by {field.Label.ToLower()}: {{{{vm.options.{relationship.ParentName.ToCamelCase()}.{relationship.ParentField.Name.ToCamelCase()}}}}}</div>" + Environment.NewLine;
+                        filterAlerts += $"            <div class=\"alert alert-info alert-dismissible\" ng-if=\"vm.options.{relationship.ParentName.ToCamelCase()}\"><button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\" ng-click=\"vm.search.{field.Name.ToCamelCase()}=undefined;\"><span aria-hidden=\"true\" ng-if=\"vm.options.removeFilters\">&times;</span></button>Filtered by {field.Label.ToLower()}: {{{{vm.options.{relationship.ParentName.ToCamelCase()}.{relationship.ParentField.Name.ToCamelCase()}}}}}</div>" + Environment.NewLine;
                 }
             }
 
@@ -2253,6 +2264,7 @@ namespace WEB.Models
                 .Replace("PLURALNAME", CurrentEntity.PluralName)
                 .Replace("NAME_TOLOWER", CurrentEntity.Name.ToLower())
                 .Replace("NAME", CurrentEntity.Name)
+                .Replace("ADDNEWURL",CurrentEntity.PluralName.ToLower() + "/{{vm.appSettings.newGuid}}")
                 .Replace("// <reference", "/// <reference");
         }
 
@@ -2294,7 +2306,7 @@ namespace WEB.Models
             if (type == CodeType.Enums || type == CodeType.ApiResource || type == CodeType.AppRouter || type == CodeType.BundleConfig || type == CodeType.DbContext)
                 replacements = CodeReplacements.Where(cr => !cr.Disabled && cr.CodeType == type && cr.Entity.ProjectId == CurrentEntity.ProjectId).ToList();
 
-            foreach (var replacement in replacements)
+            foreach (var replacement in replacements.OrderBy(o => o.SortOrder))
             {
                 var findCode = replacement.FindCode.Replace("(", "\\(").Replace(")", "\\)").Replace("[", "\\[").Replace("]", "\\]").Replace("?", "\\?").Replace("*", "\\*").Replace("$", "\\$").Replace("+", "\\+").Replace("{", "\\{").Replace("}", "\\}").Replace("|", "\\|").Replace("\n", "\r\n").Replace("\r\r", "\r");
                 var re = new Regex(findCode);

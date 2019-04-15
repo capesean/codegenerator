@@ -194,11 +194,17 @@ namespace WEB.Models
                         return $"{{{{ { Entity.CamelCaseName}.{ Name.ToCamelCase()} }}}}";
                 }
             }
-        } 
+        }
 
         public override string ToString()
         {
             return Name;
+        }
+
+        public string NotNullCheck(string fieldName)
+        {
+            if (CustomType == CustomType.String) return fieldName + " != null";
+            else return fieldName + ".HasValue";
         }
     }
 
