@@ -55,6 +55,9 @@ namespace WEB.Models
         public bool UseSelectorDirective { get; set; }
 
         [Required]
+        public bool UseMultiSelect { get; set; }
+
+        [Required]
         public int SortOrderOnChild { get; set; }
 
         public virtual ICollection<RelationshipField> RelationshipFields { get; set; } = new List<RelationshipField>();
@@ -71,6 +74,11 @@ namespace WEB.Models
         public Relationship()
         {
             RelationshipId = Guid.NewGuid();
+        }
+
+        public override string ToString()
+        {
+            return CollectionName;
         }
     }
 }

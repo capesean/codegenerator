@@ -52,6 +52,9 @@ namespace WEB.Models
         public bool UseSelectorDirective { get; set; }
 
         [Required]
+        public bool UseMultiSelect { get; set; }
+
+        [Required]
         public int SortOrderOnChild { get; set; }
 
         public EntityDTO ChildEntity { get; set; }
@@ -84,6 +87,7 @@ namespace WEB.Models
             relationshipDTO.RelationshipAncestorLimit = relationship.RelationshipAncestorLimit;
             relationshipDTO.CascadeDelete = relationship.CascadeDelete;
             relationshipDTO.UseSelectorDirective = relationship.UseSelectorDirective;
+            relationshipDTO.UseMultiSelect = relationship.UseMultiSelect;
             relationshipDTO.SortOrderOnChild = relationship.SortOrderOnChild;
             relationshipDTO.ChildEntity = Create(relationship.ChildEntity);
             relationshipDTO.ParentEntity = Create(relationship.ParentEntity);
@@ -107,6 +111,7 @@ namespace WEB.Models
             relationship.RelationshipAncestorLimit = relationshipDTO.RelationshipAncestorLimit;
             relationship.CascadeDelete = relationshipDTO.CascadeDelete;
             relationship.UseSelectorDirective = relationshipDTO.UseSelectorDirective;
+            relationship.UseMultiSelect = relationshipDTO.UseMultiSelect;
             relationship.SortOrderOnChild = relationshipDTO.SortOrderOnChild;
         }
     }

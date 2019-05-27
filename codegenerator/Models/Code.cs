@@ -472,8 +472,8 @@ namespace WEB.Models
                 {
                     s.Add($"            CreateNullableUniqueIndex(\"{field.Entity.Name}\", \"{field.Name}\");");
                 }
+                s.Add($"        }}");
             }
-            s.Add($"        }}");
             s.Add($"    }}");
             s.Add($"}}");
 
@@ -514,6 +514,8 @@ namespace WEB.Models
 
             s.Add($"        public async Task<IHttpActionResult> Search([FromUri]PagingOptions pagingOptions{(CurrentEntity.TextSearchFields.Count > 0 ? ", [FromUri]string q = null" : "")}{(fieldsToSearch.Count > 0 ? $", {fieldsToSearch.Select(f => f.ControllerSearchParams).Aggregate((current, next) => current + ", " + next)}" : "")})");
             s.Add($"        {{");
+            s.Add($"            if (pagingOptions == null) pagingOptions = new PagingOptions();");
+            s.Add($"");
             s.Add($"            IQueryable<{CurrentEntity.Name}> results = {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName};");
 
             if (CurrentEntity.RelationshipsAsChild.Where(r => r.RelationshipAncestorLimit != RelationshipAncestorLimits.Exclude).Any())
@@ -577,7 +579,7 @@ namespace WEB.Models
             s.Add($"        public async Task<IHttpActionResult> Get({CurrentEntity.ControllerParameters})");
             s.Add($"        {{");
             s.Add($"            var {CurrentEntity.CamelCaseName} = await {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName}");
-            foreach (var relationship in CurrentEntity.RelationshipsAsChild.OrderBy(r => r.SortOrder))
+            foreach (var relationship in CurrentEntity.RelationshipsAsChild.OrderBy(r => r.SortOrder).ThenBy(o => o.ParentName))
             {
                 if (relationship.RelationshipAncestorLimit == RelationshipAncestorLimits.Exclude) continue;
 
@@ -813,6 +815,43 @@ namespace WEB.Models
             }
             #endregion
 
+            #region multiselect saves
+            foreach (var rel in CurrentEntity.RelationshipsAsParent.Where(o => o.UseMultiSelect))
+            {
+                var relationshipField = rel.RelationshipFields.Single();
+                var reverseRel = rel.ChildEntity.RelationshipsAsChild.Where(o => o.RelationshipId != rel.RelationshipId).SingleOrDefault();
+                var reverseRelationshipField = reverseRel.RelationshipFields.Single();
+
+                s.Add($"        [{(CurrentEntity.AuthorizationType == AuthorizationType.ProtectChanges ? (CurrentEntity.Project.UseStringAuthorizeAttributes ? "Authorize(Roles = \"Administrator\"), " : "AuthorizeRoles(Roles.Administrator), ") : "")}HttpPost, Route(\"{CurrentEntity.RoutePath}/{rel.ChildEntity.PluralName.ToLower()}\")]");
+                s.Add($"        public async Task<IHttpActionResult> Save{rel.ChildEntity.Name}({CurrentEntity.ControllerParameters}, [FromBody]{rel.ChildEntity.DTOName}[] {rel.ChildEntity.DTOName.ToCamelCase()}s)");
+                s.Add($"        {{");
+                s.Add($"            if (!ModelState.IsValid)");
+                s.Add($"                return BadRequest(ModelState);");
+                s.Add($"");
+                s.Add($"            foreach (var {rel.ChildEntity.DTOName.ToCamelCase()} in {rel.ChildEntity.DTOName.ToCamelCase()}s)");
+                s.Add($"            {{");
+                s.Add($"                if ({rel.ChildEntity.DTOName.ToCamelCase()}.{rel.ChildEntity.KeyFields[0].Name} != Guid.Empty) return BadRequest(\"Invalid {rel.ChildEntity.KeyFields[0].Name}\");");
+                s.Add($"");
+                s.Add($"                if ({rel.ParentEntity.KeyFields[0].Name.ToCamelCase()} != {rel.ChildEntity.DTOName.ToCamelCase()}.{relationshipField.ChildField.Name}) return BadRequest(\"{CurrentEntity.FriendlyName} ID mismatch\");");
+                s.Add($"");
+                s.Add($"                if (!await db.{rel.ChildEntity.PluralName}.AnyAsync(o => o.{relationshipField.ChildField} == {rel.ParentEntity.KeyFields[0].Name.ToCamelCase()} && o.{reverseRelationshipField.ParentField} == {rel.ChildEntity.DTOName.ToCamelCase()}.{reverseRelationshipField.ParentField}))");
+                s.Add($"                {{");
+                s.Add($"                    var {rel.ChildEntity.Name.ToCamelCase()} = new {rel.ChildEntity.Name}();");
+                s.Add($"");
+                s.Add($"                    db.Entry({rel.ChildEntity.Name.ToCamelCase()}).State = EntityState.Added;");
+                s.Add($"");
+                s.Add($"                    ModelFactory.Hydrate({rel.ChildEntity.Name.ToCamelCase()}, {rel.ChildEntity.DTOName.ToCamelCase()});");
+                s.Add($"                }}");
+                s.Add($"            }}");
+                s.Add($"");
+                s.Add($"            await db.SaveChangesAsync();");
+                s.Add($"");
+                s.Add($"            return Ok();");
+                s.Add($"        }}");
+                s.Add($"");
+            }
+            #endregion
+
             s.Add($"    }}");
             s.Add($"}}");
 
@@ -968,6 +1007,9 @@ namespace WEB.Models
             s.Add($"");
             foreach (var e in NormalEntities)
             {
+                var multiSelectRelationships = e.RelationshipsAsParent.Where(o => o.UseMultiSelect).OrderBy(o => o.SortOrder);
+                var hasOtherRoutes = e.HasCompositePrimaryKey || e.HasASortField || multiSelectRelationships.Any();
+
                 s.Add($"    //#region {e.Name.ToLower()} resource");
                 s.Add($"    {e.ResourceName}.$inject = [\"$resource\", \"appSettings\"];");
                 s.Add($"    function {e.ResourceName}($resource, appSettings) {{");
@@ -975,25 +1017,36 @@ namespace WEB.Models
                 s.Add($"            {{");
                 foreach (var field in e.KeyFields)
                     s.Add($"                {field.Name.ToCamelCase()}: \"@{field.Name.ToCamelCase()}\"{(field == e.KeyFields.Last() ? "" : ",")}");
-                s.Add($"            }}" + (e.HasCompositePrimaryKey || e.HasASortField ? "," : string.Empty));
+                s.Add($"            }}" + (hasOtherRoutes ? "," : string.Empty));
+                if (hasOtherRoutes)
+                {
+                    s.Add($"            {{");
+                }
                 if (e.HasCompositePrimaryKey)
                 {
                     // composite primary keys can't use the .query method because: http://stackoverflow.com/questions/39405452/ngresource-query-with-composite-key-parameter/40087371#40087371
-                    s.Add($"            {{");
                     s.Add($"                search: {{");
                     s.Add($"                    method: \"GET\",");
                     s.Add($"                    url: appSettings.apiServiceBaseUri + appSettings.apiPrefix + \"{e.PluralName.ToLower()}\",");
                     s.Add($"                    isArray: true");
-                    s.Add($"                }}");
-                    s.Add($"            }}" + (e.HasASortField ? "," : string.Empty));
+                    s.Add($"                }}" + (e.HasASortField || multiSelectRelationships.Any() ? "," : string.Empty));
+                }
+                foreach (var rel in multiSelectRelationships)
+                {
+                    s.Add($"                save{rel.ChildEntity.PluralName}: {{");
+                    s.Add($"                    method: \"POST\",");
+                    s.Add($"                    url: appSettings.apiServiceBaseUri + appSettings.apiPrefix + \"{e.PluralName.ToLower()}/{e.KeyFields.Select(o => ":" + o.Name.ToCamelCase()).Aggregate((current, next) => current + "/" + next) }/{rel.ChildEntity.PluralName.ToLower()}\"");
+                    s.Add($"                }}" + (e.HasASortField || rel != multiSelectRelationships.Last() ? "," : string.Empty));
                 }
                 if (e.HasASortField)
                 {
-                    s.Add($"            {{");
                     s.Add($"                sort: {{");
                     s.Add($"                    method: \"POST\",");
                     s.Add($"                    url: appSettings.apiServiceBaseUri + appSettings.apiPrefix + \"{e.PluralName.ToLower()}/sort\"");
                     s.Add($"                }}");
+                }
+                if (hasOtherRoutes)
+                {
                     s.Add($"            }}");
                 }
                 s.Add($"        );");
@@ -1294,7 +1347,7 @@ namespace WEB.Models
                 s.Add($"            }});");
                 s.Add($"");
                 s.Add($"            {CurrentEntity.ResourceName}.sort(");
-                s.Add($"                ids: ids");
+                s.Add($"                ids");
                 s.Add($"            ).$promise.then(");
                 s.Add($"                () => {{");
                 s.Add($"");
@@ -1403,7 +1456,7 @@ namespace WEB.Models
                         s.Add(t + $"                        <label class=\"control-label\">");
                         s.Add(t + $"                            {field.Label}:");
                         s.Add(t + $"                        </label>");
-                        s.Add(t + $"                        <{CurrentEntity.Project.AngularDirectivePrefix}-select-{relationship.ParentEntity.FriendlyName.ToLower().Replace(" ", "-")} id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} placeholder=\"Select {field.Label.ToLower()}\" singular=\"{relationship.ParentFriendlyName}\" plural=\"{relationship.ParentEntity.PluralFriendlyName}\" {relationship.ParentEntity.FriendlyName.ToLower().Replace(" ", "-")}=\"{CurrentEntity.ViewModelObject}.{relationship.ParentName.ToCamelCase()}\"></{CurrentEntity.Project.AngularDirectivePrefix}-select-{relationship.ParentEntity.FriendlyName.ToLower().Replace(" ", "-")}>");
+                        s.Add(t + $"                        <{CurrentEntity.Project.AngularDirectivePrefix}-select-{relationship.ParentEntity.Name.Hyphenated().Replace(" ", "-")} id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} placeholder=\"Select {field.Label.ToLower()}\" singular=\"{relationship.ParentFriendlyName}\" plural=\"{relationship.ParentEntity.PluralFriendlyName}\" {relationship.ParentEntity.Name.Hyphenated()}=\"{CurrentEntity.ViewModelObject}.{relationship.ParentName.ToCamelCase()}\"></{CurrentEntity.Project.AngularDirectivePrefix}-select-{relationship.ParentEntity.Name.Hyphenated().Replace(" ", "-")}>");
                         s.Add(t + $"                    </div>");
                         s.Add(t + $"                </div>");
                         s.Add(t + $"");
@@ -1685,45 +1738,52 @@ namespace WEB.Models
 
                     var childEntity = relationship.ChildEntity;
                     s.Add($"                <fieldset ng-disabled=\"vm.loading\">");
-                    var href = "/";
-                    foreach (var entity in childEntity.GetNavigationEntities())
+
+                    if (relationship.UseMultiSelect)
                     {
-                        href += (href == "/" ? string.Empty : "/") + entity.PluralName.ToLower();
-                        foreach (var field in childEntity.GetNavigationFields().Where(f => f.EntityId == entity.EntityId))
-                        {
-                            if (entity == childEntity)
-                                href += "/{{vm.appSettings." + field.NewVariable + "}}";
-                            else
-                                href += "/{{vm." + entity.Name.ToCamelCase() + "." + field.Name.ToCamelCase() + "}}";
-                        }
+                        s.Add($"                    <button class=\"btn btn-primary\" ng-click=\"vm.add{relationship.CollectionName}()\">Add {relationship.CollectionFriendlyName}<i class=\"fa fa-plus-circle ml-1\"></i></button><br />");
                     }
-                    s.Add($"                    <a class=\"btn btn-primary\" href=\"{href}\">Add {childEntity.FriendlyName}<i class=\"fa fa-plus-circle ml-1\"></i></a><br />");
+                    else
+                    {
+                        var href = "/";
+                        foreach (var entity in childEntity.GetNavigationEntities())
+                        {
+                            href += (href == "/" ? string.Empty : "/") + entity.PluralName.ToLower();
+                            foreach (var field in childEntity.GetNavigationFields().Where(f => f.EntityId == entity.EntityId))
+                            {
+                                if (entity == childEntity)
+                                    href += "/{{vm.appSettings." + field.NewVariable + "}}";
+                                else
+                                    href += "/{{vm." + entity.Name.ToCamelCase() + "." + field.Name.ToCamelCase() + "}}";
+                            }
+                        }
+                        s.Add($"                    <a class=\"btn btn-primary\" href=\"{href}\">Add {childEntity.FriendlyName}<i class=\"fa fa-plus-circle ml-1\"></i></a><br />");
+                    }
+
                     s.Add($"                    <br />");
                     s.Add($"                </fieldset>");
                     s.Add($"");
                     s.Add($"                <table class=\"table table-striped table-hover table-bordered row-navigation{(CurrentEntity.Project.Bootstrap3 ? string.Empty : " table-sm")}\" ng-class=\"{{ 'disabled': vm.loading }}\">");
                     s.Add($"                    <thead>");
                     s.Add($"                        <tr>");
-                    var firstCol = true;
+                    if (relationship.Hierarchy && childEntity.HasASortField)
+                        s.Add($"                            <th scope=\"col\" ng-if=\"vm.{relationship.CollectionName.ToCamelCase()}.length > 1\" class=\"text-center fa-col-width\"><i class=\"fa fa-sort mt-1\"></i></th>");
                     foreach (var column in childEntity.GetSearchResultsFields(CurrentEntity))
                     {
-                        if (relationship.Hierarchy && firstCol && childEntity.HasASortField)
-                            s.Add($"                <th scope=\"col\" ng-if=\"vm.{relationship.CollectionName.ToCamelCase()}.length > 1\" class=\"text-center fa-col-width\"><i class=\"fa fa-sort mt-1\"></i></th>");
                         s.Add($"                            <th scope=\"col\">{column.Header}</th>");
-                        firstCol = false;
                     }
+                    s.Add($"                            <th scope=\"col\" class=\"fa-col-width text-center\" ><i class=\"fa fa-remove\"></i></th>");
                     s.Add($"                        </tr>");
                     s.Add($"                    </thead>");
                     s.Add($"                    <tbody" + (relationship.Hierarchy && childEntity.HasASortField ? $" ui-sortable=\"vm.{childEntity.PluralName.ToCamelCase()}SortOptions\" ng-model=\"vm.{childEntity.PluralName.ToCamelCase()}\"" : string.Empty) + ">");
                     s.Add($"                        <tr ng-repeat=\"{childEntity.Name.ToCamelCase()} in vm.{relationship.CollectionName.ToCamelCase()}\" ng-click=\"vm.goTo{childEntity.Name}({childEntity.GetNavigationString()})\">");
-                    firstCol = true;
+                    if (relationship.Hierarchy && childEntity.HasASortField)
+                        s.Add($"                            <td ng-if=\"vm.{relationship.CollectionName.ToCamelCase()}.length > 1\" class=\"text-center fa-col-width\"><i class=\"fa fa-sort sortable-handle mt-1\" ng-click=\"$event.stopPropagation();\"></i></td>");
                     foreach (var column in childEntity.GetSearchResultsFields(CurrentEntity))
                     {
-                        if (relationship.Hierarchy && firstCol && childEntity.HasASortField)
-                            s.Add($"                            <td ng-if=\"vm.{relationship.CollectionName.ToCamelCase()}.length > 1\" class=\"text-center fa-col-width\"><i class=\"fa fa-sort sortable-handle mt-1\" ng-click=\"$event.stopPropagation();\"></i></td>");
                         s.Add($"                            <td>{column.Value}</td>");
-                        firstCol = false;
                     }
+                    s.Add($"                            <td class=\"text-center\"><i class=\"fa fa-remove clickable p-1 text-danger\" ng-click=\"vm.remove{relationship.ChildEntity.Name}({relationship.ChildEntity.Name.ToCamelCase()}, $event)\"></i></td>");
                     s.Add($"                        </tr>");
                     s.Add($"                    </tbody>");
                     s.Add($"                </table>");
@@ -1759,7 +1819,8 @@ namespace WEB.Models
 
         public string GenerateEditTypeScript()
         {
-            //if (CurrentEntity.EntityType == EntityType.User) return string.Empty;
+            var multiSelectRelationships = CurrentEntity.RelationshipsAsParent.Where(r => r.UseMultiSelect && !r.ChildEntity.Exclude).OrderBy(o => o.SortOrder);
+            var relationships = CurrentEntity.RelationshipsAsParent.Where(r => !r.ChildEntity.Exclude && r.DisplayListOnParent).OrderBy(r => r.SortOrder);
 
             var s = new StringBuilder();
 
@@ -1780,9 +1841,10 @@ namespace WEB.Models
             {
                 entityResources.Add(entity.ResourceName, entity.ResourceName + (CurrentEntity.Project.ExcludeTypes ? string.Empty : ": " + entity.TypeScriptResource));
             }
+            var uibModal = multiSelectRelationships.Any();
 
-            s.Add($"    {CurrentEntity.CamelCaseName}.$inject = [\"$scope\", \"$state\", \"$stateParams\", \"notifications\", \"appSettings\", \"$q\", \"errorService\"{entityResources.Select(e => ", \"" + e.Key + "\"").Aggregate((current, next) => current + next)}];");
-            s.Add($"    function {CurrentEntity.CamelCaseName}($scope, $state, $stateParams, notifications, appSettings, $q, errorService{entityResources.Select(e => ", " + e.Value).Aggregate((current, next) => current + next)}) {{");
+            s.Add($"    {CurrentEntity.CamelCaseName}.$inject = [\"$scope\", \"$state\", \"$stateParams\", \"notifications\", \"appSettings\", \"$q\", \"errorService\"{entityResources.Select(e => ", \"" + e.Key + "\"").Aggregate((current, next) => current + next)}{(uibModal ? ", \"$uibModal\"" : "")}];");
+            s.Add($"    function {CurrentEntity.CamelCaseName}($scope, $state, $stateParams, notifications, appSettings, $q, errorService{entityResources.Select(e => ", " + e.Value).Aggregate((current, next) => current + next)}{(uibModal ? ", $uibModal" : "")}) {{");
             s.Add($"");
             s.Add($"        var vm = this;");
             if (!CurrentEntity.Project.ExcludeTypes)
@@ -1805,6 +1867,13 @@ namespace WEB.Models
                 if (rel.Hierarchy && rel.ChildEntity.HasASortField)
                     s.Add($"        vm.{rel.ChildEntity.PluralName.ToCamelCase()}SortOptions = {{ stop: sort{rel.ChildEntity.PluralName}, handle: \"i.sortable-handle\", axis: \"y\" }};");
             }
+            foreach (var rel in multiSelectRelationships)
+            {
+                s.Add($"        vm.add{rel.ChildEntity.PluralName} = add{rel.ChildEntity.PluralName};");
+            }
+            foreach(var rel in relationships)
+                s.Add($"        vm.remove{rel.ChildEntity.Name} = remove{rel.ChildEntity.Name};");
+
             s.Add($"");
             s.Add($"        initPage();");
 
@@ -2024,7 +2093,7 @@ namespace WEB.Models
                 s.Add($"            ).$promise.catch(");
                 s.Add($"                err => {{");
                 s.Add($"");
-                s.Add($"                    notifications.error(\"Failed to load the {rel.ChildEntity.PluralFriendlyName.ToCamelCase()}.\", \"Error\", err);");
+                s.Add($"                    notifications.error(\"Failed to load the {rel.ChildEntity.PluralFriendlyName.ToLower()}.\", \"Error\", err);");
                 s.Add($"                    $state.go(\"app.{CurrentEntity.PluralName.ToCamelCase()}\");");
                 s.Add($"");
                 s.Add($"                }}");
@@ -2048,11 +2117,9 @@ namespace WEB.Models
                 s.Add($"");
                 s.Add($"            vm.loading = true;");
                 s.Add($"            {entity.ResourceName}.sort(");
-                s.Add($"                {{");
-                s.Add($"                    ids: ids");
-                s.Add($"                }}");
+                s.Add($"                ids");
                 s.Add($"            ).$promise.then(");
-                s.Add($"                data => {{");
+                s.Add($"                () => {{");
                 s.Add($"");
                 s.Add($"                    notifications.success(\"The sort order has been updated\", \"{entity.FriendlyName} Ordering\");");
                 s.Add($"");
@@ -2067,6 +2134,109 @@ namespace WEB.Models
                 s.Add($"        }}");
             }
             #endregion
+
+            #region multiSelectRelationships
+            foreach (var rel in multiSelectRelationships)
+            {
+                var reverseRel = rel.ChildEntity.RelationshipsAsChild.Where(o => o.RelationshipId != rel.RelationshipId).SingleOrDefault();
+                if (reverseRel == null) throw new Exception("Unable to find reverse relationship for multiSelectRelationships");
+                var reverseEntity = reverseRel.ParentEntity;
+
+                s.Add($"");
+                s.Add($"        function add{rel.ChildEntity.PluralName}() {{");
+                s.Add($"");
+                s.Add($"            var modalInstance = $uibModal.open({{");
+                s.Add($"                templateUrl: \"/app/directives/select{reverseEntity.Name.ToLower()}modal.html\",");
+                s.Add($"                controller: \"select{reverseEntity.Name}Modal\",");
+                s.Add($"                controllerAs: \"vm\",");
+                s.Add($"                size: \"xl\",");
+                s.Add($"                resolve: {{");
+                s.Add($"                    options: () => {{");
+                s.Add($"                        return {{");
+                s.Add($"                            multiple: true");
+                s.Add($"                        }}");
+                s.Add($"                    }}");
+                s.Add($"                }}");
+                s.Add($"            }});");
+                s.Add($"");
+                s.Add($"            modalInstance.result.then(");
+                s.Add($"                function ({reverseEntity.PluralName.ToLower()}) {{");
+                s.Add($"");
+                s.Add($"                    if ({reverseEntity.PluralName.ToLower()}.length) {{");
+                s.Add($"");
+                s.Add($"                        vm.loading = true;");
+                s.Add($"");
+                s.Add($"                        var {rel.ChildEntity.PluralName.ToCamelCase()} = [];");
+                s.Add($"                        angular.forEach({reverseEntity.PluralName.ToLower()}, {reverseEntity.Name.ToLower()} => {{");
+                // might be some issues with multiple key fields...
+                s.Add($"                            var {rel.ChildEntity.Name.ToCamelCase()} = new {rel.ChildEntity.ResourceName}();");
+                s.Add($"                            {rel.ChildEntity.Name.ToCamelCase()}.{rel.ChildEntity.KeyFields[0].Name.ToCamelCase()} = appSettings.newGuid;");
+                s.Add($"                            {rel.ChildEntity.Name.ToCamelCase()}.{CurrentEntity.KeyFields[0].Name.ToCamelCase()} = $stateParams.{CurrentEntity.KeyFields[0].Name.ToCamelCase()};");
+                s.Add($"                            {rel.ChildEntity.Name.ToCamelCase()}.{reverseEntity.KeyFields[0].Name.ToCamelCase()} = {reverseEntity.Name.ToLower()}.{reverseEntity.KeyFields[0].Name.ToCamelCase()};");
+                s.Add($"                            {rel.ChildEntity.PluralName.ToCamelCase()}.push({rel.ChildEntity.Name.ToCamelCase()});");
+                s.Add($"                        }});");
+                s.Add($"");
+                s.Add($"                        {CurrentEntity.ResourceName}.save{rel.ChildEntity.PluralName}(");
+                s.Add($"                            {{");
+                s.Add($"                                {CurrentEntity.KeyFields[0].Name.ToCamelCase()}: $stateParams.{CurrentEntity.KeyFields[0].Name.ToCamelCase()}");
+                s.Add($"                            }},");
+                s.Add($"                            {rel.ChildEntity.PluralName.ToCamelCase()},");
+                s.Add($"                            () => {{");
+                s.Add($"");
+                s.Add($"                                notifications.success(\"The {rel.ChildEntity.PluralFriendlyName.ToLower()} have been added.\", \"Add {rel.ChildEntity.PluralFriendlyName}\");");
+                s.Add($"                                load{rel.ChildEntity.PluralName}(0, false);");
+                s.Add($"");
+                s.Add($"                            }},");
+                s.Add($"                            err => {{");
+                s.Add($"                                errorService.handleApiError(err, \"{rel.ChildEntity.PluralFriendlyName.ToLower()}\", \"save\");");
+                s.Add($"                                vm.loading = false;");
+                s.Add($"                            }});");
+                s.Add($"");
+                s.Add($"                    }}");
+                s.Add($"");
+                s.Add($"                }},");
+                s.Add($"                function () {{");
+                s.Add($"                    // cancelled/closed");
+                s.Add($"                }}");
+                s.Add($"            );");
+                s.Add($"");
+                s.Add($"        }}");
+            }
+            #endregion
+
+            #region remove list entities
+            foreach (var rel in relationships)
+            {
+                s.Add($"");
+                s.Add($"        function remove{rel.ChildEntity.Name}({rel.ChildEntity.Name.ToCamelCase()}, $event) {{");
+                s.Add($"");
+                s.Add($"            $event.stopPropagation();");
+                s.Add($"            if (!confirm(\"Confirm delete?\")) return;");
+                s.Add($"            vm.loading = true;");
+                s.Add($"");
+                s.Add($"            {rel.ChildEntity.Name.ToCamelCase()}Resource.delete(");
+                s.Add($"                {{");
+                s.Add($"                    {rel.ChildEntity.KeyFields[0].Name.ToCamelCase()}: {rel.ChildEntity.Name.ToCamelCase()}.{rel.ChildEntity.KeyFields[0].Name.ToCamelCase()}");
+                s.Add($"                }}");
+                s.Add($"            ).$promise.then(");
+                s.Add($"                () => {{");
+                s.Add($"");
+                s.Add($"                    notifications.success(\"The {rel.ChildEntity.FriendlyName.ToLower()} has been deleted.\", \"Deleted\");");
+                // .collectionname, not .child.Name, for example: KTUTRAIN Facility.Trainee => Facility.CurrentTrainees
+                s.Add($"                    load{rel.CollectionName}(vm.{rel.ChildEntity.PluralName.ToCamelCase()}Headers.pageIndex, false);");
+                s.Add($"");
+                s.Add($"                }},");
+                s.Add($"                err => {{");
+                s.Add($"");
+                s.Add($"                    errorService.handleApiError(err, \"{rel.ChildEntity.FriendlyName.ToLower()}\", \"delete\");");
+                s.Add($"");
+                s.Add($"                }}");
+                s.Add($"            ).finally(() => vm.loading = false);");
+                s.Add($"");
+                s.Add($"        }}");
+            }
+
+            #endregion;
 
             s.Add($"    }};");
             s.Add($"");
@@ -2113,7 +2283,7 @@ namespace WEB.Models
                 // second part of the check, i.e. after the 'newValue !== oldValue && ...'
                 filterWatches += Environment.NewLine;
                 filterWatches += $"        $scope.$watch(\"{name}\", (newValue, oldValue) => {{" + Environment.NewLine;
-                filterWatches += $"            if (newValue !== oldValue && newValue.{relationship.RelationshipFields.Single().ParentField.Name.ToCamelCase()} !== $scope.{CurrentEntity.CamelCaseName}.{field.Name.ToCamelCase()} && !$scope.removeFilters) {{" + Environment.NewLine;
+                filterWatches += $"            if (newValue !== oldValue{(relationship == null ? "" : $" && $scope.{CurrentEntity.CamelCaseName} && newValue.{relationship.RelationshipFields.Single().ParentField.Name.ToCamelCase()} !== $scope.{CurrentEntity.CamelCaseName}.{field.Name.ToCamelCase()} && !$scope.removeFilters")}) {{" + Environment.NewLine;
                 filterWatches += $"                $scope.ngModel = undefined;" + Environment.NewLine;
                 filterWatches += $"                $scope.{CurrentEntity.CamelCaseName} = undefined;" + Environment.NewLine;
                 filterWatches += $"            }}" + Environment.NewLine;
@@ -2264,7 +2434,7 @@ namespace WEB.Models
                 .Replace("PLURALNAME", CurrentEntity.PluralName)
                 .Replace("NAME_TOLOWER", CurrentEntity.Name.ToLower())
                 .Replace("NAME", CurrentEntity.Name)
-                .Replace("ADDNEWURL",CurrentEntity.PluralName.ToLower() + "/{{vm.appSettings.newGuid}}")
+                .Replace("ADDNEWURL", CurrentEntity.PluralName.ToLower() + "/{{vm.appSettings.newGuid}}")
                 .Replace("// <reference", "/// <reference");
         }
 
@@ -2384,6 +2554,7 @@ namespace WEB.Models
             rel = CurrentEntity.RelationshipsAsParent.FirstOrDefault(r => r.RelationshipFields.Count == 0);
             if (rel != null) return $"Relationship {rel.CollectionName} (to {rel.ChildEntity.FriendlyName}) has no link fields defined";
             //if (CurrentEntity.RelationshipsAsChild.Where(r => r.Hierarchy).Count() > 1) return $"{CurrentEntity.Name} is a hierarchical child on more than one relationship";
+            if (CurrentEntity.RelationshipsAsParent.Any(r => r.UseMultiSelect && !r.DisplayListOnParent)) return "Using Multi-Select requires that the relationship is also displayed on the parent";
             return null;
         }
 

@@ -72,8 +72,8 @@
                     $scope.CAMELCASENAME = CAMELCASENAME;
                     $scope.ngModel = CAMELCASENAME ? CAMELCASENAME.CAMELCASENAMEId : undefined;
                 },
-                function (reason) {
-                    // cancelled/closed
+                function () {
+                    // cancelled/closed (reason param)
                 }
             );
         }
