@@ -30,6 +30,11 @@
                 if (vm.isNew) {
                     vm.project = new projectResource();
                     vm.project.projectId = appSettings.newGuid;
+                    vm.project.rootPath = "C:\\xxx\\";
+                    vm.project.namespace = "WEB";
+                    vm.project.angularModuleName = "app";
+                    vm.project.angularDirectivePrefix = "app";
+                    vm.project.dbContextVariable = "db";
                     vm.loading = false;
                 }
                 else {

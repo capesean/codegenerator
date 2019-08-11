@@ -95,6 +95,9 @@ namespace WEB.Models
 
         public Guid? PrimaryFieldId { get; set; }
 
+        [MaxLength(20)]
+        public string IconClass { get; set; }
+
         public virtual ICollection<Relationship> RelationshipsAsParent { get; set; } = new List<Relationship>();
 
         public virtual ICollection<Field> Fields { get; set; } = new List<Field>();
@@ -112,6 +115,11 @@ namespace WEB.Models
         public Entity()
         {
             EntityId = Guid.NewGuid();
+        }
+
+        public override string ToString()
+        {
+            return Name;
         }
     }
 }

@@ -43,15 +43,17 @@
                     (data, headers) => {
 
                         vm.entities = data;
-                        vm.headers = JSON.parse(headers("X-Pagination"))
+                        vm.headers = JSON.parse(headers("X-Pagination"));
 
-                    },
+                    }
+                ).$promise.catch(
                     err => {
 
                         notifications.error("Failed to load the entities.", "Error", err);
                         $state.go("app.home");
 
-                    }).$promise;
+                    }
+                );
 
             if (!dontSetLoading) promise.then(() => vm.loading = false);
 

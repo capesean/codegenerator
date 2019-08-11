@@ -1133,13 +1133,13 @@ namespace WEB.Models
                         // should use uib-tooltip, but angular-bootstrap-ui doesn't work (little arrow is missing)
                         s.Add($"            <div class=\"col-sm-6 col-md-3 col-lg-2\">");
                         s.Add($"                <div class=\"form-group\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"From {field.Label}\">");
-                        s.Add($"                    <input type=\"{(field.FieldType == FieldType.Date ? "date" : "datetime-local")}\" id=\"from{field.Name}\" name=\"from{field.Name}\" ng-model=\"vm.search.from{field.Name}\" {(field.FieldType == FieldType.Date ? "ng-model-options=\"{timezone: 'utc'}\" " : "")} class=\"form-control\" />");
+                        s.Add($"                    <input type=\"{(field.FieldType == FieldType.Date ? "date" : "datetime-local")}\" id=\"from{field.Name}\" name=\"from{field.Name}\" ng-model=\"vm.search.from{field.Name}\" {(field.FieldType == FieldType.Date ? "ng-model-options=\"{timezone: 'utc'} \" " : "")}class=\"form-control\" />");
                         s.Add($"                </div>");
                         s.Add($"            </div>");
                         s.Add($"");
                         s.Add($"            <div class=\"col-sm-6 col-md-3 col-lg-2\">");
                         s.Add($"                <div class=\"form-group\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"To {field.Label}\">");
-                        s.Add($"                    <input type=\"{(field.FieldType == FieldType.Date ? "date" : "datetime-local")}\" id=\"to{field.Name}\" name=\"to{field.Name}\" ng-model=\"vm.search.to{field.Name}\" {(field.FieldType == FieldType.Date ? "ng-model-options=\"{timezone: 'utc'}\" " : "")} class=\"form-control\" />");
+                        s.Add($"                    <input type=\"{(field.FieldType == FieldType.Date ? "date" : "datetime-local")}\" id=\"to{field.Name}\" name=\"to{field.Name}\" ng-model=\"vm.search.to{field.Name}\" {(field.FieldType == FieldType.Date ? "ng-model-options=\"{timezone: 'utc'} \" " : "")}class=\"form-control\" />");
                         s.Add($"                </div>");
                         s.Add($"            </div>");
                         s.Add($"");
@@ -1555,7 +1555,7 @@ namespace WEB.Models
                     s.Add(t + $"                        <label for=\"{field.Name.ToCamelCase()}\" class=\"control-label\">");
                     s.Add(t + $"                            {field.Label}:");
                     s.Add(t + $"                        </label>");
-                    s.Add(t + $"                        <input type=\"{(field.FieldType == FieldType.Date ? "date" : "datetime-local")}\" id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\" {(field.FieldType == FieldType.Date ? "ng-model-options=\"{timezone: 'utc'}\" " : "")} class=\"form-control\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} />");
+                    s.Add(t + $"                        <input type=\"{(field.FieldType == FieldType.Date ? "date" : "datetime-local")}\" id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\"{(field.FieldType == FieldType.Date ? " ng-model-options=\"{timezone: 'utc'}\" " : "")}class=\"form-control\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} />");
                     s.Add(t + $"                    </div>");
                     s.Add(t + $"                </div>");
                     s.Add($"");
@@ -1871,7 +1871,7 @@ namespace WEB.Models
             {
                 s.Add($"        vm.add{rel.ChildEntity.PluralName} = add{rel.ChildEntity.PluralName};");
             }
-            foreach(var rel in relationships)
+            foreach (var rel in relationships)
                 s.Add($"        vm.remove{rel.ChildEntity.Name} = remove{rel.ChildEntity.Name};");
 
             s.Add($"");
@@ -1956,11 +1956,16 @@ namespace WEB.Models
                 s.Add($"                            {field.Name.ToCamelCase()}: $stateParams.{field.Name.ToCamelCase()}" + (field == CurrentEntity.KeyFields.OrderBy(f => f.FieldOrder).Last() ? string.Empty : ","));
             s.Add($"                        }}");
             s.Add($"                    ).$promise.then(");
-            s.Add($"                        data => {{");
             if (CurrentEntity.Project.ExcludeTypes)
+            {
+                s.Add($"                        data => {{");
                 s.Add($"                            {CurrentEntity.ViewModelObject} = data;");
+            }
             else
-                s.Add($"                            angular.copy(data, {CurrentEntity.ViewModelObject});");
+            {
+                s.Add($"                        (data: {CurrentEntity.TypeScriptDTO}) => {{");
+                s.Add($"                            data = {CurrentEntity.ViewModelObject};");
+            }
             var lastEntity = CurrentEntity;
             foreach (var entity in CurrentEntity.GetNavigationEntities(true))
             {
@@ -2005,7 +2010,7 @@ namespace WEB.Models
             s.Add($"            vm.loading = true;");
             s.Add($"");
             s.Add($"            {CurrentEntity.ViewModelObject}.$save().then(");
-            s.Add($"                data => {{");
+            s.Add($"                () => {{");
             s.Add($"");
             // ngResource automatically updates the object
             //s.Add($"                    {CurrentEntity.ViewModelObject} = data;");
@@ -2434,11 +2439,36 @@ namespace WEB.Models
                 .Replace("PLURALNAME", CurrentEntity.PluralName)
                 .Replace("NAME_TOLOWER", CurrentEntity.Name.ToLower())
                 .Replace("NAME", CurrentEntity.Name)
+                .Replace("ICONLINK", GetIconLink(CurrentEntity))
                 .Replace("ADDNEWURL", CurrentEntity.PluralName.ToLower() + "/{{vm.appSettings.newGuid}}")
                 .Replace("// <reference", "/// <reference");
         }
 
+        private string GetIconLink(Entity entity)
+        {
+            if (String.IsNullOrWhiteSpace(entity.IconClass)) return string.Empty;
+
+            string html = $@"<span class=""input-group-btn"" ng-if=""!multiple && !!{entity.Name.ToLower()}"">
+        <a href=""{GetHierarchyString(entity)}"" class=""btn btn-secondary"" ng-disabled=""disabled"">
+            <i class=""fa {entity.IconClass}""></i>
+        </a>
+    </span>
+    ";
+            return html;
+        }
+
         // ---- HELPER METHODS -----------------------------------------------------------------------
+
+        private string GetHierarchyString(Entity entity, string prefix = null)
+        {
+            var hierarchyRelationship = entity.RelationshipsAsChild.SingleOrDefault(o => o.Hierarchy);
+            var parents = "";
+            if (hierarchyRelationship != null)
+            {
+                parents = GetHierarchyString(hierarchyRelationship.ParentEntity, (prefix == null ? "" : prefix + ".") + entity.Name.ToCamelCase());
+            }
+            return parents + "/" + entity.PluralName.ToLower() + "/{{" + (prefix == null ? "" : prefix + ".") + entity.Name.ToCamelCase() + "." + entity.KeyFields.Single().Name.ToCamelCase() + "}}";
+        }
 
         private string ClimbHierarchy(Relationship relationship, string result)
         {

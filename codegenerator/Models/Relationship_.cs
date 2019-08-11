@@ -8,7 +8,7 @@ namespace WEB.Models
         {
             get
             {
-                return $"<{ParentEntity.Project.AngularDirectivePrefix}-select-{ParentEntity.Name.ToLower().Replace(" ", "-")} id=\"{RelationshipFields.Single().ChildField.Name.ToCamelCase()}\" name=\"{RelationshipFields.Single().ChildField.Name.ToCamelCase()}\" ng-model=\"vm.search.{RelationshipFields.Single().ChildField.Name.ToCamelCase()}\" placeholder=\"Select {ParentFriendlyName.ToLower()}\" singular=\"{ParentFriendlyName}\" plural=\"{ParentEntity.PluralFriendlyName}\" {ParentEntity.FriendlyName.ToLower().Replace(" ", "-")}=\"vm.searchObjects.{ParentEntity.Name.ToCamelCase()}\"></{ChildEntity.Project.AngularDirectivePrefix}-select-{ParentEntity.Name.ToLower().Replace(" ", "-")}>";
+                return $"<{ParentEntity.Project.AngularDirectivePrefix}-select-{ParentEntity.Name.Hyphenated().Replace(" ", "-")} id=\"{RelationshipFields.Single().ChildField.Name.ToCamelCase()}\" name=\"{RelationshipFields.Single().ChildField.Name.ToCamelCase()}\" ng-model=\"vm.search.{RelationshipFields.Single().ChildField.Name.ToCamelCase()}\" placeholder=\"Select {ParentFriendlyName.ToLower()}\" singular=\"{ParentFriendlyName}\" plural=\"{ParentEntity.PluralFriendlyName}\" {ParentEntity.FriendlyName.ToLower().Replace(" ", "-")}=\"vm.searchObjects.{ParentEntity.Name.ToCamelCase()}\"></{ChildEntity.Project.AngularDirectivePrefix}-select-{ParentEntity.Name.ToLower().Replace(" ", "-")}>";
             }
         }
     }

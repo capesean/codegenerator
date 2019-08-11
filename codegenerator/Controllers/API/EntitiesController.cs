@@ -13,6 +13,8 @@ namespace WEB.Controllers
         [HttpGet, Route("")]
         public async Task<IHttpActionResult> Search([FromUri]PagingOptions pagingOptions, [FromUri]string q = null, [FromUri]Guid? projectId = null, [FromUri]Guid? primaryFieldId = null)
         {
+            if (pagingOptions == null) pagingOptions = new PagingOptions();
+
             IQueryable<Entity> results = DbContext.Entities;
             if (pagingOptions.IncludeEntities)
             {

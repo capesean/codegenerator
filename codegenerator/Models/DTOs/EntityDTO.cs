@@ -92,6 +92,9 @@ namespace WEB.Models
 
         public Guid? PrimaryFieldId { get; set; }
 
+        [MaxLength(20)]
+        public string IconClass { get; set; }
+
         public FieldDTO PrimaryField { get; set; }
 
         public ProjectDTO Project { get; set; }
@@ -134,6 +137,7 @@ namespace WEB.Models
             entityDTO.AuthorizationType = entity.AuthorizationType;
             entityDTO.Exclude = entity.Exclude;
             entityDTO.PrimaryFieldId = entity.PrimaryFieldId;
+            entityDTO.IconClass = entity.IconClass;
             entityDTO.PrimaryField = null;
             entityDTO.Project = Create(entity.Project);
 
@@ -169,6 +173,7 @@ namespace WEB.Models
             entity.AuthorizationType = entityDTO.AuthorizationType;
             entity.Exclude = entityDTO.Exclude;
             entity.PrimaryFieldId = entityDTO.PrimaryFieldId;
+            entity.IconClass = entityDTO.IconClass;
         }
     }
 }

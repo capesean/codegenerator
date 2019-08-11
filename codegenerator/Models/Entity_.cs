@@ -281,7 +281,8 @@ namespace WEB.Models
         {
             get
             {
-                if (Project.ExcludeTypes) return "vm." + Name.ToCamelCase();
+                //if (Project.ExcludeTypes)
+                    return "vm." + Name.ToCamelCase();
                 return Name.ToCamelCase();
             }
         }
@@ -345,11 +346,6 @@ namespace WEB.Models
 
                 //return Fields.SingleOrDefault(f => f.EditPageType == EditPageType.SortField);
             }
-        }
-
-        public override string ToString()
-        {
-            return Name;
         }
     }
 }

@@ -70,7 +70,14 @@
             modalInstance.result.then(
                 function (CAMELCASENAME) {
                     $scope.CAMELCASENAME = CAMELCASENAME;
-                    $scope.ngModel = CAMELCASENAME ? CAMELCASENAME.CAMELCASENAMEId : undefined;
+                    if ($scope.multiple) {
+                        $scope.ngModel = [];
+                        angular.forEach(CAMELCASENAME, item => {
+                            $scope.ngModel.push(item.CAMELCASENAMEId);
+                        });
+                    } else {
+                        $scope.ngModel = CAMELCASENAME ? CAMELCASENAME.CAMELCASENAMEId : undefined;
+                    }
                 },
                 function () {
                     // cancelled/closed (reason param)

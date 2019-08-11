@@ -28,10 +28,10 @@
             var promise = entityResource.query(vm.search, function (data, headers) {
                 vm.entities = data;
                 vm.headers = JSON.parse(headers("X-Pagination"));
-            }, function (err) {
+            }).$promise.catch(function (err) {
                 notifications.error("Failed to load the entities.", "Error", err);
                 $state.go("app.home");
-            }).$promise;
+            });
             if (!dontSetLoading)
                 promise.then(function () { return vm.loading = false; });
             return promise;
