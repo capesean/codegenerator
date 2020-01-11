@@ -1,5 +1,7 @@
-﻿/// <reference path="../../scripts/typings/highlightjs/highlightjs.d.ts" />
+﻿/// <reference path="../../scripts/typings/highlightjs/highlightjs-7.5.0.d.ts" />
 /// <reference path="../../scripts/typings/angularjs/angular.d.ts" />
+declare var hljs: any;
+
 (function () {
     "use strict";
 

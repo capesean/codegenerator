@@ -394,8 +394,10 @@ namespace WEB.Models
             {
                 if (field.KeyField || field.EditPageType == EditPageType.ReadOnly) continue;
                 if (field.EditPageType == EditPageType.Exclude || field.EditPageType == EditPageType.CalculatedField) continue;
-                s.Add($"            {CurrentEntity.CamelCaseName}.{field.Name} = {CurrentEntity.DTOName.ToCamelCase()}.{field.Name};");
+                //s.Add($"            {CurrentEntity.CamelCaseName}.{field.Name} = {CurrentEntity.DTOName.ToCamelCase()}.{field.Name};");
+                s.Add($"            {CurrentEntity.CamelCaseName}.{field.Name} = {CurrentEntity.DTOName.ToCamelCase()}.{field.Name}{(field.FieldType == FieldType.Date ? (field.IsNullable ? "?" : "") + ".ToUniversalTime()" : "")};");
             }
+
             s.Add($"        }}");
             s.Add($"    }}");
             s.Add($"}}");
@@ -647,7 +649,7 @@ namespace WEB.Models
                         hierarchyFields += (hierarchyFields == string.Empty ? "" : " && ") + "o." + relField.ChildField.Name + " == " + CurrentEntity.DTOName.ToCamelCase() + "." + relField.ChildField.Name;
                     hierarchyFields += " && ";
                 }
-                s.Add($"            if (" + (field.IsNullable ? field.NotNullCheck(CurrentEntity.DTOName.ToCamelCase() + "." + field.Name) + " && " : "") + $"await {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName}.AnyAsync(o => {hierarchyFields}o.{field.Name} == {CurrentEntity.DTOName.ToCamelCase()}.{field.Name} && {GetKeyFieldLinq("o", CurrentEntity.DTOName.ToCamelCase(), " != ", " || ", true)}))");
+                s.Add($"            if (" + (field.IsNullable ? field.NotNullCheck(CurrentEntity.DTOName.ToCamelCase() + "." + field.Name) + " && " : "") + $"await {CurrentEntity.Project.DbContextVariable}.{CurrentEntity.PluralName}.AnyAsync(o => {hierarchyFields}o.{field.Name} == {CurrentEntity.DTOName.ToCamelCase()}.{field.Name} && {GetKeyFieldLinq("o", CurrentEntity.DTOName.ToCamelCase(), "!=", " || ", true)}))");
                 s.Add($"                return BadRequest(\"{field.Label} already exists{(ParentHierarchyRelationship == null ? string.Empty : " on this " + ParentHierarchyRelationship.ParentEntity.FriendlyName)}.\");");
                 s.Add($"");
             }
@@ -1133,13 +1135,13 @@ namespace WEB.Models
                         // should use uib-tooltip, but angular-bootstrap-ui doesn't work (little arrow is missing)
                         s.Add($"            <div class=\"col-sm-6 col-md-3 col-lg-2\">");
                         s.Add($"                <div class=\"form-group\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"From {field.Label}\">");
-                        s.Add($"                    <input type=\"{(field.FieldType == FieldType.Date ? "date" : "datetime-local")}\" id=\"from{field.Name}\" name=\"from{field.Name}\" ng-model=\"vm.search.from{field.Name}\" {(field.FieldType == FieldType.Date ? "ng-model-options=\"{timezone: 'utc'} \" " : "")}class=\"form-control\" />");
+                        s.Add($"                    <input type=\"{(field.FieldType == FieldType.Date ? "date" : "datetime-local")}\" id=\"from{field.Name}\" name=\"from{field.Name}\" ng-model=\"vm.search.from{field.Name}\" {(field.FieldType == FieldType.Date ? "ng-model-options=\"{ timezone: 'utc' }\" " : "")}class=\"form-control\" />");
                         s.Add($"                </div>");
                         s.Add($"            </div>");
                         s.Add($"");
                         s.Add($"            <div class=\"col-sm-6 col-md-3 col-lg-2\">");
                         s.Add($"                <div class=\"form-group\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"To {field.Label}\">");
-                        s.Add($"                    <input type=\"{(field.FieldType == FieldType.Date ? "date" : "datetime-local")}\" id=\"to{field.Name}\" name=\"to{field.Name}\" ng-model=\"vm.search.to{field.Name}\" {(field.FieldType == FieldType.Date ? "ng-model-options=\"{timezone: 'utc'} \" " : "")}class=\"form-control\" />");
+                        s.Add($"                    <input type=\"{(field.FieldType == FieldType.Date ? "date" : "datetime-local")}\" id=\"to{field.Name}\" name=\"to{field.Name}\" ng-model=\"vm.search.to{field.Name}\" {(field.FieldType == FieldType.Date ? "ng-model-options=\"{ timezone: 'utc' }\" " : "")}class=\"form-control\" />");
                         s.Add($"                </div>");
                         s.Add($"            </div>");
                         s.Add($"");
@@ -1555,7 +1557,7 @@ namespace WEB.Models
                     s.Add(t + $"                        <label for=\"{field.Name.ToCamelCase()}\" class=\"control-label\">");
                     s.Add(t + $"                            {field.Label}:");
                     s.Add(t + $"                        </label>");
-                    s.Add(t + $"                        <input type=\"{(field.FieldType == FieldType.Date ? "date" : "datetime-local")}\" id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\"{(field.FieldType == FieldType.Date ? " ng-model-options=\"{timezone: 'utc'}\" " : "")}class=\"form-control\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} />");
+                    s.Add(t + $"                        <input type=\"{(field.FieldType == FieldType.Date ? "date" : "datetime-local")}\" id=\"{field.Name.ToCamelCase()}\" name=\"{field.Name.ToCamelCase()}\" ng-model=\"{CurrentEntity.ViewModelObject}.{field.Name.ToCamelCase()}\"{(field.FieldType == FieldType.Date ? " ng-model-options=\"{ timezone: 'utc' }\" " : "")}class=\"form-control\"{(field.IsNullable ? string.Empty : " ng-required=\"true\"")} />");
                     s.Add(t + $"                    </div>");
                     s.Add(t + $"                </div>");
                     s.Add($"");
@@ -1772,7 +1774,7 @@ namespace WEB.Models
                     {
                         s.Add($"                            <th scope=\"col\">{column.Header}</th>");
                     }
-                    s.Add($"                            <th scope=\"col\" class=\"fa-col-width text-center\" ><i class=\"fa fa-remove\"></i></th>");
+                    s.Add($"                            <th scope=\"col\" class=\"fa-col-width text-center\"><i class=\"fa fa-remove\"></i></th>");
                     s.Add($"                        </tr>");
                     s.Add($"                    </thead>");
                     s.Add($"                    <tbody" + (relationship.Hierarchy && childEntity.HasASortField ? $" ui-sortable=\"vm.{childEntity.PluralName.ToCamelCase()}SortOptions\" ng-model=\"vm.{childEntity.PluralName.ToCamelCase()}\"" : string.Empty) + ">");

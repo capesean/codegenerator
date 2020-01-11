@@ -64,54 +64,70 @@
   <ItemGroup>
     <Reference Include="Antlr3.Runtime, Version=3.5.0.2, Culture=neutral, PublicKeyToken=eb42632606e9261f, processorArchitecture=MSIL">
       <HintPath>..\packages\Antlr.3.5.0.2\lib\Antlr3.Runtime.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.AspNet.Identity.Core, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.Identity.Core.2.2.1\lib\net45\Microsoft.AspNet.Identity.Core.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.AspNet.Identity.EntityFramework, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.Identity.EntityFramework.2.2.1\lib\net45\Microsoft.AspNet.Identity.EntityFramework.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.AspNet.Identity.Owin, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.Identity.Owin.2.2.1\lib\net45\Microsoft.AspNet.Identity.Owin.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.1\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.Owin, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Owin.3.0.1\lib\net45\Microsoft.Owin.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Owin.Host.SystemWeb, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Owin.Host.SystemWeb.3.0.1\lib\net45\Microsoft.Owin.Host.SystemWeb.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Owin.Security, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Owin.Security.3.0.1\lib\net45\Microsoft.Owin.Security.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Owin.Security.Cookies, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Owin.Security.Cookies.3.0.1\lib\net45\Microsoft.Owin.Security.Cookies.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Owin.Security.OAuth, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Owin.Security.OAuth.3.0.1\lib\net45\Microsoft.Owin.Security.OAuth.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Owin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f0ebd12fd5e55cc5, processorArchitecture=MSIL">
       <HintPath>..\packages\Owin.1.0\lib\net40\Owin.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Net.Http.Formatting, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.5.2.3\lib\net45\System.Net.Http.Formatting.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Web.DynamicData" />
     <Reference Include="System.Web.Entity" />
@@ -124,30 +140,39 @@
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Helpers, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.Helpers.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Web.Http, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.WebApi.Core.5.2.3\lib\net45\System.Web.Http.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Web.Http.WebHost, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.WebApi.WebHost.5.2.3\lib\net45\System.Web.Http.WebHost.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Web.Mvc, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.Mvc.5.2.3\lib\net45\System.Web.Mvc.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Web.Optimization, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.Web.Optimization.1.1.3\lib\net40\System.Web.Optimization.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Web.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.Razor.3.2.3\lib\net45\System.Web.Razor.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Web.WebPages, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Web.WebPages.Deployment, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.Deployment.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Web.WebPages.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.Razor.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="System.Configuration" />
@@ -156,6 +181,7 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="WebGrease, Version=1.6.5135.21930, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\WebGrease.1.6.0\lib\WebGrease.dll</HintPath>
+      <Private>True</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -181,6 +207,7 @@
     <Content Include="app\settings\settings.html" />
     <Content Include="app\users\user.html" />
     <Content Include="app\users\users.html" />
+    <Content Include="App_Code\Highlight\classref.txt" />
     <Content Include="Content\bootstrap-theme.css" />
     <Content Include="Content\bootstrap-theme.min.css" />
     <Content Include="Content\bootstrap.css" />
@@ -369,15 +396,10 @@
     <Content Include="fonts\fontawesome-webfont.svg" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Global.asax" />
-    <Content Include="packages.config">
-      <SubType>Designer</SubType>
-    </Content>
-    <Content Include="test.txt" />
-    <Content Include="robots.txt" />
-    <Content Include="scripts\angular-clipboard.js" />
+    <Content Include="scripts\angular-breadcrumb.js" />
+    <Content Include="scripts\angular-breadcrumb.min.js" />
     <Content Include="scripts\angular-local-storage.js" />
     <Content Include="scripts\angular-local-storage.min.js" />
-    <Content Include="scripts\angular-local-storage.min.js.map" />
     <Content Include="scripts\angular-messages.js" />
     <Content Include="scripts\angular-messages.min.js" />
     <Content Include="scripts\angular-mocks.js" />
@@ -385,17 +407,15 @@
     <Content Include="scripts\angular-resource.min.js" />
     <Content Include="scripts\angular-sanitize.js" />
     <Content Include="scripts\angular-sanitize.min.js" />
+    <Content Include="scripts\angular-ui-router.js" />
+    <Content Include="scripts\angular-ui-router.min.js" />
+    <Content Include="scripts\angular-ui\sortable.js" />
+    <Content Include="scripts\angular-ui\ui-bootstrap-tpls.js" />
+    <Content Include="scripts\angular-ui\ui-bootstrap-tpls.min.js" />
+    <Content Include="scripts\angular-ui\ui-bootstrap.js" />
+    <Content Include="scripts\angular-ui\ui-bootstrap.min.js" />
     <Content Include="scripts\angular.js" />
     <Content Include="scripts\angular.min.js" />
-    <Content Include="scripts\angular.min.js.map" />
-    <Content Include="scripts\angular-messages.min.js.map" />
-    <Content Include="scripts\angular-resource.min.js.map" />
-    <Content Include="scripts\angular-sanitize.min.js.map" />
-    <Content Include="fonts\FontAwesome.otf" />
-    <Content Include="fonts\fontawesome-webfont.woff2" />
-    <Content Include="fonts\fontawesome-webfont.woff" />
-    <Content Include="fonts\fontawesome-webfont.ttf" />
-    <Content Include="fonts\fontawesome-webfont.eot" />
     <Content Include="fonts\glyphicons-halflings-regular.woff2" />
     <Content Include="fonts\glyphicons-halflings-regular.woff" />
     <Content Include="fonts\glyphicons-halflings-regular.ttf" />
@@ -408,7 +428,6 @@
     <Content Include="Content\DataTables\css\common.scss" />
     <Content Include="Content\toastr.scss" />
     <Content Include="Content\toastr.less" />
-    <None Include="Properties\PublishProfiles\HostKing.pubxml" />
     <None Include="scripts\jquery-2.2.3.intellisense.js" />
     <Content Include="scripts\bootstrap.js" />
     <Content Include="scripts\bootstrap.min.js" />
@@ -478,9 +497,45 @@
     <Content Include="scripts\DataTables\responsive.jqueryui.min.js" />
     <Content Include="scripts\jquery-2.2.3.js" />
     <Content Include="scripts\jquery-2.2.3.min.js" />
-    <Content Include="scripts\jquery-2.2.3.min.map" />
+    <Content Include="scripts\jquery-ui-1.11.4.js" />
+    <Content Include="scripts\jquery-ui-1.11.4.min.js" />
+    <Content Include="scripts\metisMenu.js" />
+    <Content Include="scripts\metisMenu.min.js" />
+    <Content Include="scripts\moment-with-locales.js" />
+    <Content Include="scripts\moment-with-locales.min.js" />
+    <Content Include="scripts\moment.js" />
+    <Content Include="scripts\moment.min.js" />
+    <Content Include="scripts\toastr.js" />
+    <Content Include="scripts\toastr.min.js" />
+    <Content Include="test.txt" />
+    <Content Include="robots.txt" />
+    <Content Include="scripts\angular-clipboard.js" />
+    <Content Include="fonts\FontAwesome.otf" />
+    <Content Include="fonts\fontawesome-webfont.woff2" />
+    <Content Include="fonts\fontawesome-webfont.woff" />
+    <Content Include="fonts\fontawesome-webfont.ttf" />
+    <Content Include="fonts\fontawesome-webfont.eot" />
+    <Content Include="App_Code\Highlight\README.ru.md" />
+    <Content Include="App_Code\Highlight\README.md" />
+    <Content Include="App_Code\Highlight\LICENSE" />
+    <None Include="packages.config" />
+    <None Include="Properties\PublishProfiles\HostKing.pubxml" />
     <Content Include="scripts\nya-bs-select.js" />
     <Content Include="scripts\sb-admin-2.js" />
+    <TypeScriptCompile Include="scripts\typings\angularjs\angular-animate.d.ts" />
+    <TypeScriptCompile Include="scripts\typings\angularjs\angular-component-router.d.ts" />
+    <TypeScriptCompile Include="scripts\typings\angularjs\angular-cookies.d.ts" />
+    <TypeScriptCompile Include="scripts\typings\angularjs\angular-mocks.d.ts" />
+    <TypeScriptCompile Include="scripts\typings\angularjs\angular-resource.d.ts" />
+    <TypeScriptCompile Include="scripts\typings\angularjs\angular-route.d.ts" />
+    <TypeScriptCompile Include="scripts\typings\angularjs\angular-sanitize.d.ts" />
+    <TypeScriptCompile Include="scripts\typings\angularjs\angular.d.ts" />
+    <TypeScriptCompile Include="scripts\typings\jquery.dataTables\jquery.dataTables-1.9.4.d.ts" />
+    <TypeScriptCompile Include="scripts\typings\jquery.dataTables\jquery.dataTables.d.ts" />
+    <TypeScriptCompile Include="scripts\typings\jquery\jquery.d.ts" />
+    <TypeScriptCompile Include="scripts\typings\moment\moment-node.d.ts" />
+    <TypeScriptCompile Include="scripts\typings\moment\moment.d.ts" />
+    <TypeScriptCompile Include="scripts\typings\toastr\toastr.d.ts" />
     <TypeScriptCompile Include="templates\selectmodal.ts" />
     <Content Include="templates\selectmodal.html" />
     <TypeScriptCompile Include="templates\appselect.ts" />
@@ -497,39 +552,20 @@
     <Content Include="Views\Shared\_Layout.cshtml" />
     <Content Include="Views\Web.config" />
     <Content Include="Views\_ViewStart.cshtml" />
+    <Content Include="scripts\angular-local-storage.min.js.map" />
+    <Content Include="scripts\angular.min.js.map" />
+    <Content Include="scripts\angular-messages.min.js.map" />
+    <Content Include="scripts\angular-resource.min.js.map" />
+    <Content Include="scripts\angular-sanitize.min.js.map" />
+    <Content Include="scripts\jquery-2.2.3.min.map" />
+    <None Include="Web.config" />
     <None Include="Web.config.sample" />
-    <None Include="Web.Debug.config">
-      <DependentUpon>Web.config</DependentUpon>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Web.Release.config">
-      <DependentUpon>Web.config</DependentUpon>
-    </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="scripts\angular-breadcrumb.js" />
-    <Content Include="scripts\angular-breadcrumb.min.js" />
-    <Content Include="scripts\angular-ui-router.js" />
-    <Content Include="scripts\angular-ui-router.min.js" />
-    <Content Include="scripts\angular-ui\sortable.js" />
-    <Content Include="scripts\angular-ui\ui-bootstrap-tpls.js" />
-    <Content Include="scripts\angular-ui\ui-bootstrap-tpls.min.js" />
-    <Content Include="scripts\angular-ui\ui-bootstrap.js" />
-    <Content Include="scripts\angular-ui\ui-bootstrap.min.js" />
     <Content Include="scripts\Highlight\highlight.pack.js" />
-    <Content Include="scripts\jquery-ui-1.11.4.js" />
-    <Content Include="scripts\jquery-ui-1.11.4.min.js" />
-    <Content Include="scripts\metisMenu.js" />
-    <Content Include="scripts\metisMenu.min.js" />
-    <Content Include="scripts\moment-with-locales.js" />
-    <Content Include="scripts\moment-with-locales.min.js" />
-    <Content Include="scripts\moment.js" />
-    <Content Include="scripts\moment.min.js" />
-    <Content Include="scripts\toastr.js" />
-    <Content Include="scripts\toastr.min.js" />
-    <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="App_Code\Highlight\Highlight.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -636,22 +672,7 @@
     <TypeScriptCompile Include="app\settings\settings.ts" />
     <TypeScriptCompile Include="app\users\user.ts" />
     <TypeScriptCompile Include="app\users\users.ts" />
-    <TypeScriptCompile Include="scripts\typings\angularjs\angular-animate.d.ts" />
-    <TypeScriptCompile Include="scripts\typings\angularjs\angular-component-router.d.ts" />
-    <TypeScriptCompile Include="scripts\typings\angularjs\angular-cookies.d.ts" />
-    <TypeScriptCompile Include="scripts\typings\angularjs\angular-mocks.d.ts" />
-    <TypeScriptCompile Include="scripts\typings\angularjs\angular-resource.d.ts" />
-    <TypeScriptCompile Include="scripts\typings\angularjs\angular-route.d.ts" />
-    <TypeScriptCompile Include="scripts\typings\angularjs\angular-sanitize.d.ts" />
-    <TypeScriptCompile Include="scripts\typings\angularjs\angular.d.ts" />
     <TypeScriptCompile Include="scripts\typings\highlightjs\highlightjs-7.5.0.d.ts" />
-    <TypeScriptCompile Include="scripts\typings\highlightjs\highlightjs.d.ts" />
-    <TypeScriptCompile Include="scripts\typings\jquery.dataTables\jquery.dataTables-1.9.4.d.ts" />
-    <TypeScriptCompile Include="scripts\typings\jquery.dataTables\jquery.dataTables.d.ts" />
-    <TypeScriptCompile Include="scripts\typings\jquery\jquery.d.ts" />
-    <TypeScriptCompile Include="scripts\typings\moment\moment-node.d.ts" />
-    <TypeScriptCompile Include="scripts\typings\moment\moment.d.ts" />
-    <TypeScriptCompile Include="scripts\typings\toastr\toastr.d.ts" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />
@@ -685,15 +706,6 @@
       </FlavorProperties>
     </VisualStudio>
   </ProjectExtensions>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Microsoft.Net.Compilers.1.3.2\build\Microsoft.Net.Compilers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Net.Compilers.1.3.2\build\Microsoft.Net.Compilers.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.3\build\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.3\build\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.Net.Compilers.1.2.1\build\Microsoft.Net.Compilers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Net.Compilers.1.2.1\build\Microsoft.Net.Compilers.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.1\build\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.1\build\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props'))" />
-  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
