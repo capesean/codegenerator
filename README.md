@@ -1,3 +1,5 @@
+> **LATEST FOR VERSION** see: https://github.com/capesean/codegenerator3
+
 # codegenerator
 Generate code for an Entity Framework 6 / WebApi, with an AngularJS font-end, using Bootstrap 3 or 4.
 
