@@ -1172,9 +1172,9 @@ namespace WEB.Models
             s.Add($"        <thead>");
             s.Add($"            <tr>");
             if (useSortColumn)
-                s.Add($"                <th scope=\"col\" ng-if=\"vm.{CurrentEntity.PluralName.ToCamelCase()}.length > 1\" class=\"text-center fa-col-width\"><i class=\"fa fa-sort mt-1\"></i></th>");
+                s.Add($"                <th ng-if=\"vm.{CurrentEntity.PluralName.ToCamelCase()}.length > 1\" class=\"text-center fa-col-width\"><i class=\"fa fa-sort mt-1\"></i></th>");
             foreach (var field in CurrentEntity.Fields.Where(f => f.ShowInSearchResults).OrderBy(f => f.FieldOrder))
-                s.Add($"                <th scope=\"col\">{field.Label}</th>");
+                s.Add($"                <th>{field.Label}</th>");
             s.Add($"            </tr>");
             s.Add($"        </thead>");
             s.Add($"        <tbody{(CurrentEntity.HasASortField && !CurrentEntity.RelationshipsAsChild.Any(r => r.Hierarchy) ? " ui-sortable=\"vm.sortOptions\" ng-model=\"vm." + CurrentEntity.PluralName.ToCamelCase() + "\"" : "")}>");
@@ -1769,12 +1769,12 @@ namespace WEB.Models
                     s.Add($"                    <thead>");
                     s.Add($"                        <tr>");
                     if (relationship.Hierarchy && childEntity.HasASortField)
-                        s.Add($"                            <th scope=\"col\" ng-if=\"vm.{relationship.CollectionName.ToCamelCase()}.length > 1\" class=\"text-center fa-col-width\"><i class=\"fa fa-sort mt-1\"></i></th>");
+                        s.Add($"                            <th ng-if=\"vm.{relationship.CollectionName.ToCamelCase()}.length > 1\" class=\"text-center fa-col-width\"><i class=\"fa fa-sort mt-1\"></i></th>");
                     foreach (var column in childEntity.GetSearchResultsFields(CurrentEntity))
                     {
-                        s.Add($"                            <th scope=\"col\">{column.Header}</th>");
+                        s.Add($"                            <th>{column.Header}</th>");
                     }
-                    s.Add($"                            <th scope=\"col\" class=\"fa-col-width text-center\"><i class=\"fa fa-remove\"></i></th>");
+                    s.Add($"                            <th class=\"fa-col-width text-center\"><i class=\"fa fa-remove\"></i></th>");
                     s.Add($"                        </tr>");
                     s.Add($"                    </thead>");
                     s.Add($"                    <tbody" + (relationship.Hierarchy && childEntity.HasASortField ? $" ui-sortable=\"vm.{childEntity.PluralName.ToCamelCase()}SortOptions\" ng-model=\"vm.{childEntity.PluralName.ToCamelCase()}\"" : string.Empty) + ">");
@@ -2340,7 +2340,7 @@ namespace WEB.Models
                     }
                 }
 
-                fieldHeaders += (fieldHeaders == string.Empty ? string.Empty : Environment.NewLine) + $"                <th scope=\"col\"{ngIf}>{field.Label}</th>";
+                fieldHeaders += (fieldHeaders == string.Empty ? string.Empty : Environment.NewLine) + $"                <th{ngIf}>{field.Label}</th>";
                 fieldList += (fieldList == string.Empty ? string.Empty : Environment.NewLine);
 
                 fieldList += $"                <td{ngIf}>{field.ListFieldHtml}</td>";

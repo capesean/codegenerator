@@ -17,7 +17,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>codegenerator</RootNamespace>
     <AssemblyName>codegenerator</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <UseIISExpress>true</UseIISExpress>
     <IISExpressSSLPort />
     <IISExpressAnonymousAuthentication />
@@ -507,7 +507,6 @@
     <Content Include="scripts\moment.min.js" />
     <Content Include="scripts\toastr.js" />
     <Content Include="scripts\toastr.min.js" />
-    <Content Include="test.txt" />
     <Content Include="robots.txt" />
     <Content Include="scripts\angular-clipboard.js" />
     <Content Include="fonts\FontAwesome.otf" />
